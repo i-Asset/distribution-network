@@ -1,0 +1,19 @@
+version: '3.3'
+
+services:
+  postgresdb:
+    image: postgres
+    restart: always
+#    network_mode: host
+    networks:
+      - pr
+    environment:
+      POSTGRES_USER: iasset
+      POSTGRES_PASSWORD: iasset
+      POSTGRES_DB: iasset
+    ports:
+      - "5432:5432"
+
+networks:
+  pr:
+    driver: bridge
