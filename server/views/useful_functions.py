@@ -8,7 +8,8 @@ def get_uid():
 
 def get_id():
     import random
-    return random.randint(-1e12, -10)
+    # Postgres allows -2147483648 to +2147483647
+    return random.randint(-1e9, -10)
 
 
 def get_datetime():

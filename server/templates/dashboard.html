@@ -14,21 +14,23 @@
   <hr>
   <table class="table table-striped">
     <tr>
-      <th>uuid</th>
+      <th>id</th>
       <th>Domain</th>
       <th>Enterprise</th>
+      <th>Name</th>
       <th>Creator</th>
       <th></th>
 <!--      <th></th>-->
     </tr>
       {% for company in companies %}
       <tr>
-        <td><a href="show_company/{{company.company_uuid}}" class="btn btn-block">{{company.company_uuid}}</a></td>
-        <td><a href="show_company/{{company.company_uuid}}" class="btn btn-block">{{company.domain}}</a></td>
-        <td><a href="show_company/{{company.company_uuid}}" class="btn btn-block">{{company.enterprise}}</a></td>
-        <td><a href="show_company/{{company.company_uuid}}" class="btn btn-block">{{company.contact_mail}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.id}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.domain}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.enterprise}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.name}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.contact_mail}}</a></td>
 <!--        <td>{{company.contact_mail}}</td>-->
-        <td><a href="show_company/{{company.company_uuid}}" class="btn btn-info float-right"
+        <td><a href="show_company/{{company.id}}" class="btn btn-info float-right"
         data-toggle="tooltip" title="Manage this company.">manage company</a></td>
 <!--        <td><a class="btn btn-danger" href="/delete_company/{{company.company_uuid}}"> delete</a></td>-->
       </tr>
@@ -52,9 +54,8 @@ A list of systems of CPSs and services that you are admin of:
   <hr>
   <table class="table table-striped">
     <tr>
-      <th>uuid</th>
+      <th>System Name</th>
       <th>Company</th>
-      <th>System</th>
       <th>Creator</th>
       <th></th>
 <!--      <th></th>-->
@@ -62,11 +63,10 @@ A list of systems of CPSs and services that you are admin of:
 
       {% for system in systems %}
       <tr>
-        <td><a href="show_system/{{system.system_uuid}}" class="btn btn-block">{{system.system_uuid}}</a></td>
-        <td><a href="show_system/{{system.system_uuid}}" class="btn btn-block">{{system.domain}}.{{system.enterprise}}</a></td>
-        <td><a href="show_system/{{system.system_uuid}}" class="btn btn-block">{{system.workcenter}}.{{system.station}}</a></td>
-        <td><a href="show_system/{{system.system_uuid}}" class="btn btn-block">{{system.contact_mail}}</a></td>
-        <td><a href="show_system/{{system.system_uuid}}" class="btn btn-info float-right"
+        <td><a href="show_system/{{system.sys_name}}" class="btn btn-block">{{system.sys_name}}</a></td>
+        <td><a href="show_system/{{system.sys_name}}" class="btn btn-block">{{system.com_name}}</a></td>
+        <td><a href="show_system/{{system.sys_name}}" class="btn btn-block">{{system.contact_mail}}</a></td>
+        <td><a href="show_system/{{system.sys_name}}" class="btn btn-info float-right"
         data-toggle="tooltip" title="Manage this system.">manage system</a></td>
 <!--        <td><a class="btn btn-danger" href="/delete_system/{{system.system_uuid}}"> delete</a></td>-->
       </tr>
@@ -92,19 +92,17 @@ A list of client applications of whose dedicated system you are admin of:
   <table class="table table-striped">
     <tr>
       <th>Name</th>
-      <th>Company</th>
       <th>System</th>
       <th>Creator</th>
       <th></th>
     </tr>
       {% for client in clients %}
       <tr>
-        <td><a href="show_client/{{client.system_uuid}}/{{client.name}}" class="btn btn-block">{{client.name}}</a></td>
-        <td><a href="show_client/{{client.system_uuid}}/{{client.name}}" class="btn btn-block">{{client.domain}}.{{client.enterprise}}</a></td>
-        <td><a href="show_client/{{client.system_uuid}}/{{client.name}}" class="btn btn-block">{{client.workcenter}}.{{client.station}}</a></td>
-        <td><a href="show_client/{{client.system_uuid}}/{{client.name}}" class="btn btn-block">{{client.contact_mail}}</a></td>
+        <td><a href="show_client/{{client.sys_name}}/{{client_name}}" class="btn btn-block">{{client.client_name}}</a></td>
+        <td><a href="show_client/{{client.sys_name}}/{{client_name}}" class="btn btn-block">{{client.sys_name}}</a></td>
+        <td><a href="show_client/{{client.sys_name}}/{{client_name}}" class="btn btn-block">{{client.contact_mail}}</a></td>
 <!--        <td>{{client.contact_mail}}</td>-->
-        <td><a href="show_client/{{client.system_uuid}}/{{client.name}}" class="btn btn-info float-right"
+        <td><a href="show_client/{{client.sys_name}}/{{client_name}}" class="btn btn-info float-right"
                 data-toggle="tooltip" title="Manage this client application.">manage</a></td>
       </tr>
     {% endfor %}
@@ -130,13 +128,13 @@ A list of streams of whose source system you are admin of:
     </tr>
       {% for stream in streams %}
       <tr>
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-block">{{stream.name}}</a></td>
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-block">{{stream.source_system}}</a></td>
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-block">{{stream.target_system}}</a></td>
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-block">{{stream.status}}</a></td>
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-block">{{stream.contact_mail}}</a></td>
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-block">{{stream.name}}</a></td>
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-block">{{stream.source_system}}</a></td>
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-block">{{stream.target_system}}</a></td>
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-block">{{stream.status}}</a></td>
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-block">{{stream.contact_mail}}</a></td>
 
-        <td><a href="show_stream/{{stream.system_uuid}}/{{stream.name}}" class="btn btn-info float-right"
+        <td><a href="show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-info float-right"
                 data-toggle="tooltip" title="Manage this stream.">manage</a></td>
       </tr>
     {% endfor %}
@@ -147,10 +145,13 @@ A list of streams of whose source system you are admin of:
   <br>
   <br>
   <hr>
-  <tr>
+    <center>
+          <tr>
       To get started, find examples and visit the open source code,
       check out the project's <a href={{payload.SOURCE_URL}}>git repository</a>.
     </tr>
+    </center>
+  <br>
   <br>
 
 {% endblock %}

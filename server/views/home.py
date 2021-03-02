@@ -22,15 +22,15 @@ def dashboard():
     if 'logged_in' not in session:
         return redirect(url_for("home.home"))
 
-    # Get current user_uuid
-    user_uuid = session["user_uuid"]
+    # Get current user_id
+    user_id = session["user_id"]
 
     # Fetch companies, for which the current user is admin of
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
 
     # fetch name of user
-    query = """SELECT first_name, sur_name FROM users WHERE uuid='{}';""".format(user_uuid)
+    query = """SELECT first_name, sur_name FROM users WHERE id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
     users = [dict(c.items()) for c in result_proxy.fetchall()]
     if users == list():
@@ -41,53 +41,53 @@ def dashboard():
     session["sur_name"] = user["sur_name"]
 
     # fetch dedicated companies
-    query = """SELECT company_uuid, domain, enterprise, creator.email AS contact_mail
+    query = """SELECT com.id, name, domain, enterprise, creator.email AS contact_mail
     FROM companies AS com 
-    INNER JOIN is_admin_of_com AS aof ON com.uuid=aof.company_uuid 
-    INNER JOIN users as admin ON admin.uuid=aof.user_uuid
-    INNER JOIN users as creator ON creator.uuid=aof.creator_uuid
-    WHERE admin.uuid='{}'
-    ORDER BY domain, com;;""".format(user_uuid)
+    INNER JOIN is_admin_of_com AS aof ON com.id=aof.company_id 
+    INNER JOIN users as admin ON admin.id=aof.user_id
+    INNER JOIN users as creator ON creator.id=aof.creator_id
+    WHERE admin.id='{}'
+    ORDER BY name;""".format(user_id)
     result_proxy = conn.execute(query)
     companies = [dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched companies: {}".format(companies))
 
     # fetch dedicated systems
-    query = """SELECT sys.uuid AS system_uuid, domain, enterprise, workcenter, station, agent.email AS contact_mail
+    query = """SELECT sys.name AS sys_name, com.name AS com_name, domain, enterprise, workcenter, station, agent.email AS contact_mail
     FROM systems AS sys
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}'
-    ORDER BY domain, com, workcenter, station;""".format(user_uuid)
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}'
+    ORDER BY sys_name;""".format(user_id)
     result_proxy = conn.execute(query)
     systems = [dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch clients, for which systems the current user is agent of
-    query = """SELECT sys.uuid AS system_uuid, name, domain, enterprise, workcenter, station, creator.email AS contact_mail
-    FROM clients
-    INNER JOIN users as creator ON creator.uuid=clients.creator_uuid
-    INNER JOIN systems AS sys ON clients.system_uuid=sys.uuid
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}'
-    ORDER BY domain, com, workcenter, station, name;""".format(user_uuid)
+    query = """SELECT client_apps.system_name AS sys_name, client_apps.name AS client_name, domain, enterprise, workcenter, station, creator.email AS contact_mail
+    FROM client_apps
+    INNER JOIN users as creator ON creator.id=client_apps.creator_id
+    INNER JOIN systems AS sys ON client_apps.system_name=sys.name
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}'
+    ORDER BY sys_name, client_apps.name;""".format(user_id)
     result_proxy = conn.execute(query)
     clients = [dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched clients: {}".format(clients))
 
     # Fetch streams, for which systems the current user is agent of
     query = """
-    SELECT sys.uuid AS system_uuid, streams.name, status, source_system, target_system, creator.email AS contact_mail
-    FROM streams
-    INNER JOIN users as creator ON creator.uuid=streams.creator_uuid
-    INNER JOIN systems AS sys ON streams.system_uuid=sys.uuid
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}'
-    ORDER BY source_system, target_system, streams.name;""".format(user_uuid)
+    SELECT stream_apps.name, status, source_system, target_system, creator.email AS contact_mail
+    FROM stream_apps
+    INNER JOIN users as creator ON creator.id=stream_apps.creator_id
+    INNER JOIN systems AS sys ON stream_apps.source_system=sys.name
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}'
+    ORDER BY source_system, target_system, stream_apps.name;""".format(user_id)
     result_proxy = conn.execute(query)
     streams = [dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched streams: {}".format(streams))
@@ -123,8 +123,8 @@ def search():
     search_request = request.args.get('request').strip().lower()
     app.logger.info("Searching for: {}".format(search_request))
 
-    # Get current user_uuid
-    user_uuid = session["user_uuid"]
+    # Get current user_id
+    user_id = session["user_id"]
     messages = dict()
     # msg_systems = msg_companies = msg_clients = msg_streamhub = None
 
@@ -133,12 +133,12 @@ def search():
     conn = engine.connect()
 
     # fetch dedicated companies
-    query = """SELECT company_uuid, com.*, creator.email AS contact_mail
+    query = """SELECT company_id, com.*, creator.email AS contact_mail
     FROM companies AS com 
-    INNER JOIN is_admin_of_com AS aof ON com.uuid=aof.company_uuid 
-    INNER JOIN users as admin ON admin.uuid=aof.user_uuid
-    INNER JOIN users as creator ON creator.uuid=aof.creator_uuid
-    WHERE admin.uuid='{}';""".format(user_uuid)
+    INNER JOIN is_admin_of_com AS aof ON com.id=aof.company_id 
+    INNER JOIN users as admin ON admin.id=aof.user_id
+    INNER JOIN users as creator ON creator.id=aof.creator_id
+    WHERE admin.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
     companies = [dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
@@ -148,12 +148,12 @@ def search():
         messages["companies"] = "No companies found."
 
     # fetch dedicated systems
-    query = """SELECT sys.uuid AS system_uuid, domain, enterprise, sys.*, agent.email AS contact_mail
+    query = """SELECT domain, enterprise, sys.*, agent.email AS contact_mail
     FROM systems AS sys
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}';""".format(user_uuid)
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
     systems = [dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
@@ -162,15 +162,15 @@ def search():
         messages["systems"] = "No systems found."
 
     # fetch dedicated clients
-    query = """SELECT sys.uuid AS system_uuid, name, domain, enterprise, workcenter, station, 
-    creator.email AS contact_mail, clients.*
-    FROM clients
-    INNER JOIN users as creator ON creator.uuid=clients.creator_uuid
-    INNER JOIN systems AS sys ON clients.system_uuid=sys.uuid
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}';""".format(user_uuid)
+    query = """SELECT sys.name AS system_name, client_apps.name, domain, enterprise, workcenter, station, 
+    creator.email AS contact_mail, client_apps.*
+    FROM client_apps
+    INNER JOIN users as creator ON creator.id=client_apps.creator_id
+    INNER JOIN systems AS sys ON client_apps.system_name=sys.name
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
     clients = [dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
@@ -180,14 +180,14 @@ def search():
 
     # fetch dedicated streams
     query = """
-    SELECT sys.uuid AS system_uuid, streams.*, creator.email AS contact_mail
-    FROM streams
-    INNER JOIN users as creator ON creator.uuid=streams.creator_uuid
-    INNER JOIN systems AS sys ON streams.system_uuid=sys.uuid
-    INNER JOIN companies AS com ON sys.company_uuid=com.uuid
-    INNER JOIN is_admin_of_sys AS agf ON sys.uuid=agf.system_uuid 
-    INNER JOIN users as agent ON agent.uuid=agf.user_uuid
-    WHERE agent.uuid='{}';""".format(user_uuid)
+    SELECT sys.name AS sys_name, creator.email AS contact_mail, stream_apps.*
+    FROM stream_apps
+    INNER JOIN users as creator ON creator.id=stream_apps.creator_id
+    INNER JOIN systems AS sys ON stream_apps.source_system=sys.name
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
     streams = [dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term

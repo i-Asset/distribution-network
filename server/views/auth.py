@@ -35,7 +35,6 @@ class RegisterForm(Form):
 def register():
     form = RegisterForm(request.form)
     email = form.email.data.strip()
-    # form.birthdate.label = "Birthdate"
     if request.method == 'POST' and form.validate():
         # Create cursor
         engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
