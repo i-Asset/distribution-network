@@ -105,15 +105,22 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 sudo apt-get install postgresql
 
-sudo -u postgres psql
-postgres=# CREATE ROLE iasset LOGIN PASSWORD 'iasset';
-postgres=# CREATE DATABASE iasset OWNER iasset;
+sudo -u postgres psql -c "CREATE ROLE postgres LOGIN PASSWORD 'postgres';"
+sudo -u postgres psql -c "CREATE DATABASE distributionnetworkdb OWNER postgres;"
+sudo -u postgres psql -f setup/postgresql/initdb/db_init.sql
 ```
 
 #### Create Database
 
-Currently, the database is created by the Distribution Service.
+The database `distributionnetworkdb` is created and filled with demo-data automatically 
+with the startup, as configured in `setup/postgresql/initdb/db_init.sql`. 
+Check the entries in the tables using commands like:
 
+```bash
+docker exec -it postgresql_postgresdb_1 psql -U postgres -d distributionnetworkdb -c "select * from users;"
+```
+
+Note that dummy users and companies have negative ids, real entries have always non-negative entries.
 
 
 ### Setup Distribution Service
@@ -125,7 +132,6 @@ In both cases, the **Distribution Service** depends on the Delivery Framework Ap
 and the Database Postgres. 
 The respective dependency-variables have to be valid and are required to set up the 
 **Distribution Service**.
-
 
 
 #### Option 1: Setup Distribution Service on Docker
