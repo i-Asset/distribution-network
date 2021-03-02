@@ -19,6 +19,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://iot4cps:iot4cps@localhost/iot4cps'
 SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+DB_INSERT_SAMPLE = True
 
 # Secret key for signing cookies
 SECRET_KEY = "changeme"

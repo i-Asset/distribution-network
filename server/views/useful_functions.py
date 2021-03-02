@@ -6,6 +6,11 @@ def get_uid():
     return str(uuid.uuid4()).split("-")[-1]
 
 
+def get_id():
+    import random
+    return random.randint(-1e12, -10)
+
+
 def get_datetime():
     import pytz
     from dateutil import tz

@@ -8,15 +8,15 @@ from flask import Flask
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
 from server.create_database import create_tables, insert_samples_if_empty
 
-# from server.views.auth import auth
-# from server.views.clients import client
+from server.views.home import home_bp
+from server.views.auth import auth
 # from server.views.company import company
-# from server.views.home import home_bp
-#
+# from server.views.system import system
+# from server.views.clients import client
+
 # # Import application-specific functions
 # from server.views.kafka_interface import KafkaHandler, KafkaInterface
 # from server.views.streamhub import streamhub_bp
-# from server.views.system import system
 
 
 def create_app():
@@ -27,8 +27,8 @@ def create_app():
     app = Flask(__name__)
 
     # # Register modules as blueprint
-    # app.register_blueprint(home_bp)
-    # app.register_blueprint(auth)
+    app.register_blueprint(home_bp)
+    app.register_blueprint(auth)
     # app.register_blueprint(company)
     # app.register_blueprint(system)
     # app.register_blueprint(client)
@@ -58,7 +58,8 @@ def create_app():
     # Creating the tables
     app.logger.info("Creating database distributionnetworkdb and insert sample data.")
     create_tables(app)
-    insert_samples_if_empty(app)
+    if app.config.get("DB_INSERT_SAMPLE"):
+        insert_samples_if_empty(app)
 
     # if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
     #     app.kafka_interface.create_default_topics()
