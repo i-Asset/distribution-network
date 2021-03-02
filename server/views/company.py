@@ -148,7 +148,7 @@ def add_company():
             conn.execute(query, values_list)
             engine.dispose()
             company_name = "{}.{}".format(form_domain, form_enterprise)
-            app.logger.info("The company '{}' was created.".format(company_name))
+            app.logger.info(f"The company '{company_name}' was created by '{user_id}'.")
             flash("The company '{}' was created.".format(company_name), "success")
             return redirect(url_for("company.show_all_companies"))
 
@@ -162,9 +162,9 @@ def add_company():
 
 
 # Delete company
-@company.route("/delete_company/<company_uuid>", methods=["GET"])
+@company.route("/delete_company/<string:com_id>", methods=["GET"])
 @is_logged_in
-def delete_company(company_uuid):
+def delete_company(com_id):
     # Get current user_id
     user_id = session["user_id"]
 
@@ -173,11 +173,11 @@ def delete_company(company_uuid):
     conn = engine.connect()
 
     # Check if you are admin of this company
-    query = """SELECT company_uuid, domain, enterprise, user_id
+    query = """SELECT com.id AS com_id, domain, enterprise, user_id
         FROM companies AS com 
-        INNER JOIN is_admin_of_com AS aof ON com.uuid=aof.company_uuid 
+        INNER JOIN is_admin_of_com AS aof ON com.id=aof.company_id 
         WHERE aof.user_id='{}'
-        AND aof.company_uuid='{}';""".format(user_id, company_uuid)
+        AND aof.company_id='{}';""".format(user_id, com_id)
     result_proxy = conn.execute(query)
     permitted_companies = [dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -187,22 +187,22 @@ def delete_company(company_uuid):
         return redirect(url_for("company.show_all_companies"))
 
     # Check if you are the last admin of the company
-    query = """SELECT aof.company_uuid, domain, enterprise, user_id
-        FROM companies AS com INNER JOIN is_admin_of_com AS aof ON com.uuid=aof.company_uuid 
-        WHERE aof.company_uuid='{}';""".format(company_uuid)
+    query = """SELECT aof.company_id, domain, enterprise, user_id
+        FROM companies AS com INNER JOIN is_admin_of_com AS aof ON com.id=aof.company_id 
+        WHERE aof.company_id='{}';""".format(com_id)
     result_proxy_admin = conn.execute(query)
 
     # Check if there is no system left
-    query = """SELECT sys.company_uuid
+    query = """SELECT sys.company_id
         FROM companies AS com 
-        INNER JOIN systems AS sys ON com.uuid=sys.company_uuid 
-        WHERE sys.company_uuid='{}';""".format(company_uuid)
+        INNER JOIN systems AS sys ON com.id=sys.company_id 
+        WHERE sys.company_id='{}';""".format(com_id)
     result_proxy_system = conn.execute(query)
 
     if len(result_proxy_system.fetchall()) >= 1:
         flash("You are not permitted to delete a company which has systems.", "danger")
         engine.dispose()
-        return redirect(url_for("company.show_company", company_uuid=company_uuid))
+        return redirect(url_for("company.show_company", company_uuid=com_id))
     if len(result_proxy_admin.fetchall()) >= 2:
         flash("You are not permitted to delete a company which has other admins.", "danger")
         engine.dispose()
@@ -216,11 +216,10 @@ def delete_company(company_uuid):
     try:
         # Delete new is_admin_of_com instance
         query = """DELETE FROM is_admin_of_com
-            WHERE company_uuid='{}';""".format(company_uuid)
+            WHERE company_id='{}';""".format(com_id)
         conn.execute(query)
         # Delete company
-        query = """DELETE FROM companies
-            WHERE uuid='{}';""".format(company_uuid)
+        query = """DELETE FROM companies WHERE id='{}';""".format(com_id)
         conn.execute(query)
         transaction.commit()
         engine.dispose()
@@ -338,7 +337,7 @@ def delete_admin_company(company_id, admin_id):
         INNER JOIN users as admin ON admin.id=aof.user_id
         INNER JOIN users as creator ON creator.id=aof.creator_id
         WHERE admin.id='{}'
-        AND aof.company_id='{}';""".format(user_id, company_id)
+        AND aof.company_id='{}';""".format(admin_id, company_id)
     result_proxy = conn.execute(query)
     permitted_companies = [dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -347,7 +346,7 @@ def delete_admin_company(company_id, admin_id):
         flash("You are not permitted to delete this company.", "danger")
         return redirect(url_for("company.show_all_companies"))
 
-    elif user_id == admin_id:
+    elif str(user_id) == str(admin_id):
         engine.dispose()
         flash("You are not permitted to remove yourself.", "danger")
         return redirect(url_for("company.show_company", company_id=company_id))
@@ -379,7 +378,7 @@ def delete_admin_company(company_id, admin_id):
             engine.dispose()
 
             msg = "The user with email '{}' was removed as admin from company '{}.{}'.".format(
-                del_user["admin_email"], del_user["domain"], del_user["enterprise"])
+                del_user["admin_email"], del_user["domain"].strip(), del_user["enterprise"].strip())
             app.logger.info(msg)
             flash(msg, "success")
             return redirect(url_for("company.show_company", company_id=del_user["com_id"]))
