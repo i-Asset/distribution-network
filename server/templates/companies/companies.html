@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<!--  <h1>Dashboard <small> Welcome {{session.first_name}} {{session.sur_name}}</small></h1>-->
+  <h1> <small> Your companies </small></h1>
+A list of companies that you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>id</th>
+      <th>Name</th>
+      <th>Domain</th>
+      <th>Enterprise</th>
+      <th>Creator</th>
+      <th></th>
+<!--      <th></th>-->
+    </tr>
+      {% for company in companies %}
+      <tr>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.id}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.name}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.domain}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.enterprise}}</a></td>
+        <td><a href="show_company/{{company.id}}" class="btn btn-block">{{company.contact_mail}}</a></td>
+<!--        <td>{{company.contact_mail}}</td>-->
+        <td><a href="show_company/{{company.id}}" class="btn btn-info float-right"
+        data-toggle="tooltip" title="Manage this company.">manage company</a></td>
+<!--        <td><a class="btn btn-danger" href="/delete_company/{{company.company_uuid}}"> delete</a></td>-->
+      </tr>
+    {% endfor %}
+  </table>
+    {% if not companies %}
+      No companies were created yet.
+      <br>
+      <br>
+    {% endif %}
+  <a class="btn btn-success" href="/add_company"
+        data-toggle="tooltip" title="Add a new company."> Add Company</a>
+
+  <br>
+  <br>
+{% endblock %}
