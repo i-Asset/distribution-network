@@ -16,7 +16,7 @@ from server.views.system import system
 
 # # Import application-specific functions
 # from server.views.kafka_interface import KafkaHandler, KafkaInterface
-# from server.views.streamhub import streamhub_bp
+from server.views.stream_apps import stream_app
 
 
 def create_app():
@@ -32,7 +32,7 @@ def create_app():
     app.register_blueprint(company)
     app.register_blueprint(system)
     # app.register_blueprint(client)
-    # app.register_blueprint(streamhub_bp)
+    app.register_blueprint(stream_app)
 
     app.config.from_envvar('APP_CONFIG_FILE')
 

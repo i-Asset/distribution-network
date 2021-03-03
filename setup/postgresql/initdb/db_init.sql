@@ -5,7 +5,7 @@
 CREATE TABLE if not exists users (
     id integer NOT NULL PRIMARY KEY,
     first_name varchar(32) NOT NULL,
-    surname varchar(32) NOT NULL,
+    sur_name varchar(32) NOT NULL,
     email varchar(64) NOT NULL,
     password varchar(256),
     bearer_token varchar(256)
@@ -116,7 +116,7 @@ CREATE TABLE if not exists subscriptions (
 -- ##################### Fill tables ######################
 -- ########################################################
 
-INSERT INTO users (id, first_name, surname, email, password) VALUES
+INSERT INTO users (id, first_name, sur_name, email, password) VALUES
 (-1, 'Sue', 'Smith', 'sue.smith@example.com', md5('asdf')),
 (-2, 'Stefan', 'Gunnarsson', 'stefan.gunnarsson@example.com', md5('asdf')),
 (-3, 'Peter', 'Novak', 'peter.novak@example.com', md5('asdf')),

@@ -5,7 +5,7 @@ import sqlalchemy as db
 from flask import current_app as app, send_from_directory
 from flask import Blueprint, render_template, flash, redirect, url_for, session, request
 
-from .useful_functions import is_logged_in
+from .useful_functions import is_logged_in, strip_dict
 
 home_bp = Blueprint("home", __name__)
 
@@ -32,7 +32,7 @@ def dashboard():
     # fetch name of user
     query = """SELECT first_name, sur_name FROM users WHERE id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
-    users = [dict(c.items()) for c in result_proxy.fetchall()]
+    users = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     if users == list():
         flash("Please login.", "danger")
         return redirect(url_for("auth.login"))
@@ -49,7 +49,7 @@ def dashboard():
     WHERE admin.id='{}'
     ORDER BY name;""".format(user_id)
     result_proxy = conn.execute(query)
-    companies = [dict(c.items()) for c in result_proxy.fetchall()]
+    companies = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched companies: {}".format(companies))
 
     # fetch dedicated systems
@@ -61,7 +61,7 @@ def dashboard():
     WHERE agent.id='{}'
     ORDER BY sys_name;""".format(user_id)
     result_proxy = conn.execute(query)
-    systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch clients, for which systems the current user is agent of
     query = """SELECT client_apps.system_name AS sys_name, client_apps.name AS client_name, domain, enterprise, workcenter, station, creator.email AS contact_mail
@@ -74,22 +74,19 @@ def dashboard():
     WHERE agent.id='{}'
     ORDER BY sys_name, client_apps.name;""".format(user_id)
     result_proxy = conn.execute(query)
-    clients = [dict(c.items()) for c in result_proxy.fetchall()]
+    clients = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched clients: {}".format(clients))
 
     # Fetch streams, for which systems the current user is agent of
     query = """
-    SELECT stream_apps.name, status, source_system, target_system, creator.email AS contact_mail
-    FROM stream_apps
-    INNER JOIN users as creator ON creator.id=stream_apps.creator_id
-    INNER JOIN systems AS sys ON stream_apps.source_system=sys.name
-    INNER JOIN companies AS com ON sys.company_id=com.id
-    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN users as agent ON agent.id=agf.user_id
-    WHERE agent.id='{}'
-    ORDER BY source_system, target_system, stream_apps.name;""".format(user_id)
+    SELECT streams.name, status, source_system, target_system, creator.email AS contact_mail
+    FROM stream_apps as streams
+    INNER JOIN users as creator ON creator.id=streams.creator_id
+    INNER JOIN is_admin_of_sys AS agf ON streams.source_system=agf.system_name 
+    WHERE agf.user_id='{}'
+    ORDER BY source_system, target_system, streams.name;""".format(user_id)
     result_proxy = conn.execute(query)
-    streams = [dict(c.items()) for c in result_proxy.fetchall()]
+    streams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched streams: {}".format(streams))
 
     engine.dispose()
@@ -140,7 +137,7 @@ def search():
     INNER JOIN users as creator ON creator.id=aof.creator_id
     WHERE admin.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
-    companies = [dict(c.items()) for c in result_proxy.fetchall()]
+    companies = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
     companies = [item for item in companies if search_request in str(list(item.values())).lower()]
     # print("Fetched companies: {}".format(companies))
@@ -155,7 +152,7 @@ def search():
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
-    systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
     systems = [item for item in systems if search_request in str(list(item.values())).lower()]
     if len(systems) == 0:
@@ -172,7 +169,7 @@ def search():
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
-    clients = [dict(c.items()) for c in result_proxy.fetchall()]
+    clients = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
     clients = [item for item in clients if search_request in str(list(item.values())).lower()]
     if len(clients) == 0:
@@ -189,7 +186,7 @@ def search():
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}';""".format(user_id)
     result_proxy = conn.execute(query)
-    streams = [dict(c.items()) for c in result_proxy.fetchall()]
+    streams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # Filter systems by term
     streams = [item for item in streams if search_request in str(list(item.values())).lower()]
     if len(streams) == 0:

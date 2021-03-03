@@ -1,0 +1,178 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+
+<table class="table" xmlns="http://www.w3.org/1999/html">
+    <td>
+      <h1> <small>Stream app: </small>{{payload.name}}</h1>
+      {% if payload.description %}
+      {{payload.description}}
+      {% endif %}
+        <br>
+    </td>
+
+    <td>
+       <a class="btn btn-danger float-right mb-2" href="/delete_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="Delete this stream application.">delete stream</a>
+    </td>
+  </table>
+
+
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Source System</th>
+      <th>Target System</th>
+      <th>Creator's mail</th>
+      <th>Created at</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+      <tr>
+        <td><center>{{payload.source_system}}</center></td>
+        <td><center>{{payload.target_system}}</center></td>
+        <td><center>{{payload.contact_mail}}</center></td>
+        <td><center>{{payload.datetime}}</center></td>
+
+      {% if payload.status == "init" %}
+       <td><a class="btn btn-info float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="The stream wasn't deployed yet.">{{payload.status}}</a></td>
+      {% elif payload.status == "starting" %}
+       <td><a class="btn btn-warning float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="The stream is starting.">{{payload.status}}</a></td>
+      {% elif payload.status == "running" %}
+       <td><a class="btn btn-success float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="The stream is running.">{{payload.status}}</a></td>
+      {% elif payload.status == "stopping" %}
+       <td><a class="btn btn-info float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="This stream will stopping.">{{payload.status}}</a></td>
+      {% elif payload.status == "idle" %}
+       <td><a class="btn btn-primary float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="This stream is idle.">{{payload.status}}</a></td>
+      {% elif payload.status == "failing" %}
+       <td><a class="btn btn-warning float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="This stream is failing.">{{payload.status}}</a></td>
+      {% elif payload.status == "crashed" %}
+       <td><a class="btn btn-danger float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="This stream is failing.">{{payload.status}}</a></td>
+      {% else %}
+       <td></td><a class="btn btn-warning float-right mb-2" href="/show_stream/{{payload.system_url}}/{{payload.name}}"
+          data-toggle="tooltip" title="This stream status is unknown.">{{payload.status}}</a></td>
+      {% endif %}
+
+        {% if payload.status == "init" or payload.status == "idle" %}
+         <td><a class="btn btn-success float-right mb-2" href="/start_stream/{{payload.system_url}}/{{payload.name}}"
+            data-toggle="tooltip" title="Start this stream application.">deploy stream</a></td>
+        {% else %}
+         <td><a class="btn btn-warning float-right mb-2" href="/stop_stream/{{payload.system_url}}/{{payload.name}}"
+            data-toggle="tooltip" title="Stop this stream application.">stop stream</a></td>
+        {% endif %}
+      </tr>
+  </table>
+
+
+  <hr>
+  <table class="table table-striped">
+    <tr>
+        {% if payload.is_multi_source %}
+            <th><h2> <small> Multi-Source Stream App Function: </small></h2></th>
+        {% else %}
+            <th><h2> <small> Single-Source Stream App Filter Logic: </small></h2></th>
+        {% endif %}
+      <th></th>
+    </tr>
+  </table>
+
+    <div class="form-group">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">-->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>-->
+
+        <div class="container">
+
+            <table class="table">
+                {% if payload.logic %}
+                    {% if payload.is_multi_source %}
+                        <td>A Multi-source Stream-App configuration was set.</td>
+                    {% else %}
+                        <td>{{payload.logic}}</td>
+                    {% endif %}
+                {% else %}
+                    <td>There is no Filter Logic set.</td>
+                {% endif %}
+            <td><button type="button" class="btn btn-info float-right mb-2" data-toggle="collapse" data-target="#demo">edit</button></td>
+            </table>
+
+            <div id="demo" class="collapse">
+                {% from "includes/_formhelpers.html" import render_field %}
+              <form method="POST">
+
+                <br>
+
+                <table class="table">
+<!--                <td>-->
+<!--                    {{render_field(form.logic, class_="form-control", value=logic)}}-->
+<!--                     <small id="filterHelp" class="form-text text-muted">The Filter Logic will be tested and updated.</small>-->
+<!--                </td>-->
+                <td>
+                    <div class="md-form">
+                      <i class="fas fa-pencil-alt prefix"></i>
+                      <textarea id="logic" name="logic" class="md-textarea form-control" rows="3">{{payload.logic}}</textarea>
+                      <small id="filterHelp" class="form-text text-muted">The Filter Logic will be tested and updated.</small>
+                    </div>
+                </td>
+                <td>
+                    <input type="submit" class="btn btn-success float-right mb-2"
+                        data-toggle="tooltip" title="Click to update the filter logic" value="save & test">
+                </td>
+                </table>
+              </form>
+            </div>
+        </div>
+    </div>
+    {% if payload.is_multi_source %}
+        <a>The function field should contain valid functions for 'ingest_fct', 'on_join' and required constants.</a>
+    {% else %}
+        <a>The filter logic should be a SQL like expression containing only a single source system.</a>
+    {% endif %}
+
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th><h2> <small> Stream App Stats </small></h2></th>
+      <th></th>
+    </tr>
+    <tr>
+      <td>
+        {% if app_stats %}
+            <pre id="json"></pre>
+
+            <script>
+              var stats = {
+                  "Running": '{{app_stats.Running}}',
+                  "Restarting": '{{app_stats.Restarting}}',
+                  "StartedAt": '{{app_stats.StartedAt}}',
+                  "FinishedAt": '{{app_stats.FinishedAt}}',
+                  "ExitCode": '{{app_stats.ExitCode}}'
+                  // ".Config.Env": '{{app_stats[".Config.Env"]}}'
+                  // ".NetworkSettings.Gateway": '{{app_stats.StartedAt}}'
+              };
+              document.getElementById("json").innerHTML = JSON.stringify(stats, undefined, 2);
+            </script>
+        {% else %}
+          <a>Stats are not available for an undeployed stream.</a>
+        {% endif %}
+      </td>
+      <td>
+      <a class="btn btn-info float-right mb-2" href="/download_log/{{payload.system_url}}/{{payload.name}}"
+            data-toggle="tooltip" title="Click to download the full logs.">download logfile</a>
+      </td>
+    </tr>
+  </table>
+
+  <hr>
+  <br>
+  <br>
+{% endblock %}

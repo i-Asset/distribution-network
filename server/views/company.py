@@ -5,7 +5,7 @@ from flask import current_app as app
 from sqlalchemy import exc as sqlalchemy_exc
 from wtforms import Form, StringField, validators, TextField, TextAreaField
 
-from .useful_functions import get_datetime, get_id, is_logged_in, valid_level_name
+from .useful_functions import get_datetime, get_id, is_logged_in, valid_level_name, strip_dict
 
 company = Blueprint("company", __name__)  # url_prefix="/comp")
 
@@ -28,7 +28,7 @@ def show_all_companies():
     ORDER BY domain, com;""".format(user_id)
     result_proxy = conn.execute(query)
     engine.dispose()
-    companies = [dict(c.items()) for c in result_proxy.fetchall()]
+    companies = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched companies: {}".format(companies))
     return render_template("/companies/companies.html", companies=companies)
 
@@ -54,7 +54,7 @@ def show_company(company_id):
     INNER JOIN users as creator ON creator.id=aof.creator_id 
     WHERE company_id='{}';""".format(company_id)
     result_proxy = conn.execute(query)
-    admins = [dict(c.items()) for c in result_proxy.fetchall()]
+    admins = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched admins: {}".format(admins))
 
     # Check if the company exists and has admins
@@ -81,7 +81,7 @@ def show_company(company_id):
      WHERE sys.company_id='{}';""".format(company_id)
     result_proxy = conn.execute(query)
     engine.dispose()
-    systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     return render_template("/companies/show_company.html", admins=admins, systems=systems, payload=payload)
 
@@ -179,7 +179,7 @@ def delete_company(com_id):
         WHERE aof.user_id='{}'
         AND aof.company_id='{}';""".format(user_id, com_id)
     result_proxy = conn.execute(query)
-    permitted_companies = [dict(c.items()) for c in result_proxy.fetchall()]
+    permitted_companies = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if permitted_companies == list():
         engine.dispose()
@@ -261,7 +261,7 @@ def add_admin_company(company_id):
             AND com.id='{}';""".format(user_id, company_id)
     result_proxy = conn.execute(query)
     engine.dispose()
-    permitted_companies = [dict(c.items()) for c in result_proxy.fetchall() if str(c["com_id"]) == company_id]
+    permitted_companies = [strip_dict(c.items()) for c in result_proxy.fetchall() if str(c["com_id"]) == company_id]
 
     if permitted_companies == list():
         flash("You are not permitted to add an admin for this company.", "danger")
@@ -282,7 +282,7 @@ def add_admin_company(company_id):
         # Check if the user is registered
         query = """SELECT id AS user_id FROM users WHERE email='{}';""".format(email)
         result_proxy = conn.execute(query)
-        found_users = [dict(c.items()) for c in result_proxy.fetchall()]
+        found_users = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
         if found_users == list():
             flash("No user was found with this email address.", "danger")
@@ -339,7 +339,7 @@ def delete_admin_company(company_id, admin_id):
         WHERE admin.id='{}'
         AND aof.company_id='{}';""".format(admin_id, company_id)
     result_proxy = conn.execute(query)
-    permitted_companies = [dict(c.items()) for c in result_proxy.fetchall()]
+    permitted_companies = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if permitted_companies == list():
         engine.dispose()
@@ -360,7 +360,7 @@ def delete_admin_company(company_id, admin_id):
                 WHERE admin.id='{}'
                 AND aof.company_id='{}';""".format(admin_id, company_id)
         result_proxy = conn.execute(query)
-        del_users = [dict(c.items()) for c in result_proxy.fetchall()]
+        del_users = [strip_dict(c.items()) for c in result_proxy.fetchall()]
         if del_users == list():
             engine.dispose()
             flash("nothing to delete.", "danger")

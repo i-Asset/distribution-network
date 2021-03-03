@@ -7,7 +7,7 @@
       <h1>{{payload.system_name}}</h1>
     <h3> <small> System in company: {{payload.com_name}} </small></h3>
     {% if payload.creator_mail %}
-    <h3> <small> Created by {{payload.creator_mail}} at {{payload.sys_datetime}}. </small></h3>
+    <h3> <small> Created by {{payload.first_name}} {{payload.sur_name}} at {{payload.sys_datetime}}. </small></h3>
     {% endif %}
 
     {% if payload.description %}

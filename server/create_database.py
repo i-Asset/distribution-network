@@ -96,7 +96,8 @@ def create_tables(app):
         db.Column('source_system', db.ForeignKey('systems.name'), primary_key=True, nullable=False),
         db.Column('target_system', db.ForeignKey('systems.name'), nullable=False),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=True),
-        db.Column('logic', db.VARCHAR(1024), nullable=True),
+        db.Column('logic', db.TEXT, nullable=True),
+        db.Column('is_multi_source', db.BOOLEAN, nullable=False, default=False),
         db.Column('status', db.VARCHAR(32), nullable=False, default="init"),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True)

@@ -6,7 +6,7 @@ from flask import current_app as app
 from sqlalchemy import exc as sqlalchemy_exc
 from wtforms import Form, StringField, validators, TextAreaField
 
-from .useful_functions import get_datetime, get_uid, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url
+from .useful_functions import get_datetime, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url, strip_dict
 
 system = Blueprint("system", __name__)  # url_prefix="/comp")
 
@@ -32,7 +32,7 @@ def show_all_systems():
     ORDER BY domain, com, workcenter, station;""".format(user_id)
     result_proxy = conn.execute(query)
     engine.dispose()
-    systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     for sys in systems:
         sys["sys_url"] = encode_sys_url(sys["sys_name"])
     # print("Fetched companies: {}".format(companies))
@@ -40,9 +40,10 @@ def show_all_systems():
     return render_template("/systems/systems.html", systems=systems)
 
 
-@system.route("/show_system/<string:system_name>")
+@system.route("/show_system/<string:system_url>")
 @is_logged_in
-def show_system(system_name):
+def show_system(system_url):
+    system_name = decode_sys_url(system_url)
     # Get current user_id
     user_id = session["user_id"]
 
@@ -59,7 +60,7 @@ def show_system(system_name):
     INNER JOIN users as creator ON creator.id=agf.creator_id 
     WHERE sys.name='{}';""".format(system_name)
     result_proxy = conn.execute(query)
-    agents = [dict(c.items()) for c in result_proxy.fetchall()]
+    agents = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched agents: {}".format(agents))
 
     # Check if the system exists and has agents
@@ -85,7 +86,7 @@ def show_system(system_name):
     WHERE agent.id='{}' AND sys.name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
     engine.dispose()
-    client_apps = [dict(c.items()) for c in result_proxy.fetchall()]
+    client_apps = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch streams, for which systems the current user is agent of
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
@@ -101,7 +102,7 @@ def show_system(system_name):
     WHERE agent.id='{}' AND sys.name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
     engine.dispose()
-    streams = [dict(c.items()) for c in result_proxy.fetchall()]
+    streams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # if not, agents has at least one item
     payload = agents[0]
@@ -149,7 +150,7 @@ def add_system_for_company(company_id):
     INNER JOIN users as creator ON creator.id=aof.creator_id 
     WHERE company_id='{}';""".format(company_id)
     result_proxy = conn.execute(query)
-    admins = [dict(c.items()) for c in result_proxy.fetchall()]
+    admins = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Check if the company exists and you are an admin
     if len(admins) == 0:
@@ -211,7 +212,7 @@ def add_system_for_company(company_id):
             transaction.commit()
             app.logger.info("The system '{}' was created.".format(system_name))
             flash("The system '{}' was created.".format(system_name), "success")
-            return redirect(url_for("system.show_system", system_name=system_name))
+            return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
         except Exception as e:
             transaction.rollback()
             app.logger.warning("The system '{}' couldn't created.".format(system_name))
@@ -223,9 +224,10 @@ def add_system_for_company(company_id):
 
 
 # Delete system
-@system.route("/delete_system/<string:system_name>", methods=["GET"])
+@system.route("/delete_system/<string:system_url>", methods=["GET"])
 @is_logged_in
-def delete_system(system_name):
+def delete_system(system_url):
+    system_name = decode_sys_url(system_url)
     # Get current user_id
     user_id = session["user_id"]
 
@@ -239,7 +241,7 @@ def delete_system(system_name):
         WHERE agf.user_id='{}'
         AND agf.system_name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
-    permitted_systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    permitted_systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if permitted_systems == list():
         engine.dispose()
@@ -257,7 +259,7 @@ def delete_system(system_name):
     if len(result_proxy.fetchall()) >= 2:
         engine.dispose()
         flash("You are not permitted to delete a system which has multiple agents.", "danger")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     # Check if there are client applications for that system
     query = """SELECT system_name, client_apps.name AS client_name
@@ -269,7 +271,7 @@ def delete_system(system_name):
     if len(result_proxy.fetchall()) >= 1:
         engine.dispose()
         flash("You are not permitted to delete a system which has client applications.", "danger")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     # Now the system can be deleted
     selected_system = permitted_systems[0]  # This list has only one element
@@ -313,9 +315,10 @@ class AgentForm(Form):
     email = StringField("Email", [validators.Email(message="The given email seems to be wrong.")])
 
 
-@system.route("/add_agent_system/<string:system_name>", methods=["GET", "POST"])
+@system.route("/add_agent_system/<string:system_url>", methods=["GET", "POST"])
 @is_logged_in
-def add_agent_system(system_name):
+def add_agent_system(system_url):
+    system_name = decode_sys_url(system_url)
     # Get current user_id
     user_id = session["user_id"]
 
@@ -331,12 +334,12 @@ def add_agent_system(system_name):
         WHERE agf.user_id='{}'
         AND agf.system_name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
-    permitted_systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    permitted_systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if permitted_systems == list():
         engine.dispose()
         flash("You are not permitted to add an agent for this system.", "danger")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     payload = permitted_systems[0]
 
@@ -346,7 +349,7 @@ def add_agent_system(system_name):
         # Check if the user is registered
         query = """SELECT * FROM users WHERE email='{}';""".format(email)
         result_proxy = conn.execute(query)
-        found_users = [dict(c.items()) for c in result_proxy.fetchall()]
+        found_users = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
         if found_users == list():
             engine.dispose()
@@ -356,7 +359,7 @@ def add_agent_system(system_name):
         user = found_users[0]
         # Check if the user is already agent of this system
         query = """SELECT system_name, user_id FROM is_admin_of_sys
-        WHERE user_id='{}' AND system_name='{}';""".format(user["name"], system_name)
+        WHERE user_id='{}' AND system_name='{}';""".format(user["id"], system_name)
         result_proxy = conn.execute(query)
         if result_proxy.fetchall() != list():
             engine.dispose()
@@ -365,7 +368,7 @@ def add_agent_system(system_name):
 
         # Create new is_admin_of_sys instance
         query = db.insert(app.config["tables"]["is_admin_of_sys"])
-        values_list = [{"user_id": user["user_id"],
+        values_list = [{"user_id": user["id"],
                         "system_name": payload["system_name"],
                         "creator_id": user_id,
                         "datetime": get_datetime()}]
@@ -374,15 +377,16 @@ def add_agent_system(system_name):
 
         flash("The user {} was added to {}.{}.{}.{} as an agent.".format(
             email, payload["domain"], payload["enterprise"], payload["workcenter"], payload["station"]), "success")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     return render_template("/systems/add_agent_system.html", form=form, payload=payload)
 
 
 # Delete agent for system
-@system.route("/delete_agent_system/<string:system_name>/<string:agent_id>", methods=["GET"])
+@system.route("/delete_agent_system/<string:system_url>/<string:agent_id>", methods=["GET"])
 @is_logged_in
-def delete_agent_system(system_name, agent_id):
+def delete_agent_system(system_url, agent_id):
+    system_name = decode_sys_url(system_url)
     # Get current user_id
     user_id = session["user_id"]
 
@@ -396,17 +400,17 @@ def delete_agent_system(system_name, agent_id):
             WHERE agf.user_id='{}'
             AND agf.system_name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
-    permitted_systems = [dict(c.items()) for c in result_proxy.fetchall()]
+    permitted_systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if permitted_systems == list():
         engine.dispose()
         flash("You are not permitted to delete agents for this system.", "danger")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     if str(user_id) == str(agent_id):
         engine.dispose()
         flash("You can't remove yourself.", "danger")
-        return redirect(url_for("system.show_system", system_name=system_name))
+        return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
     # get info for the deleted agent
     query = """SELECT company_id, system_name, domain, enterprise, workcenter, station, agent.email AS email, 
@@ -418,7 +422,7 @@ def delete_agent_system(system_name, agent_id):
     WHERE agent.id='{}'
     AND agf.system_name='{}';""".format(agent_id, system_name)
     result_proxy = conn.execute(query)
-    del_users = [dict(c.items()) for c in result_proxy.fetchall()]
+    del_users = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     if del_users == list():
         engine.dispose()
@@ -437,4 +441,4 @@ def delete_agent_system(system_name, agent_id):
     flash("User with email {} was removed as agent from system {}.{}.{}.{}.".format(
         del_user["email"], del_user["domain"], del_user["enterprise"], del_user["workcenter"], del_user["station"]),
         "success")
-    return redirect(url_for("system.show_system", system_name=system_name))
+    return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))

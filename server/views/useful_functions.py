@@ -21,11 +21,25 @@ def get_datetime():
 
 
 def encode_sys_url(system_name):
+    # ".": "%2E", " ": "%20"
     return system_name.replace(".", "%2E")
 
 
 def decode_sys_url(system_url):
     return system_url.replace("%2E", ".")
+
+
+# strips each string value of a dictionaries, container-safe
+def strip_dict(dic):
+    d = dict()
+    for k, v in dic:
+        if isinstance(v, str):
+            d[k] = v.strip()
+            if k in ["system_name", "source_system"]:
+                d["system_url"] = encode_sys_url(d[k])
+        else:
+            d[k] = v
+    return d
 
 
 # Check if user is logged in
