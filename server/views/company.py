@@ -154,7 +154,7 @@ def add_company():
 
         except sqlalchemy_exc.IntegrityError as e:
             engine.dispose()
-            print("An Integrity Error occured: {}".format(e))
+            app.logger.error("An Integrity Error occured: {}".format(e))
             flash("An unexpected error occured.", "danger")
             return render_template(url_for("auth.login"))
 
@@ -202,7 +202,7 @@ def delete_company(com_id):
     if len(result_proxy_system.fetchall()) >= 1:
         flash("You are not permitted to delete a company which has systems.", "danger")
         engine.dispose()
-        return redirect(url_for("company.show_company", company_uuid=com_id))
+        return redirect(url_for("company.show_company", company_id=com_id))
     if len(result_proxy_admin.fetchall()) >= 2:
         flash("You are not permitted to delete a company which has other admins.", "danger")
         engine.dispose()

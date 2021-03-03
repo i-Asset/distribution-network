@@ -20,6 +20,14 @@ def get_datetime():
     return dt.isoformat()
 
 
+def encode_sys_url(system_name):
+    return system_name.replace(".", "%2E")
+
+
+def decode_sys_url(system_url):
+    return system_url.replace("%2E", ".")
+
+
 # Check if user is logged in
 def is_logged_in(f):
     from flask import flash, redirect, url_for, session

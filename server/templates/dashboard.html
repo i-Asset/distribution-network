@@ -32,7 +32,7 @@
 <!--        <td>{{company.contact_mail}}</td>-->
         <td><a href="show_company/{{company.id}}" class="btn btn-info float-right"
         data-toggle="tooltip" title="Manage this company.">manage company</a></td>
-<!--        <td><a class="btn btn-danger" href="/delete_company/{{company.company_uuid}}"> delete</a></td>-->
+<!--        <td><a class="btn btn-danger" href="/delete_company/{{company.company_id}}"> delete</a></td>-->
       </tr>
     {% endfor %}
   </table>
@@ -68,7 +68,7 @@ A list of systems of CPSs and services that you are admin of:
         <td><a href="show_system/{{system.sys_name}}" class="btn btn-block">{{system.contact_mail}}</a></td>
         <td><a href="show_system/{{system.sys_name}}" class="btn btn-info float-right"
         data-toggle="tooltip" title="Manage this system.">manage system</a></td>
-<!--        <td><a class="btn btn-danger" href="/delete_system/{{system.system_uuid}}"> delete</a></td>-->
+<!--        <td><a class="btn btn-danger" href="/delete_system/{{system.system_id}}"> delete</a></td>-->
       </tr>
     {% endfor %}
   </table>

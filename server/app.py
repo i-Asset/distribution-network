@@ -11,7 +11,7 @@ from server.create_database import create_tables, insert_samples_if_empty
 from server.views.home import home_bp
 from server.views.auth import auth
 from server.views.company import company
-# from server.views.system import system
+from server.views.system import system
 # from server.views.clients import client
 
 # # Import application-specific functions
@@ -30,7 +30,7 @@ def create_app():
     app.register_blueprint(home_bp)
     app.register_blueprint(auth)
     app.register_blueprint(company)
-    # app.register_blueprint(system)
+    app.register_blueprint(system)
     # app.register_blueprint(client)
     # app.register_blueprint(streamhub_bp)
 

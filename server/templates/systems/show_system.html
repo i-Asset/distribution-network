@@ -1,0 +1,117 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+  <table class="table">
+  <td>
+      <h1>{{payload.system_name}}</h1>
+    <h3> <small> System in company: {{payload.com_name}} </small></h3>
+    {% if payload.creator_mail %}
+    <h3> <small> Created by {{payload.creator_mail}} at {{payload.sys_datetime}}. </small></h3>
+    {% endif %}
+
+    {% if payload.description %}
+    {{payload.description}}
+    {% endif %}
+  </td>
+  <td>
+<!--     <a class="btn btn-info float-right mb-2" href="/edit_client/{{payload.system_name}}/{{payload.name}}"> edit description </a>-->
+     <a class="btn btn-danger float-right" href="/delete_system/{{payload.system_name}}"
+        data-toggle="tooltip" title="Only empty systems can be deleted."> delete system </a>
+  </td>
+  </table>
+
+<!---------------------------------------------------------------------------------------------->
+
+  <hr>
+  <h2> <small> Client applications </small></h2>
+  For connecting CPSs and services:
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>Company</th>
+      <th>System</th>
+      <th>Creator</th>
+      <th></th>
+      <th></th>
+    </tr>
+      {% for client in clients %}
+      <tr>
+        <td><center>{{client.name}}</center></td>
+        <td><center>{{client.domain}}.{{client.enterprise}}</center></td>
+        <td><center>{{client.workcenter}}.{{client.station}}</center></td>
+        <td><center>{{client.contact_mail}}</center></td>
+<!--        <td><a href="/show_client/{{client.system_name}}/{{client.name}}" class="btn btn-block">{{client.datetime}}</a></td>-->
+        <td><a href="/show_client/{{client.system_name}}/{{client.name}}" class="btn btn-info float-right"
+          data-toggle="tooltip" title="Manage this client.">manage</a></td>
+        <td><a class="btn btn-danger float-right" href="/delete_client/{{client.system_name}}/{{client.name}}"
+        data-toggle="tooltip" title="Delete this client application."> delete </a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_client/{{payload.system_name}}"
+        data-toggle="tooltip" title="Add a new client application for this system."> Add Client</a>
+
+  <br>
+  <br>
+<!---------------------------------------------------------------------------------------------->
+
+  <hr>
+  <h2> <small>Stream applications</small></h2>
+  For sharing data from this system to another:
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>Source System</th>
+      <th>Target System</th>
+      <th>Creator</th>
+      <th></th>
+      <th></th>
+    </tr>
+      {% for stream in streams %}
+      <tr>
+        <td><center>{{stream.name}}</center></td>
+        <td><center>{{stream.source_system}}</center></td>
+        <td><center>{{stream.target_system}}</center></td>
+        <td><center>{{stream.contact_mail}}</center></td>
+
+        <td><a href="/show_stream/{{stream.system_name}}/{{stream.name}}" class="btn btn-info float-right"
+                data-toggle="tooltip" title="Manage this stream.">manage</a></td>
+        <td><a class="btn btn-danger float-right" href="/delete_stream/{{stream.system_name}}/{{stream.name}}"
+        data-toggle="tooltip" title="Delete this stream."> delete </a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_stream/{{payload.system_name}}"
+      data-toggle="tooltip" title="Add a new stream application to this system."> Add Stream</a>
+
+  <br>
+  <br>
+<!---------------------------------------------------------------------------------------------->
+
+  <hr>
+  <h2> <small> Admins of the system </small></h2>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>Contact</th>
+      <th></th>
+    </tr>
+      {% for agent in agents %}
+      <tr>
+        <td><center>{{agent.first_name}} {{agent.sur_name}}</center></td>
+        <td><center>{{agent.agent_mail}}</center></td>
+        <td>
+            <a class="btn btn-danger float-right" href="/delete_agent_system/{{agent.system_name}}/{{agent.agent_id}}"
+        data-toggle="tooltip" title="Remove this user as admin from the company."> remove </a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <a href="/add_agent_system/{{payload.system_name}}" class="btn btn-success"
+        data-toggle="tooltip" title="Add a registered user as new admin for this system.">Add Admin</a>
+
+  <br>
+  <br>
+{% endblock %}
