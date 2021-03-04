@@ -21,7 +21,7 @@ else:
 stream_app = Blueprint("stream_app", __name__)
 
 
-@stream_app.route("/streamhub")
+@stream_app.route("/stream_apps")
 @is_logged_in
 def show_all_streams():
     # Get current user_id

@@ -60,6 +60,7 @@ def show_system(system_url):
     INNER JOIN users as creator ON creator.id=agf.creator_id 
     WHERE sys.name='{}';""".format(system_name)
     result_proxy = conn.execute(query)
+    engine.dispose()
     agents = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched agents: {}".format(agents))
 
@@ -76,6 +77,8 @@ def show_system(system_url):
         return redirect(url_for("system.show_all_systems"))
 
     # Fetch client_apps of the system, for with the user is agent
+    engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    conn = engine.connect()
     query = """SELECT sys.name AS system_name, client_apps.name, domain, enterprise, workcenter, station, creator.email AS contact_mail
     FROM client_apps
     INNER JOIN users as creator ON creator.id=client_apps.creator_id
@@ -85,12 +88,24 @@ def show_system(system_url):
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}' AND sys.name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
-    engine.dispose()
+    # engine.dispose()
     client_apps = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
+    # Fetch clients, for which systems the current user is agent of
+    query = """SELECT aas.system_name, aas.name, aas.registry_uri, creator.email AS contact_mail
+    FROM aas
+    INNER JOIN is_admin_of_sys AS agf ON aas.system_name=agf.system_name 
+    INNER JOIN users as creator ON creator.id=agf.creator_id
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}'
+    ORDER BY system_name, aas.name;""".format(user_id)
+    result_proxy = conn.execute(query)
+    # engine.dispose()
+    aas_list = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+
     # Fetch streams, for which systems the current user is agent of
-    engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-    conn = engine.connect()
+    # engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    # conn = engine.connect()
     query = """
     SELECT sys.name AS system_name, stream_apps.name AS name, source_system, target_system, creator.email AS contact_mail
     FROM stream_apps
@@ -107,7 +122,7 @@ def show_system(system_url):
     # if not, agents has at least one item
     payload = agents[0]
     return render_template("/systems/show_system.html", agents=agents, payload=payload,
-                           client_apps=client_apps, streams=streams)
+                           client_apps=client_apps, streams=streams, aas_list=aas_list)
 
 
 # System Form Class

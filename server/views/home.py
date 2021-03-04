@@ -145,7 +145,7 @@ def search():
         messages["companies"] = "No companies found."
 
     # fetch dedicated systems
-    query = """SELECT domain, enterprise, sys.*, agent.email AS contact_mail
+    query = """SELECT domain, enterprise, sys.*, com.name AS company_name, agent.email AS contact_mail
     FROM systems AS sys
     INNER JOIN companies AS com ON sys.company_id=com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
@@ -159,8 +159,8 @@ def search():
         messages["systems"] = "No systems found."
 
     # fetch dedicated clients
-    query = """SELECT sys.name AS system_name, client_apps.name, domain, enterprise, workcenter, station, 
-    creator.email AS contact_mail, client_apps.*
+    query = """SELECT sys.name AS system_name, com.name AS company_name, client_apps.name, 
+    domain, enterprise, workcenter, station, creator.email AS contact_mail, client_apps.*
     FROM client_apps
     INNER JOIN users as creator ON creator.id=client_apps.creator_id
     INNER JOIN systems AS sys ON client_apps.system_name=sys.name
@@ -175,9 +175,26 @@ def search():
     if len(clients) == 0:
         messages["clients"] = "No clients found."
 
+    # fetch dedicated aas
+    query = """SELECT sys.name AS system_name, com.name AS company_name, aas.name, 
+    domain, enterprise, workcenter, station, creator.email AS contact_mail, aas.*
+    FROM aas
+    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN systems AS sys ON aas.system_name=sys.name
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users as agent ON agent.id=agf.user_id
+    WHERE agent.id='{}';""".format(user_id)
+    result_proxy = conn.execute(query)
+    aas_list = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    # Filter systems by term
+    aas_list = [item for item in aas_list if search_request in str(list(item.values())).lower()]
+    if len(aas_list) == 0:
+        messages["aas"] = "No aas found."
+
     # fetch dedicated streams
     query = """
-    SELECT sys.name AS sys_name, creator.email AS contact_mail, stream_apps.*
+    SELECT sys.name AS sys_name, creator.email AS contact_mail, stream_apps.*, com.name AS company_name
     FROM stream_apps
     INNER JOIN users as creator ON creator.id=stream_apps.creator_id
     INNER JOIN systems AS sys ON stream_apps.source_system=sys.name
@@ -199,4 +216,4 @@ def search():
     else:
         flash("Received no results for search request '{}'".format(found_count, search_request), "danger")
     return render_template("search.html", companies=companies, systems=systems, clients=clients, streams=streams,
-                           messages=messages, search_request=search_request)
+                           messages=messages, search_request=search_request, aas_list=aas_list)

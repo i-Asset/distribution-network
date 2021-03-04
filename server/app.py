@@ -14,6 +14,7 @@ from server.views.company import company
 from server.views.system import system
 from server.views.client_apps import client_app
 from server.views.stream_apps import stream_app
+from server.views.aas import aas
 
 # # Import application-specific functions
 # from server.views.kafka_interface import KafkaHandler, KafkaInterface
@@ -33,6 +34,7 @@ def create_app():
     app.register_blueprint(system)
     app.register_blueprint(client_app)
     app.register_blueprint(stream_app)
+    app.register_blueprint(aas)
 
     app.config.from_envvar('APP_CONFIG_FILE')
 
