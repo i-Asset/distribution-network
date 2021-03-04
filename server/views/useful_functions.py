@@ -20,13 +20,17 @@ def get_datetime():
     return dt.isoformat()
 
 
+# Separator between RAMI 4.0 instances in the url instead of a dot ".": "%2E", " ": "%20": "_": "_"
+url_sep = "_"
+
+
 def encode_sys_url(system_name):
-    # ".": "%2E", " ": "%20"
-    return system_name.replace(".", "%2E")
+
+    return system_name.replace(".", url_sep)
 
 
 def decode_sys_url(system_url):
-    return system_url.replace("%2E", ".")
+    return system_url.replace(url_sep, ".")
 
 
 # strips each string value of a dictionaries, container-safe

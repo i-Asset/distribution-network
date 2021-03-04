@@ -53,18 +53,18 @@ def dashboard():
     # print("Fetched companies: {}".format(companies))
 
     # fetch dedicated systems
-    query = """SELECT sys.name AS sys_name, com.name AS com_name, domain, enterprise, workcenter, station, agent.email AS contact_mail
+    query = """SELECT sys.name AS system_name, com.name AS com_name, agent.email AS contact_mail
     FROM systems AS sys
     INNER JOIN companies AS com ON sys.company_id=com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}'
-    ORDER BY sys_name;""".format(user_id)
+    ORDER BY system_name;""".format(user_id)
     result_proxy = conn.execute(query)
     systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch clients, for which systems the current user is agent of
-    query = """SELECT client_apps.system_name AS sys_name, client_apps.name AS client_name, domain, enterprise, workcenter, station, creator.email AS contact_mail
+    query = """SELECT client_apps.system_name AS system_name, client_apps.name AS client_name, creator.email AS contact_mail
     FROM client_apps
     INNER JOIN users as creator ON creator.id=client_apps.creator_id
     INNER JOIN systems AS sys ON client_apps.system_name=sys.name
@@ -72,7 +72,7 @@ def dashboard():
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN users as agent ON agent.id=agf.user_id
     WHERE agent.id='{}'
-    ORDER BY sys_name, client_apps.name;""".format(user_id)
+    ORDER BY system_name, client_apps.name;""".format(user_id)
     result_proxy = conn.execute(query)
     clients = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched clients: {}".format(clients))
