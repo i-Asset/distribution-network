@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<!--  <h1>Dashboard <small> Welcome {{session.first_name}} {{session.sur_name}}</small></h1>-->
+  <h1> <small> Your client applications </small></h1>
+
+A list of client applications of whose dedicated system you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>System</th>
+      <th>Creator</th>
+      <th></th>
+    </tr>
+      {% for client in clients %}
+      <tr>
+        <td><center>{{client.name}}</center></td>
+        <td><center>{{client.system_name}}</center></td>
+        <td><center>{{client.contact_mail}}</center></td>
+<!--        <td>{{client.contact_mail}}</td>-->
+        <td><a href="show_client/{{client.system_url}}/{{client.name}}" class="btn btn-info float-right"
+                data-toggle="tooltip" title="Manage this client application.">manage</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_client"
+      data-toggle="tooltip" title="Add a new client application to this system."> Add Client</a>
+
+  <br>
+  <br>
+
+{% endblock %}

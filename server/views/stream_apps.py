@@ -319,12 +319,13 @@ def get_stream_payload(user_id, system_name, stream_name):
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = """
-    SELECT company_id, streams.name, status, source_system, target_system, 
+    SELECT company_id, streams.name, status, source_system, target_system, com.name AS company_name,
     creator.email AS contact_mail, streams.description, agf.user_id AS agent_id, streams.datetime AS datetime,
     logic
     FROM stream_apps as streams
     INNER JOIN users as creator ON creator.id=streams.creator_id
     INNER JOIN systems AS sys ON streams.source_system=sys.name
+    INNER JOIN companies AS com ON sys.company_id = com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     WHERE source_system='{}' AND streams.name='{}';""".format(system_name, stream_name)
     result_proxy = conn.execute(query)
@@ -350,7 +351,9 @@ def get_stream_payload(user_id, system_name, stream_name):
 
 @stream_app.route("/start_stream/<string:system_url>/<string:stream_name>", methods=["GET"])
 @is_logged_in
-def start_stream(system_name, stream_name):
+def start_stream(system_url, stream_name):
+    system_name = decode_sys_url(system_url)
+
     if not app.config["KAFKA_BOOTSTRAP_SERVER"]:
         # This platform runs in the 'platform-only' mode and doesn't provide the stream functionality
         flash("The platform runs in the 'platform-only' mode and doesn't provide the stream functionality.", "info")

@@ -12,11 +12,11 @@ from server.views.home import home_bp
 from server.views.auth import auth
 from server.views.company import company
 from server.views.system import system
-# from server.views.clients import client
+from server.views.client_apps import client_app
+from server.views.stream_apps import stream_app
 
 # # Import application-specific functions
 # from server.views.kafka_interface import KafkaHandler, KafkaInterface
-from server.views.stream_apps import stream_app
 
 
 def create_app():
@@ -31,7 +31,7 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(company)
     app.register_blueprint(system)
-    # app.register_blueprint(client)
+    app.register_blueprint(client_app)
     app.register_blueprint(stream_app)
 
     app.config.from_envvar('APP_CONFIG_FILE')

@@ -5,7 +5,10 @@
 
 <table class="table" xmlns="http://www.w3.org/1999/html">
     <td>
-      <h1> <small>Stream app: </small>{{payload.name}}</h1>
+      <h1> {{payload.name}}</h1>
+    <h3> <small> Stream application in company: {{payload.company_name}} </small></h3>
+        <br>
+
       {% if payload.description %}
       {{payload.description}}
       {% endif %}

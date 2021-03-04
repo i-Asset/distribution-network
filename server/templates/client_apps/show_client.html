@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+  <table class="table">
+  <td>
+    <h1> {{payload.name}}</h1>
+    <h3> <small> Client application in company: {{payload.company_name}} </small></h3>
+    <hr>
+    <h3> <small> This is a registered Client application of the system:</small></h3>
+    <h3>{{payload.system_name}}</h3>
+      <br>
+    {% if payload.description %}
+    {{payload.description}}
+    {% endif %}
+  </td>
+    <td>
+<!--     <a class="btn btn-info float-right mb-2" href="/edit_client/{{payload.system_url}}/{{payload.name}}"> edit description </a>-->
+     <a class="btn btn-danger float-right" href="/delete_client/{{payload.system_url}}/{{payload.name}}"
+        data-toggle="tooltip" title="Delete this client application."> delete client </a>
+      <br>
+      <br>
+      <h3> <small> Config to connect a CPS or service: </small></h3>
+      Copy & Paste this config into your client application, see <a href={{payload.SOURCE_URL}}>here</a>.
+
+      <pre id="json"></pre>
+  </td>
+  </table>
+
+  <script>
+    var data = {
+        "client_name": '{{config.client_name}}',
+        "system_name": '{{config.system_name}}',
+        "submodel_element_collection": '{{payload.submodel_element_collection}}',
+        "kafka_bootstrap_servers": '{{config.kafka_bootstrap_servers}}'};
+    document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);
+  </script>
+
+
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Client's name</th>
+      <th>Company</th>
+      <th>Creator's mail</th>
+      <th>Created at</th>
+      <th>Key</th>
+<!--      <th>Creator</th>-->
+    </tr>
+      <tr>
+        <td><a href="/show_client/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.name}}</a></td>
+        <td><a href="/show_company/{{payload.company_id}}" class="btn btn-block">{{payload.company_name}}</a></td>
+        <td><a href="/show_client/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.contact_mail}}</a></td>
+        <td><a href="/show_client/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.datetime}}</a></td>
+
+        {% if payload.keyfile_av %}
+        <td><a href="/download_key/{{payload.system_url}}/{{payload.name}}" target="_blank" class="btn btn-primary float-right"
+        data-toggle="tooltip" title="For security reasons, the key can be downloaded only once!">download key</a></td>
+        {% else %}
+        <td><a href="/download_key/{{payload.system_url}}/{{payload.name}}" class="btn btn-block float-right disabled"
+        data-toggle="tooltip" title="The key was already downloaded or is not available.">already downloaded</a></td>
+        {% endif %}
+      </tr>
+  </table>
+
+  <br>
+  <br>
+{% endblock %}
