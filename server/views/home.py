@@ -118,7 +118,7 @@ def favicon():
 @is_logged_in
 def search():
     search_request = request.args.get('request').strip().lower()
-    app.logger.info("Searching for: {}".format(search_request))
+    app.logger.info("Searching for: '{}'".format(search_request))
 
     # Get current user_id
     user_id = session["user_id"]

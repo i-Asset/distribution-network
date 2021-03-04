@@ -31,7 +31,7 @@ try:
 except:
     HOST_IP = "127.0.0.1"
 HOST_IP = "127.0.0.1"  # in the current setup, localhost should be preferred
-KAFKA_BOOTSTRAP_SERVER = False  # "{}:9092".format(HOST_IP)
+KAFKA_BOOTSTRAP_SERVER = f"{HOST_IP}:9092,{HOST_IP}:9093,{HOST_IP}:9094"
 
 GOST_SERVER = "{}:8082".format(HOST_IP)
 

@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   zoo1:
-    image: zookeeper:3.4.9
+    image: zookeeper:3.5.9
     hostname: zoo1
     ports:
       - "2181:2181"
@@ -16,7 +16,7 @@ services:
     restart: always
 
   zoo2:
-    image: zookeeper:3.4.9
+    image: zookeeper:3.5.9
     hostname: zoo2
     ports:
       - "2182:2182"
@@ -30,7 +30,7 @@ services:
     restart: always
 
   zoo3:
-    image: zookeeper:3.4.9
+    image: zookeeper:3.5.9
     hostname: zoo3
     ports:
       - "2183:2183"
@@ -45,7 +45,7 @@ services:
 
 
   kafka1:
-    image: confluentinc/cp-kafka:5.5.1
+    image: confluentinc/cp-kafka:5.5.3
     hostname: kafka1
     ports:
       - "9092:9092"
@@ -65,7 +65,7 @@ services:
     restart: always
 
   kafka2:
-    image: confluentinc/cp-kafka:5.5.1
+    image: confluentinc/cp-kafka:5.5.3
     hostname: kafka2
     ports:
       - "9093:9093"
@@ -85,7 +85,7 @@ services:
     restart: always
 
   kafka3:
-    image: confluentinc/cp-kafka:5.5.1
+    image: confluentinc/cp-kafka:5.5.3
     hostname: kafka3
     ports:
       - "9094:9094"

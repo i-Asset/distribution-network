@@ -15,8 +15,7 @@ if __name__ == '__main__':
 else:
     from .useful_functions import get_datetime, is_logged_in, valid_name, valid_system, nocache, strip_dict, \
     decode_sys_url, encode_sys_url
-    from .StreamAppHandler import stream_checks, fab_streams
-
+    from server.interfaces.StreamAppHandler import fab_streams, stream_checks
 
 stream_app = Blueprint("stream_app", __name__)
 
