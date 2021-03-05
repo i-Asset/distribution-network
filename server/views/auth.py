@@ -1,15 +1,13 @@
-import os
 import sqlalchemy as db
 from sqlalchemy import exc as sqlalchemy_exc
 
-from flask import Blueprint, Flask, render_template, flash , redirect, url_for, session, request
+from flask import Blueprint, render_template, flash , redirect, url_for, session, request
 from passlib.hash import sha256_crypt
 
-import wtforms
-from wtforms import Form, StringField, TextField, TextAreaField, PasswordField, validators
+from wtforms import Form, StringField, PasswordField, validators
 from flask import current_app as app
 
-from .useful_functions import get_datetime, get_id, is_logged_in
+from server.utils.useful_functions import get_id, is_logged_in
 
 # print("current app: {}".format(app.config))
 auth = Blueprint('auth', __name__) #, url_prefix='/comp')

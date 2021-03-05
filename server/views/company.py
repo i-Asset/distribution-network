@@ -3,9 +3,9 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 # Must be imported to use the app config
 from flask import current_app as app
 from sqlalchemy import exc as sqlalchemy_exc
-from wtforms import Form, StringField, validators, TextField, TextAreaField
+from wtforms import Form, StringField, validators, TextAreaField
 
-from .useful_functions import get_datetime, get_id, is_logged_in, valid_level_name, strip_dict
+from server.utils.useful_functions import get_datetime, get_id, is_logged_in, valid_level_name, strip_dict
 
 company = Blueprint("company", __name__)  # url_prefix="/comp")
 
@@ -46,7 +46,7 @@ def show_company(company_id):
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = """
-    SELECT com.id, com.name AS com_name, domain, enterprise, description, admin.id AS admin_id, 
+    SELECT com.id, com.name AS com_name, domain, enterprise, com.description, admin.id AS admin_id, 
     admin.first_name, admin.sur_name, admin.email, creator.email AS contact_mail, com.datetime AS com_datetime
     FROM companies AS com 
     INNER JOIN is_admin_of_com AS aof ON com.id=aof.company_id 
@@ -73,11 +73,11 @@ def show_company(company_id):
     payload = admins[0]
 
     # Fetch systems of this company
-    query = """SELECT sys.name AS sys_name, workcenter, station, com.name AS com_name, creator.email AS contact_mail
+    query = """SELECT DISTINCT sys.name AS sys_name, workcenter, station, com.name AS com_name, creator.email AS contact_mail
     FROM systems AS sys
     INNER JOIN companies AS com on sys.company_id = com.id
-    INNER JOIN is_admin_of_sys iaos on sys.name = iaos.system_name
-    INNER JOIN users creator on iaos.creator_id = creator.id
+    INNER JOIN is_admin_of_sys AS iaos on sys.name = iaos.system_name
+    INNER JOIN users AS creator on iaos.creator_id = creator.id
      WHERE sys.company_id='{}';""".format(company_id)
     result_proxy = conn.execute(query)
     engine.dispose()

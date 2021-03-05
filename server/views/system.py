@@ -3,10 +3,9 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 
 # Must be imported to use the app config
 from flask import current_app as app
-from sqlalchemy import exc as sqlalchemy_exc
 from wtforms import Form, StringField, validators, TextAreaField
 
-from .useful_functions import get_datetime, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url, strip_dict
+from server.utils.useful_functions import get_datetime, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url, strip_dict
 
 system = Blueprint("system", __name__)  # url_prefix="/comp")
 
@@ -56,7 +55,6 @@ def show_system(system_url):
     FROM systems AS sys
     INNER JOIN companies AS com ON sys.company_id=com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN users as agent ON agent.id=agf.user_id
     INNER JOIN users as creator ON creator.id=agf.creator_id 
     WHERE sys.name='{}';""".format(system_name)
     result_proxy = conn.execute(query)

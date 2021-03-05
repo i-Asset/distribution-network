@@ -1,11 +1,10 @@
-import logging
 import os
 
 import sqlalchemy as db
 from flask import current_app as app, send_from_directory
 from flask import Blueprint, render_template, flash, redirect, url_for, session, request
 
-from .useful_functions import is_logged_in, strip_dict
+from server.utils.useful_functions import is_logged_in, strip_dict
 
 home_bp = Blueprint("home", __name__)
 

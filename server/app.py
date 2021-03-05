@@ -16,8 +16,11 @@ from server.views.client_apps import client_app
 from server.views.stream_apps import stream_app
 from server.views.aas import aas
 
+# import api
+# from server.api.api_system import api_system
+
 # Import application-specific functions
-from server.interfaces.kafka_interface import KafkaHandler, KafkaInterface
+from server.utils.kafka_interface import KafkaHandler, KafkaInterface
 
 
 def create_app():
@@ -68,9 +71,9 @@ def create_app():
     if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
         app.kafka_interface.create_default_topics()
 
-    # Test the Kafka Interface by creating and deleting a test topic
-    app.kafka_interface.create_system_topics("test.test.test.test")
-    app.kafka_interface.delete_system_topics("test.test.test.test")
+    # # Test the Kafka Interface by creating and deleting a test topic
+    # app.kafka_interface.create_system_topics("test.test.test.test")
+    # app.kafka_interface.delete_system_topics("test.test.test.test")
 
     return app
 
