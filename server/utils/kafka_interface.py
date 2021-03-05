@@ -5,7 +5,7 @@ import logging
 import time
 import sqlalchemy as db
 
-from server.views.useful_functions import strip_dict
+from server.utils.useful_functions import strip_dict
 
 try:
     import confluent_kafka
