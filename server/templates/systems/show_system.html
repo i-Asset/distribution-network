@@ -29,17 +29,15 @@
   <table class="table table-striped">
     <tr>
       <th>Name</th>
-      <th>Company</th>
       <th>System</th>
       <th>Creator</th>
       <th></th>
       <th></th>
     </tr>
-      {% for client in clients %}
+      {% for client in client_apps %}
       <tr>
         <td><center>{{client.name}}</center></td>
-        <td><center>{{client.domain}}.{{client.enterprise}}</center></td>
-        <td><center>{{client.workcenter}}.{{client.station}}</center></td>
+        <td><center>{{client.system_name}}</center></td>
         <td><center>{{client.contact_mail}}</center></td>
 <!--        <td><a href="/show_client/{{client.system_name}}/{{client.name}}" class="btn btn-block">{{client.datetime}}</a></td>-->
         <td><a href="/show_client/{{client.system_url}}/{{client.name}}" class="btn btn-info float-right"

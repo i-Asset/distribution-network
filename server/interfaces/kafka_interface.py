@@ -110,8 +110,7 @@ class KafkaInterface:
 
     def delete_system_topics(self, system_name):
         if not self.bootstrap_server:
-            self.app.logger.warning("Skipped to delete topics for '{}' as the platform-only mode is used".format(
-                system_name))
+            self.app.logger.warning(f"Skipped to delete topics for '{system_name}' as the platform-only mode is used")
             return None
         # multiple trials to delete the system topics
         max_trials = 3

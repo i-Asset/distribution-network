@@ -79,14 +79,11 @@ def show_system(system_url):
     # Fetch client_apps of the system, for with the user is agent
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
-    query = """SELECT sys.name AS system_name, client_apps.name, domain, enterprise, workcenter, station, creator.email AS contact_mail
+    query = """SELECT client_apps.system_name, client_apps.name, creator.email AS contact_mail
     FROM client_apps
     INNER JOIN users as creator ON creator.id=client_apps.creator_id
-    INNER JOIN systems AS sys ON client_apps.system_name=sys.name
-    INNER JOIN companies AS com ON sys.company_id=com.id
-    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN users as agent ON agent.id=agf.user_id
-    WHERE agent.id='{}' AND sys.name='{}';""".format(user_id, system_name)
+    INNER JOIN is_admin_of_sys AS agf ON client_apps.system_name=agf.system_name 
+    WHERE agf.user_id='{}' AND agf.system_name='{}';""".format(user_id, system_name)
     result_proxy = conn.execute(query)
     # engine.dispose()
     client_apps = [strip_dict(c.items()) for c in result_proxy.fetchall()]
@@ -270,59 +267,63 @@ def delete_system(system_url):
         INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name
         AND agf.system_name='{}';""".format(system_name)
     result_proxy = conn.execute(query)
-
-    if len(result_proxy.fetchall()) >= 2:
+    agents = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    if len(agents) >= 2:
         engine.dispose()
         flash("You are not permitted to delete a system which has multiple agents.", "danger")
         return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
-    # Check if there are client applications for that system
-    query = """SELECT system_name, client_apps.name AS client_name
-        FROM systems
-        INNER JOIN client_apps ON systems.name=client_apps.system_name
-        WHERE system_name='{}';""".format(system_name)
+    # Check if there are client_apps, stream_apps or aas for that system
+    query = f"""(SELECT system_name, name, 'client apps'::varchar(16) AS type 
+                FROM client_apps WHERE system_name='{system_name}')
+        UNION
+            (SELECT source_system AS system_name, name, 'stream apps' FROM stream_apps WHERE source_system='{system_name}')
+        UNION
+            (SELECT system_name, name, 'aas' FROM aas WHERE system_name='{system_name}');"""
     result_proxy = conn.execute(query)
-
-    if len(result_proxy.fetchall()) >= 1:
+    dep_instances = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    if len(dep_instances) >= 1:
         engine.dispose()
-        flash("You are not permitted to delete a system which has client applications.", "danger")
+        # print(dep_instances)
+        dep_types = list(set([instance["type"] for instance in dep_instances]))
+        flash(f"You are not permitted to delete a system which has {', '.join(dep_types)}.", "danger")
         return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
-
-    # Now the system can be deleted
-    selected_system = permitted_systems[0]  # This list has only one element
-    system_name = "{}.{}.{}.{}".format(selected_system["domain"], selected_system["enterprise"],
-                                       selected_system["workcenter"], selected_system["station"])
+    # Check if there are client applications for that system
 
     transaction = conn.begin()
-    try:
-        # Delete new is_admin_of_sys instance
-        query = """DELETE FROM is_admin_of_sys
-            WHERE system_name='{}';""".format(system_name)
-        conn.execute(query)
-        # Delete system
-        query = """DELETE FROM systems
-            WHERE name='{}';""".format(system_name)
-        conn.execute(query)
-        engine.dispose()
+    # try:
+    # Delete single mqtt_broker
+    query = """DELETE FROM mqtt_broker
+        WHERE system_name='{}';""".format(system_name)
+    conn.execute(query)
+    # Delete is_admin_of_sys instance(s)
+    query = """DELETE FROM is_admin_of_sys
+        WHERE system_name='{}';""".format(system_name)
+    conn.execute(query)
+    # Delete single system
+    query = """DELETE FROM systems
+        WHERE name='{}';""".format(system_name)
+    conn.execute(query)
+    engine.dispose()
 
-        # Delete Kafka topics
-        if app.kafka_interface.delete_system_topics(system_name=system_name):
-            transaction.commit()
-            app.logger.info("The system '{}' was deleted.".format(system_name))
-            flash("The system '{}' was deleted.".format(system_name), "success")
-        else:
-            transaction.rollback()
-            app.logger.warning("The system '{}' couldn't be deleted, returned False".format(system_name))
-            flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
-    except:
+    # Delete Kafka topics
+    if app.kafka_interface.delete_system_topics(system_name=system_name):
+        transaction.commit()
+        app.logger.info("The system '{}' was deleted.".format(system_name))
+        flash("The system '{}' was deleted.".format(system_name), "success")
+    else:
         transaction.rollback()
-        app.logger.warning("The system '{}' couldn't be deleted.".format(system_name))
+        app.logger.warning("The system '{}' couldn't be deleted, returned False".format(system_name))
         flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
-    finally:
-        # Redirect to latest page, either /systems or /show_company/UID
-        if session.get("last_url"):
-            return redirect(session.get("last_url"))
-        return redirect(url_for("system.show_all_systems"))
+    # except:
+    #     transaction.rollback()
+    #     app.logger.warning("The system '{}' couldn't be deleted.".format(system_name))
+    #     flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
+    # finally:
+    # Redirect to latest page, either /systems or /show_company/UID
+    if session.get("last_url"):
+        return redirect(session.get("last_url"))
+    return redirect(url_for("system.show_all_systems"))
 
 
 # Agent Management Form Class

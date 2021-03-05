@@ -110,7 +110,7 @@ def create_keyfile(name="testclient", system_name="12345678"):
     # TODO create a real keyfile
 
     # make directory with unique name
-    dirname = "ssl_{}_{}".format(system_name, name)
+    dirname = "ssl_{}_{}".format(encode_sys_url(system_name), name)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(dir_path, "keys", dirname)
     # print("Create dir with name: {}".format(path))

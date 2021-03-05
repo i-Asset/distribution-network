@@ -132,3 +132,5 @@ dmypy.json
 /setup/kafka/zk-multiple-kafka-multiple/
 /notes.md
 /server.save/
+/server/views/keys/
+!/server/views/keys/.gitkeep

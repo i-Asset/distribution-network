@@ -41,6 +41,8 @@ def create_app():
     app.logger.setLevel(app.config["LOGLEVEL"])
     app.logger.info("Preparing the platform.")
 
+    # TODO check the connection to postgres
+
     if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
         # Create and add a Kafka instance to app. Recreate lost Kafka topics
         app.kafka_interface = KafkaInterface(app)
@@ -63,12 +65,12 @@ def create_app():
     if app.config.get("DB_INSERT_SAMPLE"):
         insert_samples_if_empty(app)
 
-    # if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
-    #     app.kafka_interface.create_default_topics()
+    if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
+        app.kafka_interface.create_default_topics()
 
-    # # Test the Kafka Interface by creating and deleting a test topic
-    # app.kafka_interface.create_system_topics("test.test.test.test")
-    # app.kafka_interface.delete_system_topics("test.test.test.test")
+    # Test the Kafka Interface by creating and deleting a test topic
+    app.kafka_interface.create_system_topics("test.test.test.test")
+    app.kafka_interface.delete_system_topics("test.test.test.test")
 
     return app
 
