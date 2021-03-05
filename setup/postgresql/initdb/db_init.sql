@@ -16,7 +16,8 @@ CREATE TABLE if not exists companies (
     name varchar(64) NOT NULL,
     domain char(8),
     enterprise char(64),
-    datetime timestamp with time zone
+    datetime timestamp with time zone,
+    description text
 );
 
 CREATE TABLE if not exists is_admin_of_com (
