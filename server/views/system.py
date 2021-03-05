@@ -7,7 +7,7 @@ from wtforms import Form, StringField, validators, TextAreaField
 
 from server.utils.useful_functions import get_datetime, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url, strip_dict
 
-system = Blueprint("system", __name__)  # url_prefix="/comp")
+system = Blueprint("system", __name__)
 
 
 @system.route("/systems")

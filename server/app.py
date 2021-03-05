@@ -17,7 +17,7 @@ from server.views.stream_apps import stream_app
 from server.views.aas import aas
 
 # import api
-# from server.api.api_system import api_system
+from server.api.api_system import api_system
 
 # Import application-specific functions
 from server.utils.kafka_interface import KafkaHandler, KafkaInterface
@@ -30,7 +30,7 @@ def create_app():
     # Create Flask app and load configs
     app = Flask(__name__)
 
-    # # Register modules as blueprint
+    # Register modules as blueprint
     app.register_blueprint(home_bp)
     app.register_blueprint(auth)
     app.register_blueprint(company)
@@ -39,6 +39,10 @@ def create_app():
     app.register_blueprint(stream_app)
     app.register_blueprint(aas)
 
+    # Register api as blueprint
+    app.register_blueprint(api_system)
+
+    # load environment variables and start loggin
     app.config.from_envvar('APP_CONFIG_FILE')
 
     app.logger.setLevel(app.config["LOGLEVEL"])

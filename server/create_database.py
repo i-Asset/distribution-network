@@ -187,22 +187,22 @@ def insert_sample(app):
          'first_name': 'Sue',
          'sur_name': 'Smith',
          'email': 'sue.smith@example.com',
-         'password': sha256_crypt.hash(default_password)},
+         'password': sha256_crypt.hash(default_password, salt=str(abs(id_sue)))},
         {'id': id_stefan,
          'first_name': 'Stefan',
          'sur_name': 'Gunnarsson',
          'email': 'stefan.gunnarsson@example.com',
-         'password': sha256_crypt.hash(default_password)},
+         'password': sha256_crypt.hash(default_password, salt=str(abs(id_stefan)))},
         {'id': id_peter,
          'first_name': 'Peter',
          'sur_name': 'Novak',
          'email': 'peter.novak@example.com',
-         'password': sha256_crypt.hash(default_password)},
+         'password': sha256_crypt.hash(default_password, salt=str(abs(id_peter)))},
         {'id': id_anna,
          'first_name': 'Anna',
          'sur_name': 'Gruber',
          'email': 'anna.gruber@example.com',
-         'password': sha256_crypt.hash(default_password)}]
+         'password': sha256_crypt.hash(default_password, salt=str(abs(id_anna)))}]
     ResultProxy = conn.execute(query, values_list)
 
     # Insert companies

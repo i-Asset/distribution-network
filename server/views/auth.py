@@ -39,11 +39,12 @@ def register():
         conn = engine.connect()
 
         query = db.insert(app.config["tables"]["users"])
-        values_list = [{'id': get_id(),
+        new_id = get_id()
+        values_list = [{'id': new_id,
                         'first_name': form.first_name.data.strip(),
                         'sur_name': form.name.data.strip(),
                         'email': email,
-                        'password': sha256_crypt.encrypt(str(request.form["password"]))}]
+                        'password': sha256_crypt.hash(str(request.form["password"]), salt=str(abs(new_id)))}]
         try:
             ResultProxy = conn.execute(query, values_list)
             engine.dispose()
@@ -90,7 +91,8 @@ def login():
             password = data[0]['password']
 
             # Compare Passwords
-            if sha256_crypt.verify(password_candidate, password):
+            # if password == sha256_crypt.hash(password_candidate, salt=str(abs(data[0]["id"]))):
+            if sha256_crypt.verify(password_candidate, hash=password):
                 # Passed
                 session['logged_in'] = True
                 session['email'] = email
