@@ -56,6 +56,7 @@ def show_system(system_url):
     INNER JOIN companies AS com ON sys.company_id=com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN users as creator ON creator.id=agf.creator_id 
+    INNER JOIN users as agent ON agent.id=agf.user_id 
     WHERE sys.name='{}';""".format(system_name)
     result_proxy = conn.execute(query)
     engine.dispose()

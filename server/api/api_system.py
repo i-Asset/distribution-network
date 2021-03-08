@@ -13,8 +13,9 @@ from passlib.hash import sha256_crypt
 from sqlalchemy import exc as sqlalchemy_exc
 from wtforms import Form, StringField, validators, TextAreaField
 
+from .api_auth import authorize_request
 from ..utils.useful_functions import get_datetime, is_logged_in, valid_level_name, encode_sys_url, decode_sys_url, \
-    strip_dict
+    strip_dict, safe_strip
 
 prefix = "/distributionnetwork"  # url_prefix="/distributionnetwork/")
 api_system = Blueprint("api_system", __name__)
@@ -38,83 +39,48 @@ def systems_by_person(user_id):
     :param user_id: personId of the Identity-service, or (if negative) the user_id of the demo Digital Twin platform
     :return: Json of all found systems
     """
-    try:
-        user_id = int(user_id)
-    except ValueError as e:
-        msg = "systems_by_person/<string:user_id>: The user_id must be an integer."
-        app.logger.error(msg)
-        return jsonify({"value": msg}), 400
-
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    if user_id >= 0:  # Request from an identity-service person
-        bearer_token = request.headers["Authorization"].strip()
-        url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/person/", str(user_id))
-        res = requests.get(url=url,
-                           headers={'content-type': 'application/json',
-                                    'Authorization': bearer_token})
-        result = res.json()
-        if res.status_code not in [200, 201, 202] or str(user_id) != result.get("id", None):
-            msg = f"systems_by_person/<string:user_id>: Authentication error for user '{user_id}'."
-            app.logger.error(msg)
-            return jsonify({"value": msg}), res.status_code
+    fct = f"{prefix}/systems_by_person/<string:user_id>"
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    if not authorized:
+        return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-        else:
-            # TODO extract systems for user, maybe the structure has to be changed.
-            return jsonify({"value": result}), 200
+    # 2) Fetch all systems that belong to the user with id user_id
+    # cases without authorization are returned, here the user is definitely permitted to request the data
+    engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    conn = engine.connect()
+    result_proxy = conn.execute(f"""
+    SELECT sys.name AS system_name, com.name AS company, sys.description,
+    sys.datetime AS created_at, creator_id, creator.first_name, creator.sur_name, creator.email, sys.*,
+    mqtt.server as mqtt_server, mqtt.version as mqtt_version, mqtt.topic as mqtt_topic
+    FROM systems AS sys
+    INNER JOIN companies AS com ON sys.company_id=com.id
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN users AS agent ON agent.id=agf.user_id
+    INNER JOIN users as creator ON creator.id=agf.creator_id 
+    FULL JOIN mqtt_broker AS mqtt ON sys.name=mqtt.system_name 
+    WHERE agf.user_id='{user_id}';""")
+    engine.dispose()
+    systems = [dict(c.items()) for c in result_proxy.fetchall()]
 
-    else:  # Request from a Panta Rhei user, check session_id
-        app.logger.debug(f"systems_by_person/<string:user_id>: Fetch all systems for the requesting user '{user_id}'.")
-        password = request.headers["Authorization"].strip()
+    # 3) Structure the raw data and return
+    for i, res in enumerate(systems):
+        sys = dict()
+        res = {k: v for k, v in res.items() if v}
+        for key in ["system_name", "created_at", "company", "description", "company_id", "kafka_server",
+                    "company_id"]:
+            sys[key] = safe_strip(res.get(key, ""))
+        sys["creator"] = {"creator_id": res.get("creator_id", ""),
+                          "first_name": res.get("first_name", ""),
+                          "sur_name": res.get("sur_name", ""),
+                          "email": res.get("email", "")}
+        sys["mqtt_broker"] = {"mqtt_server": res.get("mqtt_server", ""),
+                              "mqtt_version": res.get("mqtt_version", ""),
+                              "mqtt_topic": res.get("mqtt_topic", "")}
+        systems[i] = sys
 
-        engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-        conn = engine.connect()
-        result_proxy = conn.execute(f"SELECT id, password FROM users WHERE id='{user_id}';")
-        engine.dispose()
-        users = [dict(c.items()) for c in result_proxy.fetchall()]
-
-        if len(users) == 0:
-            msg = f"systems_by_person/<string:user_id>: Authentication error, user with id '{user_id}' not found."
-            app.logger.error(msg)
-            return jsonify({"value": msg}), 400
-
-        if not sha256_crypt.verify(password, hash=users[0]["password"]):
-            msg = f"systems_by_person/<string:user_id>: Authentication error, password is incorrect."
-            app.logger.error(msg)
-            return jsonify({"value": msg}), 401
-
-        engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-        conn = engine.connect()
-        result_proxy = conn.execute(f"""
-        SELECT sys.name AS system_name, com.name AS company, sys.description,
-        sys.datetime AS created_at, creator_id, creator.first_name, creator.sur_name, creator.email, sys.*,
-        mqtt.server as mqtt_server, mqtt.version as mqtt_version, mqtt.topic as mqtt_topic
-        FROM systems AS sys
-        INNER JOIN companies AS com ON sys.company_id=com.id
-        INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-        INNER JOIN users AS agent ON agent.id=agf.user_id
-        INNER JOIN users as creator ON creator.id=agf.creator_id 
-        FULL JOIN mqtt_broker AS mqtt ON sys.name=mqtt.system_name 
-        WHERE agf.user_id='{user_id}';""")
-        engine.dispose()
-        systems = [dict(c.items()) for c in result_proxy.fetchall()]
-
-        for i, res in enumerate(systems):
-            sys = dict()
-            res = {k: v for k, v in res.items() if v}
-            for key in ["system_name", "created_at", "company", "description", "company_id", "kafka_server",
-                        "company_id"]:
-                sys[key] = res.get(key, "")
-            sys["creator"] = {"creator_id": res.get("creator_id", ""),
-                              "first_name": res.get("first_name", ""),
-                              "sur_name": res.get("sur_name", ""),
-                              "email": res.get("email", "")}
-            sys["mqtt_broker"] = {"mqtt_server": res.get("mqtt_server", ""),
-                                  "mqtt_version": res.get("mqtt_version", ""),
-                                  "mqtt_topic": res.get("mqtt_topic", "")}
-            systems[i] = sys
-
-        return jsonify({"systems": systems})
+    return jsonify({"systems": systems})
 
 
 @api_system.route(f"{prefix}/create_system/<string:user_id>", methods=['POST'])
@@ -123,87 +89,20 @@ def systems_by_person_post(user_id):
     Create a system by sending a json containing user, company and
     :return: return the system's name
     """
-    try:
-        user_id = int(user_id)
-    except ValueError as e:
-        msg = "systems_by_person/<string:user_id>: The user_id must be an integer."
-        app.logger.error(msg)
-        return jsonify({"value": msg}), 400
-
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
+    fct = f"{prefix}/create_system/<string:user_id>"
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    if not authorized:
+        return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    if user_id >= 0:  # Request from an identity-service person
-        bearer_token = request.headers["Authorization"].strip()
-        res = requests.get(os.path.join(app.config["IASSET_SERVER"], "/identity/person/"),
-                           headers={'content-type': 'application/json',
-                                    'Authorization': bearer_token})
-        if res.status_code in [200, 201, 202]:
-            return jsonify({"value": res.json()}), res.status_code
-
-        else:
-            msg = f"systems_by_person/<string:user_id>: Authentication error for user '{user_id}' and token '{bearer_token}'."
-            app.logger.error(msg)
-            return jsonify({"value": res.json()}), res.status_code
-
-        # TODO get systems by personId and bearer token
-        print(bearer_token)
-
-        return jsonify({"value": "hey cool"})
-
-    else:  # Request from a Panta Rhei user, check session_id
-        app.logger.debug(f"systems_by_person/<string:user_id>: Fetch all systems for the requesting user '{user_id}'.")
-        password = request.headers["Authorization"].strip()
-
-        engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-        conn = engine.connect()
-        result_proxy = conn.execute(f"SELECT id, password FROM users WHERE id='{user_id}';")
-        engine.dispose()
-        users = [dict(c.items()) for c in result_proxy.fetchall()]
-
-        if len(users) == 0:
-            msg = f"systems_by_person/<string:user_id>: Authentication error, user with id '{user_id}' not found."
-            app.logger.error(msg)
-            return jsonify({"value": msg}), 400
-
-        if not sha256_crypt.verify(password, hash=users[0]["password"]):
-            msg = f"systems_by_person/<string:user_id>: Authentication error, password is incorrect."
-            app.logger.error(msg)
-            return jsonify({"value": msg}), 401
-
-        engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-        conn = engine.connect()
-        result_proxy = conn.execute(f"""
-        SELECT sys.name AS system_name, com.name AS company, sys.description,
-        sys.datetime AS created_at, creator_id, creator.first_name, creator.sur_name, creator.email, sys.*,
-        mqtt.server as mqtt_server, mqtt.version as mqtt_version, mqtt.topic as mqtt_topic
-        FROM systems AS sys
-        INNER JOIN companies AS com ON sys.company_id=com.id
-        INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-        INNER JOIN users AS agent ON agent.id=agf.user_id
-        INNER JOIN users as creator ON creator.id=agf.creator_id 
-        FULL JOIN mqtt_broker AS mqtt ON sys.name=mqtt.system_name 
-        WHERE agf.user_id='{user_id}';""")
-        engine.dispose()
-        systems = [dict(c.items()) for c in result_proxy.fetchall()]
-
-        for i, res in enumerate(systems):
-            sys = dict()
-            res = {k: v for k, v in res.items() if v}
-            for key in ["system_name", "created_at", "company", "description", "company_id", "kafka_server",
-                        "company_id"]:
-                sys[key] = res.get(key, "")
-            sys["creator"] = {"creator_id": res.get("creator_id", ""),
-                              "first_name": res.get("first_name", ""),
-                              "sur_name": res.get("sur_name", ""),
-                              "email": res.get("email", "")}
-            sys["mqtt_broker"] = {"mqtt_server": res.get("mqtt_server", ""),
-                                  "mqtt_version": res.get("mqtt_version", ""),
-                                  "mqtt_topic": res.get("mqtt_topic", "")}
-            systems[i] = sys
-
-        return jsonify({"systems": systems})
-
+    # TODO insert new system here, also upload a user and company if necessary
+    # fetch user with id
+    # fetch company and check if the users it authorized to create a system
+    # create the new system
+    # return system
+    print(request.json)
+    return jsonify({"new system": request.json})
 
 
 # @api_system.route("/systems")

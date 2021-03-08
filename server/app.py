@@ -18,6 +18,7 @@ from server.views.aas import aas
 
 # import api
 from server.api.api_system import api_system
+# from server.api.api_system import api_auth
 
 # Import application-specific functions
 from server.utils.kafka_interface import KafkaHandler, KafkaInterface
@@ -41,6 +42,7 @@ def create_app():
 
     # Register api as blueprint
     app.register_blueprint(api_system)
+    # app.register_blueprint(api_auth)
 
     # load environment variables and start loggin
     app.config.from_envvar('APP_CONFIG_FILE')

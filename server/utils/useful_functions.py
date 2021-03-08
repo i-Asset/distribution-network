@@ -37,13 +37,17 @@ def decode_sys_url(system_url):
 def strip_dict(dic):
     d = dict()
     for k, v in dic:
-        if isinstance(v, str):
-            d[k] = v.strip()
-            if k in ["system_name", "source_system"]:
-                d["system_url"] = encode_sys_url(d[k])
-        else:
-            d[k] = v
+        d[k] = safe_strip(v)
+        if k in ["system_name", "source_system"]:
+            d["system_url"] = encode_sys_url(d[k])
     return d
+
+
+# strips an element if it is a string, otherwise returns it
+def safe_strip(v):
+    if isinstance(v, str):
+        return v.strip()
+    return v
 
 
 # Check if user is logged in
