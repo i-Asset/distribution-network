@@ -13,8 +13,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 # prefix = "/distributionnetwork"  # url_prefix="/distributionnetwork/")
 # api_auth = Blueprint("api_auth", __name__)
 
-
-def authorize_request(user_id, fct, request):
+def get_user_id(fct, user_id):
     # check if the value is an integer
     try:
         user_id = int(user_id)
@@ -22,14 +21,16 @@ def authorize_request(user_id, fct, request):
         msg = "The user_id must be an integer."
         app.logger.error(f"{fct}: {msg}")
         return False, msg, 400
+    return user_id
+
+
+def authorize_request(user_id, fct, request):
+    # check if the value is an integer
+    user_id = get_user_id(fct, user_id)
 
     # check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     if user_id >= 0:  # Request from an identity-service person
-        bearer_token = request.headers["Authorization"].strip()
-        url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/person/", str(user_id))
-        res = requests.get(url=url,
-                           headers={'content-type': 'application/json',
-                                    'Authorization': bearer_token})
+        res = get_user_from_identity_service(user_id)
         result = res.json()
         if res.status_code not in [200, 201, 202] or str(user_id) != result.get("id", None):
             msg = f"Authentication error for user '{user_id}'."
@@ -61,3 +62,20 @@ def authorize_request(user_id, fct, request):
     msg = f"Authorized request from user '{user_id}'."
     app.logger.info(f"{fct}: {msg}")
     return True, msg, 200
+
+
+def get_user_from_identity_service(user_id):
+    bearer_token = request.headers["Authorization"].strip()
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/person/", str(user_id))
+    res = requests.get(url=url,
+                       headers={'content-type': 'application/json',
+                                'Authorization': bearer_token})
+    return res
+
+def get_party_from_identity_service(partyIds):
+    bearer_token = request.headers["Authorization"].strip()
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/parties/", str(partyIds))
+    res = requests.get(url=url,
+                       headers={'content-type': 'application/json',
+                                'Authorization': bearer_token})
+    return res

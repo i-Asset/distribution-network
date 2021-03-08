@@ -93,6 +93,15 @@ def valid_level_name(form, field):
         raise ValidationError("Only alphanumeric characters and '-' are allowed.")
 
 
+def is_valid_level_name_string(field):
+    import re
+    if " " in field:
+        return False
+    if not re.match("^[a-zA-Z0-9-]*$", field):
+        return False
+    return True
+
+
 # Validator for client names
 # only 0-9, a-z, A-Z, "-" and "_" are allowed.
 def valid_name(form, field):
