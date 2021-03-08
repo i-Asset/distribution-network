@@ -74,6 +74,7 @@ def create_tables(app):
         db.Column('station', db.CHAR(32), nullable=False),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True),
+        db.Column('kafka_servers', db.VARCHAR(1024), nullable=True),
         db.Column('company_id', db.ForeignKey('companies.id'), nullable=False)
     )
     app.config["tables"]["is_admin_of_com"] = db.Table(

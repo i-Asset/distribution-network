@@ -32,6 +32,7 @@ CREATE TABLE if not exists systems (
     name char(128) NOT NULL PRIMARY KEY,
     workcenter char(32),
     station char(32),
+    kafka_servers varchar(1024),
     datetime timestamp with time zone,
     description text,
     company_id integer NOT NULL REFERENCES companies(id)
