@@ -84,10 +84,21 @@ def systems_by_person(user_id):
 
 
 @api_system.route(f"{prefix}/create_system/<string:user_id>", methods=['POST'])
-def systems_by_person_post(user_id):
+def create_systems_by_person(user_id):
     """
-    Create a system by sending a json containing user, company and
-    :return: return the system's name
+    Create a system by sending a json like:
+    "system": {
+        "company_id": -11,
+        "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
+        "kafka_server": "",
+        "mqtt_broker": {
+            "mqtt_server": "",
+            "mqtt_version": ""
+        },
+        "workcenter": "iot4cps-wp5-CarFleet",
+        "station": "Car3"
+    }
+    :return: return a json with the new system and admin_of_sys
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
@@ -233,10 +244,76 @@ def systems_by_person_post(user_id):
     else:
         query = db.insert(app.config["tables"]["is_admin_of_sys"])
         conn.execute(query, new_admin_of_sys)
-        engine.dispose()
+    engine.dispose()
+
+    # TODO add specified kafka and mqtt cluster if provided
+
+    # Create system topics
+    try:
+        app.kafka_interface.create_system_topics(system_name=system_name)
+    except Exception as e:
+        app.logger.warning(f"{fct}: Couldn't create Kafka topics for system '{system_name}, {e}")
 
     # return system
     return jsonify({"systems": new_systems, "is_admin_of_sys": new_admin_of_sys})
+
+
+@api_system.route(f"{prefix}/delete_system/<string:system_url>/<string:user_id>", methods=['DELETE'])
+def delete_systems(system_url, user_id):
+    """
+    Delete a system
+    :return: return nothing
+    """
+    # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
+    #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
+    fct = f"{prefix}/delete_system/<string:system_name>/<string:user_id>"
+    user_id = get_user_id(fct, user_id)
+    system_name = decode_sys_url(system_url)
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    if not authorized:
+        return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
+
+    # 2) check if the user is admin of the system
+    engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    conn = engine.connect()
+    result_proxy = conn.execute(
+        f"SELECT '1' FROM is_admin_of_sys "
+        f"WHERE user_id='{str(user_id)}' AND system_name='{system_name}';")
+    engine.dispose()
+    sys_admins = [dict(c.items()) for c in result_proxy.fetchall()]
+    if len(sys_admins) == 0:
+        msg = f"User '{user_id}' is not permitted to delete the system '{system_name}' or it doesn't exist."
+        app.logger.error(f"{fct}: {msg}")
+        return jsonify({"value": msg, "url": fct, "status_code": 400}), 400
+
+    # 3) delete the instances from systems, is_admin_of_sys
+    transaction = conn.begin()
+    # Delete single mqtt_broker
+    query = """DELETE FROM mqtt_broker
+        WHERE system_name='{}';""".format(system_name)
+    conn.execute(query)
+    # Delete is_admin_of_sys instance(s)
+    query = """DELETE FROM is_admin_of_sys
+        WHERE system_name='{}';""".format(system_name)
+    conn.execute(query)
+    # Delete single system
+    query = """DELETE FROM systems
+        WHERE name='{}';""".format(system_name)
+    conn.execute(query)
+    engine.dispose()
+
+    # 4) Delete Kafka topics
+    if app.kafka_interface.delete_system_topics(system_name=system_name):
+        transaction.commit()
+        app.logger.info("The system '{}' was deleted.".format(system_name))
+        flash("The system '{}' was deleted.".format(system_name), "success")
+    else:
+        transaction.rollback()
+        app.logger.warning(f"{fct}: The system '{system_name}' couldn't be deleted, returned False")
+        flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
+
+    # 5) return
+    return jsonify({"value": msg, "url": fct, "status_code": 204}), 204
 
 
 # @api_system.route("/systems")
