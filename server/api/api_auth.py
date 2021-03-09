@@ -30,12 +30,12 @@ def authorize_request(user_id, fct):
 
     # check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     if user_id >= 0:  # Request from an identity-service person
-        res = get_user_from_identity_service(user_id)
+        res = get_person_from_identity_service(fct)
         result = res.json()
         if res.status_code not in [200, 201, 202] or str(user_id) != result.get("id", None):
             msg = f"Authentication error for user '{user_id}'."
             app.logger.error(f"{fct}: {msg}")
-            return False, msg, 401
+            return False, msg, res.status_code
         else:
             # Return the result
             pass
@@ -64,17 +64,33 @@ def authorize_request(user_id, fct):
     return True, msg, 200
 
 
-def get_user_from_identity_service(user_id):
+def get_person_from_identity_service(fct):
     bearer_token = request.headers["Authorization"].strip()
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/person/", str(user_id))
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/person/")
     res = requests.get(url=url,
                        headers={'content-type': 'application/json',
                                 'Authorization': bearer_token})
     return res
 
 
-def get_party_from_identity_service(party_id):
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/parties/{party_id}")
+def get_user_from_identity_service(fct, user_id):
+    bearer_token = request.headers["Authorization"].strip()
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/person/{user_id}")
     res = requests.get(url=url,
-                       headers={'content-type': 'application/json'})
+                       headers={'content-type': 'application/json',
+                                'Authorization': bearer_token})
     return res
+
+
+def get_party_from_identity_service(fct, party_id, user_id):
+    bearer_token = request.headers["Authorization"].strip()
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/party/{party_id}?includeRoles=true")
+    res = requests.get(url=url,
+                       headers={'content-type': 'application/json',
+                                'Authorization': bearer_token})
+    if res.status_code != 200:
+        msg = f"Resource Party is not allowed."
+        app.logger.error(f"{fct}: {msg}")
+        return False, msg, res.status_code
+
+    return True, res.json(), 200

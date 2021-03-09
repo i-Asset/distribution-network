@@ -43,16 +43,17 @@ def systems_by_person(user_id):
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     fct = f"{prefix}/systems_by_person/<string:user_id>"
-    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
+    authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
     # 2) Fetch all systems that belong to the user with id user_id
     # cases without authorization are returned, here the user is definitely permitted to request the data
+    token = request.headers["Authorization"].strip()  # bearer token or password, do this to double-check
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     result_proxy = conn.execute(f"""
-    SELECT sys.name AS system_name, com.name AS company, sys.description, kafka_servers, 
+    SELECT sys.name AS system_name, com.name AS company, com.id AS company_id, sys.description, kafka_servers, 
     sys.datetime AS created_at, creator_id, creator.first_name, creator.sur_name, creator.email, sys.*,
     mqtt.server as mqtt_server, mqtt.version as mqtt_version, mqtt.topic as mqtt_topic
     FROM systems AS sys
@@ -61,7 +62,7 @@ def systems_by_person(user_id):
     INNER JOIN users AS agent ON agent.id=agf.user_id
     INNER JOIN users as creator ON creator.id=agf.creator_id 
     FULL JOIN mqtt_broker AS mqtt ON sys.name=mqtt.system_name 
-    WHERE agf.user_id='{user_id}';""")
+    WHERE agent.id='{user_id}' AND (agent.password='{token}' OR agent.bearer_token='{token}');""")
     engine.dispose()
     systems = [dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -109,6 +110,7 @@ def create_systems_by_person(user_id):
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
+    # 2) check if the system to create has the correct structure
     req_keys = {"company_id", "station", "workcenter"}
     new_system = request.json["system"]
 
@@ -127,18 +129,16 @@ def create_systems_by_person(user_id):
         app.logger.error(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
 
-    # check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
+    # 3) check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     if user_id >= 0:  # Request from an identity-service person
         # create user and company if they don't exist
-        user_res = get_user_from_identity_service(user_id).json()
-        res = get_party_from_identity_service(company_id)
-        if res.status_code != 200:
-            time.sleep(0.2)
+        user_res = get_user_from_identity_service(fct=fct, user_id=user_id)
+        authorized, party_res, status_code = get_party_from_identity_service(fct=fct, user_id=user_id, party_id=company_id)
+        if status_code != 200:
             msg = f"The company with id '{company_id}' is not registered in the identity service."
             app.logger.error(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
-        party_res = res.json()[0]
-        print()
+
         # create users if not exists
         engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
         conn = engine.connect()
@@ -204,7 +204,7 @@ def create_systems_by_person(user_id):
         domain = user_comp[0]["domain"].strip()
         enterprise = user_comp[0]["enterprise"].strip()
 
-    # create the system or warn if it exists.
+    # 4) create the system instances or warn if it exists.
     # load domain and enterprise and then build the system name :)
     workcenter = new_system["workcenter"].strip()
     station = new_system["station"].strip()
@@ -278,7 +278,7 @@ def create_systems_by_person(user_id):
 
     engine.dispose()
 
-    # Create kafka system topics
+    # 5) Create kafka system topics
     try:
         app.kafka_interface.create_system_topics(system_name=system_name)
     except Exception as e:
@@ -343,5 +343,5 @@ def delete_systems(system_url, user_id):
         flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
 
     # 5) return
-    return jsonify({"value": msg, "url": fct, "status_code": 204}), 204
+    return jsonify({"url": fct, "status_code": 204}), 204
 
