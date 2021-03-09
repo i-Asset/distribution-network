@@ -82,7 +82,6 @@ def show_company(company_id):
     result_proxy = conn.execute(query)
     engine.dispose()
     systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
-    print(systems)
 
     return render_template("/companies/show_company.html", admins=admins, systems=systems, payload=payload)
 
