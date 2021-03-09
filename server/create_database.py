@@ -62,16 +62,16 @@ def create_tables(app):
         'companies', app.config['metadata'],
         db.Column('id', db.INTEGER, primary_key=True, unique=True),
         db.Column('name', db.VARCHAR(64), nullable=False),
-        db.Column('domain', db.CHAR(8), nullable=False),
-        db.Column('enterprise', db.CHAR(64), nullable=False),
+        db.Column('domain', db.VARCHAR(8), nullable=False),
+        db.Column('enterprise', db.VARCHAR(64), nullable=False),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True)
     )
     app.config["tables"]["systems"] = db.Table(
         'systems', app.config['metadata'],
-        db.Column('name', db.CHAR(128), primary_key=True, unique=True),
-        db.Column('workcenter', db.CHAR(32), nullable=False),
-        db.Column('station', db.CHAR(32), nullable=False),
+        db.Column('name', db.VARCHAR(128), primary_key=True, unique=True),
+        db.Column('workcenter', db.VARCHAR(32), nullable=False),
+        db.Column('station', db.VARCHAR(32), nullable=False),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         db.Column('kafka_servers', db.VARCHAR(1024), nullable=True),
@@ -136,25 +136,25 @@ def create_tables(app):
         db.Column('short_name', db.VARCHAR(32), primary_key=True),
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
-        db.Column('system_name', db.CHAR(128), primary_key=True),
+        db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
         db.Column('name', db.VARCHAR(128)),
         db.Column('datastream_uri', db.VARCHAR(256), nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         # construct a composite foreign key for aas
         db.Column('aas_name', db.VARCHAR(64), nullable=True),
-        db.Column('aas_system_name', db.CHAR(128), nullable=True),
+        db.Column('aas_system_name', db.VARCHAR(128), nullable=True),
         db.ForeignKeyConstraint(['aas_name', 'aas_system_name'], ['aas.name', 'aas.system_name'])
     )
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
-        db.Column('system_name', db.CHAR(128), primary_key=True),
+        db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
 
         db.Column('datastream_short_name', db.VARCHAR(32), primary_key=True),
-        db.Column('datastream_system_name', db.CHAR(128)),
+        db.Column('datastream_system_name', db.VARCHAR(128)),
         db.ForeignKeyConstraint(['datastream_short_name', 'datastream_system_name'],
                                 ['datastreams.short_name', 'datastreams.system_name'])
     )
