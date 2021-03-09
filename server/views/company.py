@@ -73,7 +73,7 @@ def show_company(company_id):
     payload = admins[0]
 
     # Fetch systems of this company
-    query = """SELECT DISTINCT sys.name AS sys_name, workcenter, station, com.name AS com_name, creator.email AS contact_mail
+    query = """SELECT DISTINCT sys.name AS system_name, workcenter, station, com.name AS com_name, creator.email AS contact_mail
     FROM systems AS sys
     INNER JOIN companies AS com on sys.company_id = com.id
     INNER JOIN is_admin_of_sys AS iaos on sys.name = iaos.system_name
@@ -82,6 +82,7 @@ def show_company(company_id):
     result_proxy = conn.execute(query)
     engine.dispose()
     systems = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    print(systems)
 
     return render_template("/companies/show_company.html", admins=admins, systems=systems, payload=payload)
 

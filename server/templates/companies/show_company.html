@@ -4,7 +4,8 @@
   <table class="table">
   <td>
     <h1> {{payload.com_name}}</h1>
-    <h2> <small> Company identifier: </small>{{payload.domain}}.{{payload.enterprise}}</h2>
+    <h2> <small> Company identifier: </small>{{payload.id}}</h2>
+    <h2> <small> Company shortname: </small>{{payload.domain}}.{{payload.enterprise}}</h2>
 
     {% if payload.creator_mail %}
     <h3> <small> Created by {{payload.creator_mail}} at {{payload.com_datetime}}. </small></h3>
@@ -33,9 +34,9 @@
     </tr>
       {% for system in systems %}
       <tr>
-<!--        <td><a href="/show_system/{{system.system_name}}" class="btn btn-block">{{system.domain}}</a></td>-->
-<!--        <td><a href="/show_system/{{system.system_name}}" class="btn btn-block">{{system.enterprise}}</a></td>-->
-        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.sys_name}}</a></td>
+<!--        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.domain}}</a></td>-->
+<!--        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.enterprise}}</a></td>-->
+        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.system_name}}</a></td>
         <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.com_name}}</a></td>
         <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.contact_mail}}</a></td>
         <td><a href="/show_system/{{system.system_url}}" class="btn btn-info float-right"
