@@ -56,7 +56,7 @@ def create_tables(app):
         db.Column('sur_name', db.VARCHAR(32), nullable=False),
         db.Column('email', db.VARCHAR(64), nullable=False, unique=True),
         db.Column('password', db.VARCHAR(256), nullable=True),
-        db.Column('bearer_token', db.VARCHAR(256), nullable=True)
+        db.Column('bearer_token', db.VARCHAR(2048), nullable=True)
     )
     app.config["tables"]["companies"] = db.Table(
         'companies', app.config['metadata'],

@@ -1,4 +1,5 @@
 import os
+import time
 import zlib
 
 import requests
@@ -42,7 +43,7 @@ def systems_by_person(user_id):
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     fct = f"{prefix}/systems_by_person/<string:user_id>"
-    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
@@ -104,7 +105,7 @@ def create_systems_by_person(user_id):
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     fct = f"{prefix}/create_system/<string:user_id>"
     user_id = get_user_id(fct, user_id)
-    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
@@ -129,11 +130,18 @@ def create_systems_by_person(user_id):
     # check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     if user_id >= 0:  # Request from an identity-service person
         # create user and company if they don't exist
+        user_res = get_user_from_identity_service(user_id).json()
+        res = get_party_from_identity_service(company_id)
+        if res.status_code != 200:
+            time.sleep(0.2)
+            msg = f"The company with id '{company_id}' is not registered in the identity service."
+            app.logger.error(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
+        party_res = res.json()[0]
+        print()
+        # create users if not exists
         engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
         conn = engine.connect()
-
-        # create users if not exists
-        user_res = get_user_from_identity_service(user_id)
         result_proxy = conn.execute(f"SELECT id FROM users WHERE id='{user_id}';")
         users = [dict(c.items()) for c in result_proxy.fetchall()]
         if len(users) == 0:
@@ -147,16 +155,15 @@ def create_systems_by_person(user_id):
             conn.execute(query, values_list)
 
         # create company if not exists
-        party_res = get_party_from_identity_service(company_id)
         result_proxy = conn.execute(f"SELECT id, domain, enterprise FROM companies WHERE id='{company_id}';")
         companies = [dict(c.items()) for c in result_proxy.fetchall()]
         if len(companies) == 0:
             query = db.insert(app.config["tables"]["companies"])
             values_list = [{"id": company_id,
-                            "name": party_res[0]["partyName"]["name"]["value"],
+                            "name": party_res["partyName"][0]["name"]["value"],
                             "domain": "com",  # TODO get domain and enterprise
                             "enterprise": "example",
-                            "description": party_res[0]["industryClassificationCode"]["name"]["value"],
+                            "description": party_res["industryClassificationCode"]["value"],
                             'datetime': get_datetime()
                             }]
             domain = "com"
@@ -168,7 +175,7 @@ def create_systems_by_person(user_id):
 
         # create is_admin_of_com if not exists
         result_proxy = conn.execute(
-            "SELECT '1' FROM is_admin_of_com WHERE user_id='{user_id}' AND company_id='{company_id}';")
+            f"SELECT '1' FROM is_admin_of_com WHERE user_id='{user_id}' AND company_id='{company_id}';")
         admins = [dict(c.items()) for c in result_proxy.fetchall()]
         if len(admins) == 0:
             query = db.insert(app.config["tables"]["is_admin_of_com"])
@@ -292,7 +299,7 @@ def delete_systems(system_url, user_id):
     fct = f"{prefix}/delete_system/<string:system_name>/<string:user_id>"
     user_id = get_user_id(fct, user_id)
     system_name = decode_sys_url(system_url)
-    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct, request=request)
+    authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 

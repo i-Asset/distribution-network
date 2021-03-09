@@ -24,7 +24,7 @@ def get_user_id(fct, user_id):
     return user_id
 
 
-def authorize_request(user_id, fct, request):
+def authorize_request(user_id, fct):
     # check if the value is an integer
     user_id = get_user_id(fct, user_id)
 
@@ -72,10 +72,9 @@ def get_user_from_identity_service(user_id):
                                 'Authorization': bearer_token})
     return res
 
-def get_party_from_identity_service(partyIds):
-    bearer_token = request.headers["Authorization"].strip()
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), "/identity/parties/", str(partyIds))
+
+def get_party_from_identity_service(party_id):
+    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/parties/{party_id}")
     res = requests.get(url=url,
-                       headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                       headers={'content-type': 'application/json'})
     return res
