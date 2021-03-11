@@ -40,7 +40,7 @@ paths:
     get:
       tags:
         - "System Request"
-      summary: "Returns all systems that belong to a person"
+      summary: "Return all systems that belong to a person"
       produces:
         - "application/json"
       parameters:
@@ -73,7 +73,6 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/create_system/{personId}:
     post:
       tags:
         - "System Request"

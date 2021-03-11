@@ -95,7 +95,7 @@ def systems_by_person(user_id):
     return jsonify({"systems": systems})
 
 
-@api_system.route(f"{prefix}/create_system/<string:user_id>", methods=['POST'])
+@api_system.route(f"{prefix}/systems_by_person/<string:user_id>", methods=['POST'])
 def create_systems_by_person(user_id):
     """
     Create a system by sending a json like:
