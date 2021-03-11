@@ -2,7 +2,8 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, send_from_directory
+from flask_swagger_ui import get_swaggerui_blueprint
 
 # Import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
@@ -44,9 +45,8 @@ def create_app():
     # Register api as blueprint
     app.register_blueprint(api_system)
     app.register_blueprint(api_stream_app)
-    # app.register_blueprint(api_auth)
 
-    # load environment variables and start loggin
+    # load environment variables
     app.config.from_envvar('APP_CONFIG_FILE')
 
     app.logger.setLevel(app.config["LOGLEVEL"])
@@ -82,6 +82,18 @@ def create_app():
     # # Test the Kafka Interface by creating and deleting a test topic
     # app.kafka_interface.create_system_topics("test.test.test.test")
     # app.kafka_interface.delete_system_topics("test.test.test.test")
+
+    # Register the Swagger ui as blueprint
+    @app.route("/api")
+    @app.route("/api/<path:path>")
+    def send_api(path):
+        return send_from_directory("api", path)
+
+    swagger_url = '/distributionnetwork/swagger-ui.html'
+    api_url = '/api/swagger.json'
+    swaggerui_blueprint = get_swaggerui_blueprint(swagger_url, api_url,
+                                                  config={'app_name': "Swagger UI Distribution Network"})
+    app.register_blueprint(swaggerui_blueprint, url_prefix=swagger_url)
 
     return app
 

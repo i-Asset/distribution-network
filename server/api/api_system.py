@@ -23,11 +23,22 @@ api_system = Blueprint("api_system", __name__)
 
 
 @api_system.route(f"{prefix}", methods=['GET'])
+@api_system.route(f"{prefix}/", methods=['GET'])
 def test_api():
-    return jsonify({"value": "You are connected with the awesome distribution network."})
+    return jsonify({"value": "You are connected with the awesome distribution network.",
+                    "url": f"{prefix}", "status_code": 200})
+
+
+@api_system.route(f"{prefix}/api", methods=['GET'])
+@api_system.route(f"{prefix}/api/", methods=['GET'])
+def redirect_to_swagger():
+    base_url = request.base_url.split(f"{prefix}/api")[0].replace(f"{prefix}/api", "")
+    print(base_url)
+    return redirect(f"{base_url}{prefix}/swagger-ui.html")
 
 
 @api_system.route(f"{prefix}/systems_by_person", methods=['GET'])
+@api_system.route(f"{prefix}/systems_by_person/", methods=['GET'])
 def systems_by_person_no_id():
     return jsonify({"value": "Please specify a personId/user_id",
                     "url": f"{prefix}/systems_by_person/<int:user_id>", "status_code": 406}), 406
