@@ -26,7 +26,7 @@ api_system = Blueprint("api_system", __name__)
 @api_system.route(f"{prefix}/", methods=['GET'])
 def test_api():
     return jsonify({"value": "You are connected with the awesome distribution network.",
-                    "url": f"{prefix}", "status_code": 200})
+                    "url": f"{prefix}", "status_code": 200}), 200
 
 
 @api_system.route(f"{prefix}/api", methods=['GET'])
@@ -122,7 +122,7 @@ def create_systems_by_person(user_id):
 
     # 2) check if the system to create has the correct structure
     req_keys = {"company_id", "station", "workcenter"}
-    new_system = request.json["system"]
+    new_system = request.json.get("system")
 
     if not isinstance(new_system, dict):
         msg = f"The new system can't be found in request json."
@@ -265,7 +265,7 @@ def create_systems_by_person(user_id):
 
     # add mqtt cluster if provided
     if "mqtt_broker" in new_system.keys():
-        app.logger.error(f"{fct}: The MQTT messaging is not implemented yet.")
+        app.logger.warning(f"{fct}: The MQTT messaging is not implemented yet.")
         mqtt_broker = new_system["mqtt_broker"]
         mqtt_server = mqtt_broker.get("mqtt_server", "")
         if not mqtt_server or mqtt_server == "":
