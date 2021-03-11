@@ -29,7 +29,8 @@ def test_api():
 
 @api_system.route(f"{prefix}/systems_by_person", methods=['GET'])
 def systems_by_person_no_id():
-    return jsonify({"value": f"Please specify a personId/user_id: {prefix}/systems_by_person/<int:user_id>"})
+    return jsonify({"value": "Please specify a personId/user_id",
+                    "url": f"{prefix}/systems_by_person/<int:user_id>", "status_code": 406}), 406
 
 
 @api_system.route(f"{prefix}/systems_by_person/<string:user_id>", methods=['GET'])
@@ -49,7 +50,6 @@ def systems_by_person(user_id):
 
     # 2) Fetch all systems that belong to the user with id user_id
     # cases without authorization are returned, here the user is definitely permitted to request the data
-    token = request.headers["Authorization"].strip()  # bearer token or password, do this to double-check
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     result_proxy = conn.execute(f"""
@@ -59,10 +59,9 @@ def systems_by_person(user_id):
     FROM systems AS sys
     INNER JOIN companies AS com ON sys.company_id=com.id
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN users AS agent ON agent.id=agf.user_id
     INNER JOIN users as creator ON creator.id=agf.creator_id 
     FULL JOIN mqtt_broker AS mqtt ON sys.name=mqtt.system_name 
-    WHERE agent.id='{user_id}' AND (agent.password='{token}' OR agent.bearer_token='{token}');""")
+    WHERE agf.user_id='{user_id}';""")
     engine.dispose()
     systems = [dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -132,8 +131,8 @@ def create_systems_by_person(user_id):
     # 3) check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
     if user_id >= 0:  # Request from an identity-service person
         # create user and company if they don't exist
-        user_res = get_user_from_identity_service(fct=fct, user_id=user_id)
-        authorized, party_res, status_code = get_party_from_identity_service(fct=fct, user_id=user_id, party_id=company_id)
+        _, user_res, status_code = get_user_from_identity_service(fct=fct, user_id=user_id)
+        authorized, party_res, status_code = get_party_from_identity_service(fct, user_id=user_id, party_id=company_id)
         if status_code != 200:
             msg = f"The company with id '{company_id}' is not registered in the identity service."
             app.logger.error(f"{fct}: {msg}")
@@ -288,7 +287,7 @@ def create_systems_by_person(user_id):
     return jsonify({"systems": new_systems, "is_admin_of_sys": new_admin_of_sys})
 
 
-@api_system.route(f"{prefix}/delete_system/<string:system_url>/<string:user_id>", methods=['DELETE'])
+@api_system.route(f"{prefix}/delete_system/<string:user_id>/<string:system_url>", methods=['DELETE'])
 def delete_systems(system_url, user_id):
     """
     Delete a system
@@ -339,7 +338,7 @@ def delete_systems(system_url, user_id):
         flash("The system '{}' was deleted.".format(system_name), "success")
     else:
         transaction.rollback()
-        app.logger.warning(f"{fct}: The system '{system_name}' couldn't be deleted, returned False")
+        app.logger.warning(f"{fct}: The system '{system_name}' could not be deleted, returned False")
         flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
 
     # 5) return

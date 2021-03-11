@@ -36,9 +36,7 @@ def authorize_request(user_id, fct):
             msg = f"Authentication error for user '{user_id}'."
             app.logger.error(f"{fct}: {msg}")
             return False, msg, res.status_code
-        else:
-            # Return the result
-            pass
+        # The user with id is authorized
 
     else:  # Request from a Panta Rhei user, check session_id
         app.logger.debug(f"{fct}: Fetch all systems for the requesting user '{user_id}'.")
@@ -79,7 +77,7 @@ def get_user_from_identity_service(fct, user_id):
     res = requests.get(url=url,
                        headers={'content-type': 'application/json',
                                 'Authorization': bearer_token})
-    return res
+    return True, res.json(), 200
 
 
 def get_party_from_identity_service(fct, party_id, user_id):
