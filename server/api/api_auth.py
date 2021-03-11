@@ -19,7 +19,7 @@ def get_user_id(fct, user_id):
         user_id = int(user_id)
     except ValueError as e:
         msg = "The user_id must be an integer."
-        app.logger.error(f"{fct}: {msg}")
+        app.logger.warning(f"{fct}: {msg}")
         return False, msg, 400
     return user_id
 
@@ -34,8 +34,8 @@ def authorize_request(user_id, fct):
         result = res.json()
         if res.status_code not in [200, 201, 202] or str(user_id) != result.get("id", None):
             msg = f"Authentication error for user '{user_id}'."
-            app.logger.error(f"{fct}: {msg}")
-            return False, msg, res.status_code
+            app.logger.warning(f"{fct}: {msg}")
+            return False, msg, 400
         # The user with id is authorized
 
     else:  # Request from a Panta Rhei user, check session_id
@@ -49,12 +49,12 @@ def authorize_request(user_id, fct):
 
         if len(users) == 0:
             msg = f"Authentication error, user with id '{user_id}' not found."
-            app.logger.error(f"{fct}: {msg}")
+            app.logger.warning(f"{fct}: {msg}")
             return False, msg, 400
 
         if not sha256_crypt.verify(request.headers["Authorization"].strip(), hash=users[0]["password"]):
             msg = f"Authentication error, password is incorrect."
-            app.logger.error(f"{fct}: {msg}")
+            app.logger.warning(f"{fct}: {msg}")
             return False, msg, 401
 
     msg = f"Authorized request from user '{user_id}'."
@@ -88,7 +88,7 @@ def get_party_from_identity_service(fct, party_id, user_id):
                                 'Authorization': bearer_token})
     if res.status_code != 200:
         msg = f"Resource Party is not allowed."
-        app.logger.error(f"{fct}: {msg}")
+        app.logger.warning(f"{fct}: {msg}")
         return False, msg, res.status_code
 
     return True, res.json(), 200

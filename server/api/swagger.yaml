@@ -46,12 +46,12 @@ paths:
       parameters:
         - name: "personId"
           in: "path"
-          description: "personId from the identity service"
+          description: "User ID from the identity service"
           required: true
           type: "string"
         - name: "Authorization"
           in: "header"
-          description: "Authorization bearer token"
+          description: "Bearer token"
           required: true
           type: "string"
           format: "string"
@@ -61,7 +61,7 @@ paths:
           schema:
             $ref: "#/definitions/Systems"
         "400":
-          description: "Authentication error, user not found."
+          description: "Authentication error."
           schema:
             $ref: "#/definitions/Status"
         "401":
@@ -77,29 +77,29 @@ paths:
     post:
       tags:
         - "System Request"
-      summary: "Create a new system for a company that belongs to a person"
+      summary: "Create a new system for a company that belongs to a person. Creates also the corresponding Kafka topics."
       consumes:
-      - "application/json"
+        - "application/json"
       produces:
         - "application/json"
       parameters:
         - name: "personId"
           in: "path"
-          description: "personId from the identity service"
+          description: "User ID from the identity service"
           required: true
           type: "string"
         - name: "Authorization"
           in: "header"
-          description: "Authorization bearer token"
+          description: "Bearer token"
           required: true
           type: "string"
           format: "string"
         - name: "system"
           in: "body"
-          description: "A system object to create"
+          description: "A system object to create, functional part of a company"
           required: true
           schema:
-            $ref: "#definitions/SystemBodyWrapper"
+            $ref: "#definitions/SystemBody"
       responses:
         "200":
           description: "OK"
@@ -128,7 +128,7 @@ paths:
       parameters:
         - name: "personId"
           in: "path"
-          description: "personId from the identity service"
+          description: "User ID from the identity service"
           required: true
           type: "string"
         - name: "system"
@@ -139,7 +139,7 @@ paths:
           format: "string"
         - name: "Authorization"
           in: "header"
-          description: "Authorization bearer token"
+          description: "Bearer token"
           required: true
           type: "string"
           format: "string"
@@ -147,7 +147,7 @@ paths:
         "204":
           description: "Deleted"
           schema:
-            $ref: "#/definitions/Systems"
+            $ref: "#/definitions/Status"
         "400":
           description: "User or system not found."
           schema:
@@ -161,19 +161,12 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-
 securityDefinitions:
-  petstore_auth:
-    type: "oauth2"
-    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
-    flow: "implicit"
-    scopes:
-      write:pets: "modify pets in your account"
-      read:pets: "read your pets"
-  api_key:
+  Authorization:
     type: "apiKey"
-    name: "api_key"
+    name: "Authorization"
     in: "header"
+
 definitions:
   Status:
     type: "object"
@@ -214,11 +207,6 @@ definitions:
         $ref: "#definitions/User"
       mqtt_broker:
         $ref: "#definitions/MqttBroker"
-  SystemBodyWrapper:
-    type: "object"
-    properties:
-      system:
-        $ref: "#definitions/SystemBody"
   SystemBody:
     type: "object"
     properties:
@@ -256,7 +244,6 @@ definitions:
         type: "string"
       mqtt_version:
         type: "string"
-
 
 externalDocs:
   description: "Find out more about Swagger"

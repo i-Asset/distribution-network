@@ -99,7 +99,7 @@ def systems_by_person(user_id):
 def create_systems_by_person(user_id):
     """
     Create a system by sending a json like:
-    "system": {
+    {
         "company_id": -11,
         "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
         "kafka_server": "",
@@ -122,7 +122,7 @@ def create_systems_by_person(user_id):
 
     # 2) check if the system to create has the correct structure
     req_keys = {"company_id", "station", "workcenter"}
-    new_system = request.json.get("system")
+    new_system = request.json
 
     if not isinstance(new_system, dict):
         msg = f"The new system can't be found in request json."
@@ -236,7 +236,7 @@ def create_systems_by_person(user_id):
                     "station": station,
                     "kafka_servers": new_system.get("kafka_servers", "").strip(),
                     "datetime": get_datetime(),
-                    "description": new_system["description"]}]
+                    "description": new_system.get("description", "")}]
     if len(systems) > 0:
         msg = f"The system with name '{system_name}' already exists."
         app.logger.warning(f"{fct}: {msg}")
