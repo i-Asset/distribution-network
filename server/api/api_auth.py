@@ -1,3 +1,4 @@
+import json
 import urllib
 
 import requests
@@ -33,7 +34,7 @@ def authorize_request(user_id, fct):
         res = get_person_from_identity_service(fct)
         result = res.json()
         if res.status_code not in [200, 201, 202] or str(user_id) != result.get("id", None):
-            msg = f"Authentication error for user '{user_id}'."
+            msg = f"Authentication error for user '{user_id}': {json.dumps(result)}"
             app.logger.warning(f"{fct}: {msg}")
             return False, msg, 400
         # The user with id is authorized
