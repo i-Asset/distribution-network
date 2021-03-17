@@ -396,8 +396,7 @@ public class Tester {
             logNode = new LogicalNode(expr);
             System.out.println(logNode);
         } catch (Exception e) {
-            if (!e.toString().startsWith("com.github.christophschranz.iot4cpshub.StreamSQLException: " +
-                    "Query is invalid, parentheses are not closing: 'result < 30)))) AND result > 4'."))
+            if (!e.toString().startsWith("com.github.christophschranz.iot4cpshub.StreamSQLException"))
                 e.printStackTrace();
         }
     }
@@ -405,38 +404,39 @@ public class Tester {
     @Test
     public void test8() {
         System.out.println("\n######## StreamQuery and Semantics class. #########\n");
-
         StreamQuery streamQuery;
         Semantics semantics;
         JsonObject ds;
 
+        // start test 61
         jsonInput = new JsonObject();
         ds = new JsonObject();
-        ds.addProperty("quantity", "Air Temperature");
+        ds.addProperty("quantity", "temperature");
         ds.addProperty("thing", "Car1");
         jsonInput.add("datastream", ds);
-        jsonInput.addProperty("result", 12.3);
+        jsonInput.addProperty("result", 1.23);
         jsonInput.addProperty("phenomenonTime", "2020-02-24T11:26:02");
         jsonInput.addProperty("time", "2020-02-24T11:26:02");  // adding extra time key
-        jsonInput.addProperty("latitude", 47.822495);
-        jsonInput.addProperty("longitude", 13.04113);
-//                System.out.println(jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString());
-
+        JsonObject attributes = new JsonObject();
+        attributes.addProperty("latitude", 47.822495);
+        attributes.addProperty("longitude", 13.04113);
+        jsonInput.add("attributes", attributes);
+//        System.out.println(jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString());
         globalOptions.setProperty("SOURCE_SYSTEM", "is.iceland.iot4cps-wp5-WeatherService.Stations");
         globalOptions.setProperty("TARGET_SYSTEM", "cz.icecars.iot4cps-wp5-CarFleet.Car1");
         globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", "172.20.38.70:9092,172.20.38.70:9093,172.20.38.70:9094");
         globalOptions.setProperty("SEMANTIC_SERVER", "https://iasset.salzburgresearch.at/registry-service/swagger-ui.html");
-        globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE " +
-                "quantity = 'Air temperature' AND (thing = 'Station_1' OR thing = 'Station_2') AND result > 30;");
+        globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE quantity = 'temperature' AND result < 4;");
         try {
-            streamQuery = new StreamQuery(globalOptions);
-            semantics = new Semantics(globalOptions, "AAS");
+            streamQuery = new StreamQuery(globalOptions, true);
+            semantics = new Semantics(globalOptions, "AAS", true);
             System.out.println(semantics);
             JsonObject datastreams = new JsonObject();
             JsonObject ds1 = new JsonObject();
             JsonObject ds2 = new JsonObject();
 
             // This part is only required for SensorThings as it simulates it's datastream structure
+            // replace this demo semantic with a structure as {system_name: thing_aas: datastream_name: asdf}
             ds1.addProperty("thing", "Car1");
             ds1.addProperty("quantity", "Air temperature");
             ds2.addProperty("thing", "Car2");
@@ -447,8 +447,48 @@ public class Tester {
 
             System.out.println("Raw datastreams: " + jsonInput);
             System.out.println("Augmented datastreams: " + semantics.augmentJsonInput(jsonInput));  // should be false
-            if (streamQuery.evaluate(semantics.augmentJsonInput(jsonInput)))
+            if (!streamQuery.evaluate(semantics.augmentJsonInput(jsonInput)))
                 System.out.println("Test 61 failed.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // start test 62
+        ds.addProperty("quantity", "temperature");
+        jsonInput.addProperty("result", 12.34);
+        try {
+            streamQuery = new StreamQuery(globalOptions, true);
+            semantics = new Semantics(globalOptions, "AAS", true);
+            if (streamQuery.evaluate(semantics.augmentJsonInput(jsonInput)))
+                System.out.println("Test 62 failed.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // start test 63
+        ds.addProperty("quantity", "temperature");
+        jsonInput.addProperty("result", 1.23);
+        globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE " +
+                "(quantity = 'temperature' AND result < 4) OR (quantity = 'acceleration' AND result > 0.8);");
+        try {
+            streamQuery = new StreamQuery(globalOptions, true);
+            semantics = new Semantics(globalOptions, "AAS", true);
+            if (!streamQuery.evaluate(semantics.augmentJsonInput(jsonInput)))
+                System.out.println("Test 63 failed.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // start test 64
+        ds.addProperty("quantity", "temperature");
+        jsonInput.addProperty("result", 12.34);
+        globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE " +
+                "(quantity = 'temperature' AND result < 4) OR (quantity = 'acceleration' AND result > 0.8);");
+        try {
+            streamQuery = new StreamQuery(globalOptions, true);
+            semantics = new Semantics(globalOptions, "AAS", true);
+            if (streamQuery.evaluate(semantics.augmentJsonInput(jsonInput)))
+                System.out.println("Test 64 failed.");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -138,6 +138,9 @@ public class ArithmeticNode extends BaseNode {
         if (this.isAtomic)
             return this.numberValue;
         if (this.isKeyword) {
+            if (this.verbose)
+                logger.info("return arithmetic value from message: " + this.arithmeticKeyword + " = "
+                        + jsonInput.get(this.arithmeticKeyword).getAsDouble());
             return jsonInput.get(this.arithmeticKeyword).getAsDouble();  // the keyword should be result
         }
         // recursive case. The nodes subtree must be evaluated

@@ -19,6 +19,8 @@ public class StreamQuery {
     String semantic_server;
     String filter_logic;
 
+    boolean verbose;
+
     LogicalNode conditionTree;
     String projection_list;
     String cps_list;
@@ -28,7 +30,9 @@ public class StreamQuery {
     The StreamParser constructor. Requires a stream app config, extracts the parts of the filter_logic and builds a
      NodeTree for the condition query.
      */
-    public StreamQuery(Properties stream_config) throws StreamSQLException {
+
+    public StreamQuery(Properties stream_config, boolean verbose) throws StreamSQLException {
+        this.verbose = verbose;
         // gather configs and store in class vars
         this.stream_name = stream_config.getProperty("STREAM_NAME");
         this.source_system = stream_config.getProperty("SOURCE_SYSTEM");
@@ -54,18 +58,19 @@ public class StreamQuery {
         this.cps_list = this.filter_logic.substring(this.filter_logic.indexOf("FROM ") + 5).
                 split(KEY_WORDS)[0].trim();
         if (safeContainsKeyword(this.filter_logic,"WHERE "))
-            this.condition = this.filter_logic.substring(this.filter_logic.indexOf("WHERE ") + 6).
-                    split(KEY_WORDS)[0].trim();
+            this.condition = "(" + this.filter_logic.substring(this.filter_logic.indexOf("WHERE ") + 6).
+                    split(KEY_WORDS)[0].trim() + ")";
         else  // set condition to TRUE, if there is no WHERE filter
-            condition = "TRUE";
-        logger.info("projection_list: '" + projection_list + "'");
-        logger.info("cps_list: '" + cps_list + "'");
-        logger.info("condition: '" + condition + "'");
+            this.condition = "TRUE";
+
+        logger.info("projection_list: '" + this.projection_list + "'");
+        logger.info("cps_list: '" + this.cps_list + "'");
+        logger.info("condition: '" + this.condition + "'");
 
         // augment the condition with the full expressions from possible AS statements
 
         // build the conditional expression via a node tree
-        this.conditionTree = new LogicalNode(condition);
+        this.conditionTree = new LogicalNode(this.condition);
 
         logger.info(this.toString());
     }

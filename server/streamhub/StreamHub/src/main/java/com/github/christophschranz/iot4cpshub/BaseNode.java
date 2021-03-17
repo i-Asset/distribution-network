@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public abstract class BaseNode {
     String rawExpression;
     private int degree;
+    boolean verbose = true;
 
     String operation;  // can be any form of operation: logical, comparison, or arithmetic.
     BaseNode child1;  // left term of an expression
@@ -40,7 +41,7 @@ public abstract class BaseNode {
         return  "\n\t rawExpression: " + this.rawExpression +
                 "\n\t maximal degree: " + this.degree +
                 "\n\t main operation: " + this.operation +
-                "\n\t child1: " + ch1_expr+
+                "\n\t child1: " + ch1_expr +
                 "\n\t child2: " + ch2_expr;
     }
     /** toString-method, compact version for a single line
@@ -87,10 +88,14 @@ public abstract class BaseNode {
      * @return String of the outer expression
      */
     public static String getOuterExpr(String str) throws StreamSQLException {
+        return getOuterExpr(str, 0);
+    }
+    public static String getOuterExpr(String str, int offset) throws StreamSQLException {
         str = str.trim();
         int i = 0;  // idx for str
         int idx = 0;  // idx for outerString generation
-        int depth = 0;
+        int depth = offset;  // offset for parenthesis
+        boolean gotToDeep = false;
         char[] ca = new char[str.length()];
         while (i<str.length()) {
             if (str.charAt(i) == '(')
@@ -100,9 +105,12 @@ public abstract class BaseNode {
             if (depth == 0) {
                 ca[idx] = str.charAt(i);
                 idx ++;
+            } else if (depth < 0) {
+                gotToDeep = true;
             }
             i ++;
         }
+        // if the parenthesis got too deep, e.g. TODO
 
         // correct invalid number of parentheses
         if (depth != 0) {
@@ -167,15 +175,33 @@ public abstract class BaseNode {
         return outerString.indexOf(operation);
     }
 
-        /**
-         * Strip outer parenthesis recursively
-         * Remove brackets and strip the expression if no outer statement was found.
-         * @return Cleaned expression String
-         */
+    /**
+     * Strip outer parenthesis recursively
+     * Remove brackets and strip the expression if no outer statement was found.
+     * @return Cleaned expression String
+     */
     public static String strip(String str) {
         str = str.trim();
-        if (str.charAt(0) == '(' && str.charAt(str.length()-1) == ')')  // trim  '(' and ')' for split
-            return strip(str.substring(1, str.length()-1).trim());
+        if (str.charAt(0) == '(' && str.charAt(str.length()-1) == ')') { // trim  '(' and ')' for split
+            int i = 1;  // idx for str
+            int depth = 0;  // offset for parenthesis
+            boolean gotToDeep = false;
+            while (i<str.length()-1) {
+                if (str.charAt(i) == '(')
+                    depth ++;
+                if (str.charAt(i) == ')')
+                    depth--;
+                if (depth < 0) {
+                    gotToDeep = true;
+                    break;
+                }
+                i ++;
+            }
+            if (!gotToDeep) {
+                System.out.println("do some stripping");
+                return strip(str.substring(1, str.length() - 1).trim());
+            }
+        }
         return str;
     }
 

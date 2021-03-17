@@ -21,22 +21,23 @@ public class Semantics {
 
     JsonObject streamObjects;
     String semantic;
+    boolean verbose;
     String[] knownSemantics = new String[] {"SensorThings", "AAS"};
     String[] augmentedDSAttributes = new String[]{"thing", "quantity"};  // augment attributes in "datastream" key
-    String[] augmentedAttributes = new String[]{"longitude", "latitude"};  // those attributes are stored as String only
+    String[] augmentedMetaAttributes = new String[]{"longitude", "latitude"};  // augment attributes in "meta" key
     boolean exitOnUnknownIotID = false;
 
     /**
      The Semantics constructor. Requires a stream app config, fetches and stores the required metadata for incoming
      jsonInputs
      */
-    public Semantics(Properties stream_config, String semantic) throws SemanticsException {
+    public Semantics(Properties stream_config, String semantic, boolean verbose) throws SemanticsException {
         // gather configs and store in class vars
         // if (semantic.equalsIgnoreCase("gost"))
         // this.semantic_server = stream_config.getProperty("SEMANTIC_SERVER").replace("\"", "");
         this.semantic = semantic;
         this.semantic_server = stream_config.getProperty("SEMANTIC_SERVER").replace("\"", "");
-
+        this.verbose = verbose;
 
         // the json value is not indexed properly, restructure such that we have {iot_id0: {}, iot_id1: {}, ...}
         this.streamObjects = new JsonObject();  // set ST to jsonObject
@@ -93,44 +94,55 @@ public class Semantics {
      * @return the Augmented JsonInput
      */
     public JsonObject augmentJsonInput(JsonObject jsonInput) {
+        // augment with AAS semantic, fields, 'datastream', 'attributes'
         if (this.semantic.equalsIgnoreCase("aas")) {
-            for (String att : this.augmentedDSAttributes) {
-                jsonInput.addProperty(att, jsonInput.get("datastream").getAsJsonObject().get(att).getAsString());
+            if (jsonInput.has("datastream")) {
+                for (String att : this.augmentedDSAttributes) {
+                    jsonInput.addProperty(att, jsonInput.get("datastream").getAsJsonObject().get(att).getAsString());
+                }
             }
-            for (String att : this.augmentedAttributes) {
-                jsonInput.addProperty(att, jsonInput.get(att).getAsDouble());
+            if (jsonInput.has("attributes")) {
+                for (String att : this.augmentedMetaAttributes) {
+                    jsonInput.addProperty(att, jsonInput.get("attributes").getAsJsonObject().get(att).getAsDouble());
+                }
             }
-            jsonInput.remove("datastream");
+            if (this.verbose)
+                logger.info("New message: " + jsonInput);
             return jsonInput;
         }
 
-        // receive input string and parse to jsonObject
-        String iot_id = jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString();
+        // augment with SensorThings semantic
+        else if (this.semantic.equalsIgnoreCase("sensorthings")) {
 
-        // if the iot_id is not already loaded, load again. Exit if it is not fetchable.
-        if (streamObjects.get(iot_id) == null) {
-            try {
-                fetchFromGOST(iot_id);
-            } catch (SemanticsException e) {
-                e.printStackTrace();
+            // receive input string and parse to jsonObject
+            String iot_id = jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString();
+
+            // if the iot_id is not already loaded, load again. Exit if it is not fetchable.
+            if (streamObjects.get(iot_id) == null) {
+                try {
+                    fetchFromGOST(iot_id);
+                } catch (SemanticsException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        // If the iot.id is still not available, log an error and exit if wished so
-        if (streamObjects.get(iot_id) == null) {
-            logger.error("The datastream with @iot.id '" + iot_id + "' is not available.");
-            if (this.exitOnUnknownIotID)
-                System.exit(61);
-            for (String att : this.augmentedAttributes) {
-                jsonInput.addProperty(att, "");
+            // If the iot.id is still not available, log an error and exit if wished so
+            if (streamObjects.get(iot_id) == null) {
+                logger.error("The datastream with @iot.id '" + iot_id + "' is not available.");
+                if (this.exitOnUnknownIotID)
+                    System.exit(61);
+                for (String att : this.augmentedDSAttributes) {
+                    jsonInput.addProperty(att, "");
+                }
+            } else {
+                String quantity;
+                for (String att : this.augmentedDSAttributes) {
+                    jsonInput.addProperty(att, streamObjects.get(iot_id).getAsJsonObject().get(att).getAsString());
+                }
+                logger.debug("Getting new (augmented) kafka message: {}", jsonInput);
             }
-        }
-        else {
-            String quantity;
-            for (String att : this.augmentedAttributes) {
-                jsonInput.addProperty(att, streamObjects.get(iot_id).getAsJsonObject().get(att).getAsString());
-            }
-            logger.debug("Getting new (augmented) kafka message: {}", jsonInput);
-        }
+            return jsonInput;
+        } else
+            logger.warn("The semantic " + this.semantic + " is not known.");
         return jsonInput;
     }
 
@@ -155,6 +167,17 @@ public class Semantics {
         }
     }
 
+    /**
+     *  Checks the connection to the Semantic Server and throws an error if not reachable
+     *  */
+    public void checkConnection() throws SemanticsException {
+        if (this.semantic.equalsIgnoreCase("sensorthings")){
+            checkConnectionGOST();
+        } else if (this.semantic.equalsIgnoreCase("aas")) {
+            checkConnectionAAS();
+        } else
+            logger.warn("The semantic " + this.semantic + " is not known.");
+    }
     /**
      *  Checks the connection to the SensorThings Server and throws an error if not reachable
      *  */
@@ -193,7 +216,46 @@ public class Semantics {
         }
     }
 
-        /**
+    /**
+     *  Checks the connection to the AAS Server and throws an error if not reachable
+     *  */
+    public void checkConnectionAAS() throws SemanticsException {
+        // urlString that is appended by the appropriate mode (all ds or a specified)
+        String urlString = "http://" + this.semantic_server;
+        logger.info("Trying to connect with " + this.semantic + "-Server at: " + urlString);
+
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("HEAD");
+            conn.setConnectTimeout(5000); //set timeout to 5 seconds
+            conn.setRequestMethod("GET");
+            BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            logger.info("Connected to " + this.semantic_server);
+        } catch (java.net.ConnectException | java.net.SocketTimeoutException | java.net.NoRouteToHostException e) {
+            logger.warn("GOST Server at '" + this.semantic_server + "' is not reachable.");
+            // retry with a relative name
+            if (!this.semantic_server.contains("registry-service:8085")) {
+                logger.warn("Setting AAS-server to 'http://registry-service:8085' and try again.");
+                this.semantic_server = "registry-service:8085";
+                checkConnectionAAS();
+            }
+            else
+                logger.error("Aborting as the AAS-Server is not reachable.");
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (java.net.UnknownHostException e) {
+            logger.error("Unknown host '" + this.semantic_server + "'. Aborting!");
+            e.printStackTrace();
+            System.exit(63);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
          *  Fetches all datastreams from GOST Server and stores the mapping of the form iot.id: entry
          *  (hash-indexed) into a jsonObject, such that the entry is available with complexity O(1).
          *  default parameter -1 triggers to fetch all entries, as it is useful at the startup.
@@ -251,7 +313,9 @@ public class Semantics {
                 throw new SemanticsException("@iot.id '" + iot_id + "' was not found on SensorThings server '" + urlString + "'.");
         }
     }
-
+    /**
+     * datastream objects from the semantic server are cached in memory to improve the inference time.
+     * */
     public void setStreamObjects(JsonObject streamObjects) {
         this.streamObjects = streamObjects;
     }

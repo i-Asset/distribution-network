@@ -12,7 +12,9 @@ import java.util.Properties;
 
 /** The StreamAppEngine generates streams between Panta Rhei Systems in Kafka, based on System variables
 java -jar target/streamApp-1.1-jar-with-dependencies.jar --STREAM_NAME test-jar --SOURCE_SYSTEM is.iceland.iot4cps-wp5-WeatherService.Stations --TARGET_SYSTEM cz.icecars.iot4cps-wp5-CarFleet.Car1 --KAFKA_BOOTSTRAP_SERVERS 192.168.48.179:9092 --GOST_SERVER 192.168.48.179:8082 --FILTER_LOGIC "SELECT * FROM * WHERE (name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_1.Air Temperature' OR name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_2.Air Temperature') AND result < 30;"
+
 */
+
 public class StreamAppEngine {
 
     public static void main(String[] args) throws StreamSQLException, SemanticsException {
@@ -21,22 +23,26 @@ public class StreamAppEngine {
         /* *************************   fetching the parameters and check them    **************************/
         logger.info("Starting a new stream with the parameter:");
 
-        globalOptions.setProperty("STREAM_NAME",
-                System.getenv("STREAM_NAME").replaceAll("\"", ""));
-        globalOptions.setProperty("SOURCE_SYSTEM", System.getenv("SOURCE_SYSTEM"));
-        globalOptions.setProperty("TARGET_SYSTEM", System.getenv("TARGET_SYSTEM"));
-        globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", System.getenv("KAFKA_BOOTSTRAP_SERVERS"));
-        globalOptions.setProperty("GOST_SERVER", System.getenv("GOST_SERVER"));
-        globalOptions.setProperty("FILTER_LOGIC",
-                System.getenv("FILTER_LOGIC").replaceAll("\"", ""));
-        // env vars: STREAM_NAME="test-stream";SOURCE_SYSTEM=is.iceland.iot4cps-wp5-WeatherService.Stations;
-        // TARGET_SYSTEM=cz.icecars.iot4cps-wp5-CarFleet.Car1;KAFKA_BOOTSTRAP_SERVERS=127.0.0.1:9092;
-        // GOST_SERVER=127.0.0.1:8082;
-        // FILTER_LOGIC="SELECT * FROM * WHERE (name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_1.Air Temperature' OR name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_2.Air Temperature') AND result < 30\;"
-        // set to hostname
-//        globalOptions.setProperty("GOST_SERVER", "172.17.0.1:8082");  // works
-//        globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", "172.17.0.1:9092");
-
+        try {
+            globalOptions.setProperty("STREAM_NAME",
+                    System.getenv("STREAM_NAME").replaceAll("\"", ""));
+            globalOptions.setProperty("SOURCE_SYSTEM", System.getenv("SOURCE_SYSTEM"));
+            globalOptions.setProperty("TARGET_SYSTEM", System.getenv("TARGET_SYSTEM"));
+            globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", System.getenv("KAFKA_BOOTSTRAP_SERVERS"));
+            globalOptions.setProperty("SEMANTIC_SERVER", System.getenv("SEMANTIC_SERVER"));
+            globalOptions.setProperty("FILTER_LOGIC",
+                    System.getenv("FILTER_LOGIC").replaceAll("\"", ""));
+            // env vars:
+            // STREAM_NAME="test-stream";SOURCE_SYSTEM=cz.icecars.iot4cps-wp5-CarFleet.Car1;
+            // TARGET_SYSTEM=cz.icecars.iot4cps-wp5-CarFleet.Car2;KAFKA_BOOTSTRAP_SERVERS=127.0.0.1:9092;
+            // SEMANTIC_SERVER=https://iasset.salzburgresearch.at/registry-service/;FILTER_LOGIC="SELECT * FROM *;"
+            // FILTER_LOGIC="SELECT * FROM * WHERE (name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_1.Air Temperature' OR name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_2.Air Temperature') AND result < 30\;"
+            // set to hostname
+            //        globalOptions.setProperty("SEMANTIC_SERVER", "172.17.0.1:8082");  // works
+            //        globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", "172.17.0.1:9092");
+        } catch (java.lang.NullPointerException e) {
+            logger.info(e + ": One or multiple environment variables are missing, searching for key-value arguments.");
+        }
 
                 // parse input parameter to options and check completeness, must be a key-val pair
         if (1 == args.length % 2) {
@@ -50,7 +56,7 @@ public class StreamAppEngine {
         }
 
         String[] keys = {"STREAM_NAME", "SOURCE_SYSTEM", "TARGET_SYSTEM", "KAFKA_BOOTSTRAP_SERVERS",
-                "GOST_SERVER", "FILTER_LOGIC"};
+                "SEMANTIC_SERVER", "FILTER_LOGIC"};
         for (String key: keys) {
             if (!globalOptions.stringPropertyNames().contains(key)) {
                 logger.error("Error: You have to define the parameter " + key +
@@ -63,11 +69,11 @@ public class StreamAppEngine {
 
 
         /* *************************        create the Stream Query class         **************************/
-        StreamQuery streamQuery = new StreamQuery(globalOptions);
+        StreamQuery streamQuery = new StreamQuery(globalOptions, true);
 
         /* *************************        create the Semantics class         **************************/
-        Semantics semantics = new Semantics(globalOptions, "SensorThings");
-        semantics.checkConnectionGOST();
+        Semantics semantics = new Semantics(globalOptions, "AAS", true);
+        semantics.checkConnection();
 
 
         /* *************************   set up the topology and then start it    **************************/

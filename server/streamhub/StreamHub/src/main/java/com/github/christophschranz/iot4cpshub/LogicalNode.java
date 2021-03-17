@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *     public static Logger logger = LoggerFactory.getLogger(StreamAppEngine.class);
  */
 public class LogicalNode extends BaseNode {
-    String expressionType;  // expressionType is either proposition, comparision, negation, variable
+    String expressionType;  // expressionType is either proposition, comparison, negation, variable
     boolean logicalValue;
 
 
@@ -42,10 +42,14 @@ public class LogicalNode extends BaseNode {
      * @param str String expression that describes an comparison operation
      */
     public LogicalNode(String str) throws StreamSQLException {
+        this(str, true);
+    }
+
+    public LogicalNode(String str, boolean verbose) throws StreamSQLException{
         super();
         // remove recursively outer brackets and trim spaces
         this.rawExpression = strip(str);
-        
+
         // extract the outer logic operator. First iterate through the expr
         String outer_str = getOuterExpr(this.rawExpression);
 
@@ -81,6 +85,8 @@ public class LogicalNode extends BaseNode {
         }
 
         // create the child nodes that are LogicalNodes if they are not variables
+        if (this.verbose)
+            System.out.println(this.expressionType + ": " + this.rawExpression + "; split on " + super.operation);
         switch (this.expressionType) {
             case "proposition": {
                 int split_idx = safeGetSplitIdx(this.rawExpression, " " + super.operation + " ");
@@ -119,7 +125,8 @@ public class LogicalNode extends BaseNode {
      * @return boolean expression
      */
     public boolean evaluate(JsonObject jsonInput) throws StreamSQLException {
-        logger.info("Checking the logical expression \"{}\".", this.rawExpression);
+        if (this.verbose)
+            logger.info("Checking the logical expression \"{}\".", this.rawExpression);
         switch (this.expressionType) {
             case "proposition":
                 if (super.operation.equals("XOR"))

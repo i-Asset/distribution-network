@@ -94,10 +94,10 @@ public class ComparisonNode extends BaseNode {
         }
 
         // check whether the key can be evaluated as arithmetic operation for keyword = result, or as
-        // string operation, e.g., for name = 'asdf' or time='2020-04-23'
+        // string operation, e.g., for quantity = 'asdf' or time='2020-04-23'
         // it the expression contains the arithmeticKeyword, then two children are created as ArithmeticNode
         if (StreamQuery.safeContainsKeyword(this.left_expr, this.arithmeticKeyword)) {
-            // extract both children, convert the correct object. (the one must match 'name', 'result' or 'time'
+            // extract both children, convert the correct object. (the one must match 'quantity', 'result' or 'time'
             this.child1 = new ArithmeticNode(left_expr);
             this.child2 = new ArithmeticNode(right_expr);
         }
@@ -127,7 +127,8 @@ public class ComparisonNode extends BaseNode {
      * @return boolean expression
      */
     public boolean evaluate(JsonObject jsonInput) throws StreamSQLException {
-        logger.info("Checking the comparison \"{}\".", this.rawExpression);
+        if (this.verbose)
+            logger.info("Checking the comparison \"{}\".", this.rawExpression);
 
         if (stringOperation) {
             String dataValue = jsonInput.get(this.left_expr).getAsString();
@@ -147,7 +148,7 @@ public class ComparisonNode extends BaseNode {
             // refer to ArithmeticNode for arithmetic operation
 //            double dataValue = jsonInput.get(this.left_expr).getAsDouble();
             if (operation.equals("="))
-                return (this.child1.arithmeticEvaluate(jsonInput) - this.child2.arithmeticEvaluate(jsonInput)) < 1E-7;
+                return (this.child1.arithmeticEvaluate(jsonInput) - this.child2.arithmeticEvaluate(jsonInput)) < 1E-9;
             if (operation.equals("<"))
                 return this.switchedKeySide ^ this.child1.arithmeticEvaluate(jsonInput) < this.child2.arithmeticEvaluate(jsonInput);  // invert if the order of the expr is interchanged
             if (operation.equals(">"))
