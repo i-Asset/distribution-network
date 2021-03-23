@@ -6,6 +6,7 @@ import time
 import sqlalchemy as db
 
 from server.utils.useful_functions import strip_dict
+from server.create_database import DEFAULT_SYSTEMS
 
 try:
     import confluent_kafka
@@ -16,11 +17,11 @@ except ModuleNotFoundError:
 
 PLATFORM_TOPIC = "platform.logger"
 KAFKA_TOPICS_POSTFIXES = [".log", ".int", ".ext"]
-DEFAULT_SYSTEMS = ["at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
-                   "cz.icecars.iot4cps-wp5-CarFleet.Car1",
-                   "cz.icecars.iot4cps-wp5-CarFleet.Car2",
-                   "is.iceland.iot4cps-wp5-WeatherService.Stations",
-                   "is.iceland.iot4cps-wp5-WeatherService.Services"]
+# DEFAULT_SYSTEMS = ["at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
+#                    "cz.icecars.iot4cps-wp5-CarFleet.Car1",
+#                    "cz.icecars.iot4cps-wp5-CarFleet.Car2",
+#                    "is.iceland.iot4cps-wp5-WeatherService.Stations",
+#                    "is.iceland.iot4cps-wp5-WeatherService.Services"]
 
 
 class KafkaInterface:
@@ -50,9 +51,9 @@ class KafkaInterface:
 
             self.app.logger.debug("Connected to Kafka Bootstrap Servers '{}'.".format(self.bootstrap_server))
             return True
-        except cimpl.KafkaException:
-            self.app.logger.error("Couldn't connect to Kafka Bootstrap servers.")
-            self.app.logger.error("Check the Kafka Bootstrap Servers '{}'!".format(self.bootstrap_server))
+        except cimpl.KafkaException as e:
+            self.app.logger.error(f"Couldn't connect to Kafka Bootstrap servers: {e}")
+            self.app.logger.error(f"Check the Kafka Bootstrap Servers '{self.bootstrap_server}'!")
             return False
 
     def recreate_lost_topics(self):
@@ -104,6 +105,15 @@ class KafkaInterface:
         if self.bootstrap_server is None:
             self.app.logger.warning("Skipped to create default system topics as the platform-only mode is used.")
             return None
+        # Create topic for platform logger
+        if self.bootstrap_server is None:
+            self.app.logger.warning("Skipped to create system topics as the platform-only mode is used.")
+            return None
+        else:
+            self.k_admin_client.create_topics([
+                kafka_admin.NewTopic(PLATFORM_TOPIC, num_partitions=3, replication_factor=1)])
+            self.app.logger.info("Created topic for platform.logger")
+
         # Create default system topics
         for system_name in DEFAULT_SYSTEMS:
             self.create_system_topics(system_name)
