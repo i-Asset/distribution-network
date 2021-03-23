@@ -318,7 +318,7 @@ def get_stream_payload(user_id, system_name, stream_name):
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = """
-    SELECT company_id, streams.name, status, source_system, target_system, com.name AS company_name,
+    SELECT company_id, streams.name, status, source_system, target_system, com.name AS company_name, is_multi_source,
     creator.email AS contact_mail, streams.description, agf.user_id AS agent_id, streams.datetime AS datetime,
     logic
     FROM stream_apps as streams
@@ -388,7 +388,7 @@ def start_stream(system_url, stream_name):
     stream["SOURCE_SYSTEM"] = payload["source_system"]
     stream["TARGET_SYSTEM"] = payload["target_system"]
     stream["KAFKA_BOOTSTRAP_SERVERS"] = app.config["KAFKA_BOOTSTRAP_SERVER"]
-    stream["GOST_SERVER"] = app.config["GOST_SERVER"]
+    stream["GOST_SERVER"] = "none"  # app.config["GOST_SERVER"]
     stream["FILTER_LOGIC"] = payload["logic"]
     stream["is_multi_source"] = payload["is_multi_source"]
 
@@ -545,7 +545,7 @@ def check_gost_connection():
 
 def create_custom_fct(name="testclient", system_name="12345678", logic="test content"):
     dir_path = os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]
-    path = os.path.join(dir_path, "TimeSeriesJoiner", "customization")
+    path = os.path.join(dir_path, "StreamHub", "TimeSeriesJoiner", "customization")
 
     # Create custom_fct in the path
     with open(os.path.join(path, f"custom_fct_{system_name}_{name}.py"), "w") as f:

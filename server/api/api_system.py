@@ -168,16 +168,18 @@ def create_systems_by_person(user_id):
         result_proxy = conn.execute(f"SELECT id, domain, enterprise FROM companies WHERE id='{company_id}';")
         companies = [dict(c.items()) for c in result_proxy.fetchall()]
         if len(companies) == 0:
+            country = party_res["postalAddress"]["country"]["name"].get("value")
+            domain = app.config["COUNTRY_CODES"].get(country, "com")  # com is the default
+            enterprise = str(company_id)
+
             query = db.insert(app.config["tables"]["companies"])
             values_list = [{"id": company_id,
                             "name": party_res["partyName"][0]["name"]["value"],
-                            "domain": "com",  # TODO get domain and enterprise
-                            "enterprise": "example",
+                            "domain": domain,
+                            "enterprise": enterprise,
                             "description": party_res["industryClassificationCode"]["value"],
                             'datetime': get_datetime()
                             }]
-            domain = "com"
-            enterprise = "example"
             conn.execute(query, values_list)
         else:
             domain = companies[0]["domain"].strip()

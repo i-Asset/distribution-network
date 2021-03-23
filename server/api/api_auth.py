@@ -14,6 +14,20 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 # prefix = "/distributionnetwork"  # url_prefix="/distributionnetwork/")
 # api_auth = Blueprint("api_auth", __name__)
 
+def check_iasset_connection(asset_uri):
+    url = urllib.parse.urljoin(asset_uri, f"/identity/statistics/")
+    try:
+        res = requests.get(url=url, headers={'content-type': 'application/json'})
+        if res.status_code in [200, 201, 202]:
+            return True
+        app.logger.error(f"check_iasset_connection: Unknown response with code {res.status_code} and body {res.json()}")
+    except Exception as e:
+        app.logger.error(f"check_iasset_connection: Connection error with i-Asset server.")
+        app.logger.error(f"check_iasset_connection: i-Asset server: '{url}'")
+        app.logger.error(f"check_iasset_connection: Exception: {e}")
+    return False
+
+
 def get_user_id(fct, user_id):
     # check if the value is an integer
     try:
