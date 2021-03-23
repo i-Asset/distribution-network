@@ -1,4 +1,0 @@
-requests
-pytz
-datetime
-confluent-kafka==1.5.*

@@ -53,6 +53,7 @@ CREATE TABLE if not exists stream_apps (
     creator_id integer REFERENCES users(id),
     logic varchar(1024),
     status varchar(32),
+    is_multi_source bool default false,
     datetime timestamp with time zone,
     description text,
     PRIMARY KEY (source_system, name)

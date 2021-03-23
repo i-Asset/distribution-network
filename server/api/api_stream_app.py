@@ -65,7 +65,7 @@ def streams_per_system(user_id, system_url):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT sys.name AS system_name, company_id, kafka_servers, sa.name, sa.source_system, sa.target_system, 
+    SELECT sys.name AS system_name, company_id, sys.kafka_servers, sa.name, sa.source_system, sa.target_system, 
     sa.creator_id, sa.logic, sa.status, sa.datetime AS created_at, sa.description, sa.is_multi_source 
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
@@ -111,7 +111,7 @@ def stream_per_system(user_id, system_url, stream_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT sys.name AS system_name, company_id, kafka_servers, sa.name, sa.source_system, sa.target_system, 
+    SELECT sys.name AS system_name, company_id, sys.kafka_servers, sa.name, sa.source_system, sa.target_system, 
     sa.creator_id, sa.logic, sa.status, sa.datetime AS created_at, sa.description, sa.is_multi_source 
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
