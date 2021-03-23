@@ -9,8 +9,13 @@ A layer for easy and structured real-time data exchange between assets.
    1. [Setup Messaging Layer](#setup-messaging-layer)
    1. [Setup Database](#setup-database)
    1. [Setup Distribution Service](#setup-distribution-service)
-1. [Platform UI](#platform-ui)
+1. [Usage](#usage)
+   1. [Platform UI](#platform-ui)
+   1. [RestAPI](#restapi)
 
+<br>
+
+___
 
 ## Requirements
 The setup is based on the following requirements:
@@ -24,6 +29,10 @@ The setup is based on the following requirements:
     cd distribution-network
     git checkout staging
     ```
+
+<br>
+
+___
 
 ## Setup
 
@@ -136,9 +145,27 @@ The respective dependency-variables have to be valid and are required to set up 
 
 #### Option 1: Setup Distribution Service on Docker
 
+Make sure `postgres` is available on port `5432` and `postgres` is the owner of the database `distributionnetworkdb`.
 ```bash
-docker-compose -f server/docker-compose.yml up --build -d
+docker-compose -f /server/postgresql/docker-compose.yml up --build -d
 ```
+
+Then set the environment variable `DOCKER_HOST_IP` and start the main docker compose:
+
+```bash
+export DOCKER_HOST_IP=$(hostname -I | cut -d ' ' -f1)
+echo $DOCKER_HOST_IP
+docker-compose up --build -d
+```
+
+Check if everything works using:
+```bash
+docker ps
+docker-compose logs -f
+docker-compose logs -f distribution-network
+docker inspect distribution-network_distribution-network_1
+```
+
 
 #### Option 2: Setup Distribution Service on Host
 
@@ -149,4 +176,42 @@ virtualenv --python=/path/to/python /path/to/new/venv
 source /path/to/new/venv/bin/activate  # e.g. /home/chris/anaconda3/envs/venv_iot4cps/bin/activate
 pip install -r setup/requirements.txt
 ```
+
+Additionally, a running Kafka instance is required, e.g.:
+```bash
+export DOCKER_HOST_IP=$(hostname -I | cut -d ' ' -f1)
+echo $DOCKER_HOST_IP
+docker-compose -f /server/kafka/docker-compose.yml up --build -d
+```
+
+Make sure that the file `server/.env` directs to the correct configuration set, that is 
+either `development`, `production`, `docker` or `platform-only` (that doesn't interact with the
+Kafka data streaming).
+The platform can be started by running:
+```bash
+export FLASK_APP=$(pwd)/server/app.py
+echo $FLASK_APP
+python -m flask run --host $(hostname -I | cut -d " " -f1) --port 1908
+```
+
+<br>
+
+___
+
+## Usage
+
+### Platform UI
+
+One easy way to check the platform is via the light-weight user interface that comes with the *distribution-network*:
+
+![platform_ui](https://github.com/i-Asset/distribution-network/blob/master/server/extra/platform_ui.png)
+
+
+### RestAPI
+
+The RestAPI is the preferred user interface and is documented in swagger on 
+[server/distributionnetwork/swagger-ui.html](http://localhost:1908/distributionnetwork/swagger-ui.html).
+
+
+![swagger_ui](https://github.com/i-Asset/distribution-network/blob/master/server/extra/swagger_ui.png)
 
