@@ -10,7 +10,7 @@ try:
     from server.utils.useful_functions import get_datetime, get_uid, is_logged_in
 except ModuleNotFoundError:
     # This is needed
-    from views.useful_functions import get_datetime, get_uid, is_logged_in
+    from utils.useful_functions import get_datetime, get_uid, is_logged_in
 
 # load environment variables automatically from a .env file in the same directory
 load_dotenv()
@@ -19,6 +19,25 @@ load_dotenv()
 app = Flask(__name__)
 # app.config.from_object('config')
 app.config.from_envvar('APP_CONFIG_FILE')
+
+DEFAULT_SYSTEMS = ["at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
+                   "cz.icecars.iot4cps-wp5-CarFleet.Car1",
+                   "cz.icecars.iot4cps-wp5-CarFleet.Car2",
+                   "is.iceland.iot4cps-wp5-WeatherService.Stations",
+                   "is.iceland.iot4cps-wp5-WeatherService.Services"]
+
+def check_postgres_connection(db_uri):
+    succeeded = False
+    try:
+        engine = db.create_engine(db_uri)
+        conn = engine.connect()
+        result_proxy = conn.execute("SELECT 'ok';")
+        app.logger.info(f"Connection to Postgres '{db_uri}' was established.")
+        succeeded = True
+        engine.dispose()
+    except Exception as e:
+        app.logger.info(f"Connection to Postgres '{db_uri}' could not be established: {e}")
+    return succeeded
 
 
 def drop_tables():
@@ -424,9 +443,9 @@ def insert_samples_if_empty(app):
 if __name__ == '__main__':
     app.logger.setLevel(logging.INFO)
 
-    # Creating the tables
-    app.logger.info("Drop database distributionnetworkdb.")
-    drop_tables()
+    # # Creating the tables
+    # app.logger.info("Drop database distributionnetworkdb.")
+    # drop_tables()
 
     # Creating the tables
     app.logger.info("Creating database distributionnetworkdb.")
