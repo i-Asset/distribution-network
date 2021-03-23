@@ -169,7 +169,7 @@ def create_systems_by_person(user_id):
         companies = [dict(c.items()) for c in result_proxy.fetchall()]
         if len(companies) == 0:
             country = party_res["postalAddress"]["country"]["name"].get("value")
-            domain = app.config["COUNTRY_CODES"].get(country, "com")  # com is the default
+            domain = app.config["COUNTRY_CODES"].get(country, "com").lower()  # com is the default
             enterprise = str(company_id)
 
             query = db.insert(app.config["tables"]["companies"])
