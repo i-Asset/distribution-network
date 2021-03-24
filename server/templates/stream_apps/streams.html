@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1> <small> Your streams </small></h1>
+A list of streams of whose source system you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>Source System</th>
+      <th>Target System</th>
+      <th>Status</th>
+      <th>Creator</th>
+      <th></th>
+    </tr>
+      {% for stream in streams %}
+      <tr>
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-block">{{stream.name}}</a></td>
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-block">{{stream.source_system}}</a></td>
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-block">{{stream.target_system}}</a></td>
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-block">{{stream.status}}</a></td>
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-block">{{stream.contact_mail}}</a></td>
+
+        <td><a href="show_stream/{{stream.source_system}}/{{stream.name}}" class="btn btn-info float-right"
+                data-toggle="tooltip" title="Manage this stream.">manage</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_stream"
+      data-toggle="tooltip" title="Add a new stream application to this system."> Add Stream</a>
+
+  <br>
+  <br>
+{% endblock %}

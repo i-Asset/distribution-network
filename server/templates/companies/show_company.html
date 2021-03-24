@@ -1,0 +1,80 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <table class="table">
+  <td>
+    <h1> {{payload.com_name}}</h1>
+    <h2> <small> Company identifier: </small>{{payload.id}}</h2>
+    <h2> <small> Company shortname: </small>{{payload.domain}}.{{payload.enterprise}}</h2>
+
+    {% if payload.creator_mail %}
+    <h3> <small> Created by {{payload.creator_mail}} at {{payload.com_datetime}}. </small></h3>
+    {% endif %}
+    {% if payload.description %}
+    {{payload.description}}
+    {% endif %}
+  </td>
+  <td>
+<!--     <a class="btn btn-info float-right mb-2" href="/edit_client/{{payload.system_name}}/{{payload.name}}"> edit description </a>-->
+     <a class="btn btn-danger float-right" href="/delete_company/{{payload.id}}"
+        data-toggle="tooltip" title="Only empty companies can be deleted."> delete company </a>
+
+  </td>
+  </table>
+
+  <hr>
+  <h2> <small>Systems for CPSs and services within the company </small></h2>
+  <table class="table table-striped">
+    <tr>
+      <th>System Name</th>
+      <th>Company</th>
+      <th>Creator</th>
+<!--      <th>Creator</th>-->
+      <th></th>
+    </tr>
+      {% for system in systems %}
+      <tr>
+<!--        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.domain}}</a></td>-->
+<!--        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.enterprise}}</a></td>-->
+        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.system_name}}</a></td>
+        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.com_name}}</a></td>
+        <td><a href="/show_system/{{system.system_url}}" class="btn btn-block">{{system.contact_mail}}</a></td>
+        <td><a href="/show_system/{{system.system_url}}" class="btn btn-info float-right"
+        data-toggle="tooltip" title="Manage this system.">manage system</a></td>
+
+<!--        <td><a class="btn btn-danger" href="/delete_system/{{system.system_name}}"-->
+<!--        data-toggle="tooltip" title="Only empty systems can be deleted."> delete</a> </td>-->
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_system/{{payload.id}}"
+        data-toggle="tooltip" title="Add a new system to this company."> Add System</a>
+  <br>
+  <br>
+
+<!-------------------------------------------------------------------------------------------->
+
+  <hr>
+  <h2> <small>Admins of the company</small></h2>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>Contact</th>
+      <th></th>
+    </tr>
+      {% for admin in admins %}
+      <tr>
+        <td>{{admin.first_name}} {{admin.sur_name}}</td>
+        <td>{{admin.email}}</td>
+        <td>
+            <a class="btn btn-danger float-right" href="/delete_admin_company/{{admin.id}}/{{admin.admin_id}}"
+        data-toggle="tooltip" title="Remove this user as agent from the company."> remove </a>
+        </td>
+    {% endfor %}
+  </table>
+  <a href="../add_admin_company/{{payload.id}}" class="btn btn-success"
+        data-toggle="tooltip" title="Add a registered user as new admin for this company.">Add Admin</a>
+
+  <br>
+  <br>
+{% endblock %}

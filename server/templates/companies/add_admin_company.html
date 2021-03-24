@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+    <h1>Add admin to company {{com_name}}</h1>
+    <h2> <small> Company identifier: </small>{{domain}}.{{enterprise}}</h2>
+    <br>
+
+    <p>Add a registered user as admin for this company:</p>
+
+    {% from "includes/_formhelpers.html" import render_field %}
+
+    <form method="POST" action="">
+        <div class="form-group">
+            {{render_field(form.email, class_="form-control")}}
+        </div>
+        <p><input type="submit" class="btn btn-primary" value="Add user as admin"> </p>
+
+    </form>
+
+  <br>
+  <br>
+{% endblock %}
+

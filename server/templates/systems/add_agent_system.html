@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+    <h1>Add an admin to system {{payload.domain}}.{{payload.enterprise}}.{{payload.workcenter}}.{{payload.station}}</h1>
+    <br>
+
+    <p>Add a registered user as admin for this system:</p>
+
+    {% from "includes/_formhelpers.html" import render_field %}
+
+    <form method="POST" action="">
+        <div class="form-group">
+            {{render_field(form.email, class_="form-control")}}
+        </div>
+        <p><input type="submit" class="btn btn-primary" value="Add user as admin"> </p>
+
+    </form>
+
+  <br>
+  <br>
+{% endblock %}
+

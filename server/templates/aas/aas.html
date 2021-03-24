@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<!--  <h1>Dashboard <small> Welcome {{session.first_name}} {{session.sur_name}}</small></h1>-->
+  <h1> <small> Your connections to asset administration shell </small></h1>
+
+A list of aas connections of whose dedicated system you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>System</th>
+      <th>Registry URI</th>
+      <th>Creator</th>
+      <th></th>
+    </tr>
+      {% for aas in aas_list %}
+      <tr>
+        <td><center>{{aas.name}}</center></td>
+        <td><center>{{aas.system_name}}</center></td>
+        <td><center>{{aas.registry_uri}}</center></td>
+        <td><center>{{aas.contact_mail}}</center></td>
+        <td><a href="/show_aas/{{aas.system_url}}/{{aas.name}}" class="btn btn-info float-right"
+                data-toggle="tooltip" title="Manage this client application.">manage</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_aas"
+      data-toggle="tooltip" title="Add a new aas connection to this system."> Add aas connection</a>
+
+  <br>
+  <br>
+
+{% endblock %}

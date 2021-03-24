@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<!--  <h1>Dashboard <small> Welcome {{session.first_name}} {{session.sur_name}}</small></h1>-->
+  <h1> <small>Your systems </small></h1>
+A list of systems of CPSs and services that you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>System Name</th>
+      <th>Company</th>
+      <th>Creator</th>
+      <th></th>
+<!--      <th></th>-->
+    </tr>
+
+      {% for system in systems %}
+      <tr>
+        <td><a href="show_system/{{system.sys_url}}" class="btn btn-block">{{system.sys_name}}</a></td>
+        <td><a href="show_system/{{system.sys_url}}" class="btn btn-block">{{system.com_name}}</a></td>
+        <td><a href="show_system/{{system.sys_url}}" class="btn btn-block">{{system.contact_mail}}</a></td>
+        <td><a href="show_system/{{system.sys_url}}" class="btn btn-info float-right"
+        data-toggle="tooltip" title="Manage this system.">manage system</a></td>
+<!--        <td><a class="btn btn-danger" href="/delete_system/{{system.sys_url}}"> delete</a></td>-->
+      </tr>
+    {% endfor %}
+  </table>
+    {% if not systems %}
+      No systems were created yet.
+      <br>
+      <br>
+    {% endif %}
+  <a class="btn btn-success" href="/add_system"
+      data-toggle="tooltip" title="Add a new system to this company."> Add System</a>
+
+  <br>
+  <br>
+{% endblock %}

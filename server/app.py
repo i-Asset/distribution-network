@@ -1,0 +1,165 @@
+import json
+import os
+import sys
+import time
+
+import requests
+from dotenv import load_dotenv
+from flask import Flask, send_from_directory
+from flask_swagger_ui import get_swaggerui_blueprint
+
+# Import modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
+from server.create_database import check_postgres_connection, create_tables, insert_samples_if_empty
+
+from server.views.home import home_bp
+from server.views.auth import auth
+from server.views.company import company
+from server.views.system import system
+from server.views.client_apps import client_app
+from server.views.stream_apps import stream_app
+from server.views.aas import aas
+
+# import api
+from server.api.api_system import api_system
+from server.api.api_stream_app import api_stream_app
+from server.api.api_auth import check_iasset_connection
+
+# Import application-specific functions
+from server.utils.kafka_interface import KafkaHandler, KafkaInterface
+
+
+def create_app():
+    ########################################################
+    # ################# register modules ################# #
+    ########################################################
+
+    # load environment variables automatically from a .env file in the same directory
+    load_dotenv()
+
+    # Create Flask app and load configs
+    app = Flask(__name__)
+
+    # Register modules as blueprint
+    app.register_blueprint(home_bp)
+    app.register_blueprint(auth)
+    app.register_blueprint(company)
+    app.register_blueprint(system)
+    app.register_blueprint(client_app)
+    app.register_blueprint(stream_app)
+    app.register_blueprint(aas)
+
+    # Register api as blueprint
+    app.register_blueprint(api_system)
+    app.register_blueprint(api_stream_app)
+
+    ########################################################
+    # ########### load and update env variables ########## #
+    ########################################################
+
+    # load environment variables
+    app.config.from_envvar('APP_CONFIG_FILE')
+
+    app.logger.setLevel(app.config["LOGLEVEL"])
+    app.logger.info("Preparing the platform.")
+
+    with open("utils/country_codes.json") as f:
+        codes = json.loads(f.read())
+        app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
+
+    if os.environ.get("IASSET_SERVER"):
+        app.config.update({"IASSET_SERVER": os.environ.get("IASSET_SERVER")})
+        app.logger.info("Update i-Asset connection to " + app.config["IASSET_SERVER"])
+    else:
+        app.logger.info("IASSET_SERVER not in environment variables, keep {}".format(app.config.get(
+            "IASSET_SERVER", None)))
+
+    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
+        app.config.update({"SQLALCHEMY_DATABASE_URI": os.environ.get("SQLALCHEMY_DATABASE_URI")})
+        app.logger.info("Update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+    else:
+        app.logger.info("SQLALCHEMY_DATABASE_URI not in environment variables, keep {}".format(app.config.get(
+            "SQLALCHEMY_DATABASE_URI", None)))
+
+    if os.environ.get("KAFKA_BOOTSTRAP_SERVER"):
+        app.config.update({"KAFKA_BOOTSTRAP_SERVER": os.environ.get("KAFKA_BOOTSTRAP_SERVER")})
+        app.logger.info("Update Kafka Bootstrap servers to " + app.config["KAFKA_BOOTSTRAP_SERVER"])
+    else:
+        app.logger.info("KAFKA_BOOTSTRAP_SERVER not in environment variables, keep {}".format(app.config.get(
+            "KAFKA_BOOTSTRAP_SERVER", None)))
+
+    # wait for infrastructure services
+    if app.config.get("WAIT_TIME"):
+        app.logger.info(f"Waiting {app.config.get('WAIT_TIME'):.1f} s for other services.")
+        time.sleep(app.config.get("WAIT_TIME"))
+
+    ########################################################
+    # ############## test i-asset connection ############# #
+    ########################################################
+
+    if not check_iasset_connection(asset_uri=app.config["IASSET_SERVER"]):
+        app.logger.error("The connection to i-Asset server couldn't be established.")
+        sys.exit(1)
+
+    ########################################################
+    # ############ test connection and feed db ########### #
+    ########################################################
+
+    if not check_postgres_connection(db_uri=app.config["SQLALCHEMY_DATABASE_URI"]):
+        app.logger.error("The connection to Postgres couldn't be established.")
+        sys.exit(2)
+
+    # Creating the tables
+    app.logger.info("Creating database distributionnetworkdb and insert sample data.")
+    create_tables(app)
+    if app.config.get("DB_INSERT_SAMPLE"):
+        insert_samples_if_empty(app)
+
+    ########################################################
+    # ###### # test connection and recreate kafka ######## #
+    ########################################################
+
+    if app.config.get("KAFKA_BOOTSTRAP_SERVER"):
+        # Create and add a Kafka instance to app
+        app.kafka_interface = KafkaInterface(app)
+
+        # Check the connection to Kafka exit if there isn't any
+        if not app.kafka_interface.get_connection():
+            app.logger.error("The connection to the Kafka Bootstrap Servers couldn't be established.")
+            sys.exit(3)
+
+        # Recreate lost Kafka topics
+        app.kafka_interface.recreate_lost_topics()
+
+        # # Test the Kafka Interface by creating and deleting a test topic
+        # app.kafka_interface.create_system_topics("test.test.test.test")
+        # app.kafka_interface.delete_system_topics("test.test.test.test")
+
+        # Adding a KafkaHandler to the logger, ingests messages into kafka
+        kh = KafkaHandler(app)
+        app.logger.addHandler(kh)
+
+    ########################################################
+    # ################ register swagger ui ################ #
+    ########################################################
+
+    # Register the Swagger ui as blueprint
+    @app.route("/api")
+    @app.route("/api/<path:path>")
+    def send_api(path):
+        return send_from_directory("api", path)
+
+    swagger_url = '/distributionnetwork/swagger-ui.html'
+    api_url = '/api/swagger.yaml'
+    swaggerui_blueprint = get_swaggerui_blueprint(swagger_url, api_url,
+                                                  config={'app_name': "Swagger UI Distribution Network"})
+    app.register_blueprint(swaggerui_blueprint, url_prefix=swagger_url)
+
+    app.logger.info("Starting the platform.")
+    return app
+
+
+if __name__ == '__main__':
+    # Run application
+    app = create_app()
+    app.run(debug=app.config["DEBUG"], host="0.0.0.0", port=1908)

@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.idea/
+/setup/kafka/zk-multiple-kafka-multiple/
+/notes.md
+/server.save/
+/server/views/keys/
+!/server/views/keys/.gitkeep
