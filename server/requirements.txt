@@ -10,7 +10,7 @@ click==7.1.2
 colorama==0.4.3
 confluent-kafka==1.5.0
 contextlib2==0.6.0
-cryptography==3.0
+cryptography==3.4.6
 DateTime==4.3
 distlib==0.3.0
 distro==1.4.0
@@ -34,9 +34,9 @@ iniconfig==1.0.1
 invoke==1.4.1
 ipaddr==2.2.0
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 lockfile==0.12.2
-lxml==4.6.2
+lxml==4.6.3
 Mako==1.1.3
 MarkupSafe==1.1.1
 marshmallow==2.18.0
