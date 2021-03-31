@@ -71,21 +71,21 @@ def create_app():
         app.config.update({"IASSET_SERVER": os.environ.get("IASSET_SERVER")})
         app.logger.info("Update i-Asset connection to " + app.config["IASSET_SERVER"])
     else:
-        app.logger.info("IASSET_SERVER not in environment variables, keep {}".format(app.config.get(
+        app.logger.info("IASSET_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
             "IASSET_SERVER", None)))
 
     if os.environ.get("SQLALCHEMY_DATABASE_URI"):
         app.config.update({"SQLALCHEMY_DATABASE_URI": os.environ.get("SQLALCHEMY_DATABASE_URI")})
         app.logger.info("Update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
     else:
-        app.logger.info("SQLALCHEMY_DATABASE_URI not in environment variables, keep {}".format(app.config.get(
+        app.logger.info("SQLALCHEMY_DATABASE_URI not in the compose-environment variables, keep {}".format(app.config.get(
             "SQLALCHEMY_DATABASE_URI", None)))
 
     if os.environ.get("KAFKA_BOOTSTRAP_SERVER"):
         app.config.update({"KAFKA_BOOTSTRAP_SERVER": os.environ.get("KAFKA_BOOTSTRAP_SERVER")})
         app.logger.info("Update Kafka Bootstrap servers to " + app.config["KAFKA_BOOTSTRAP_SERVER"])
     else:
-        app.logger.info("KAFKA_BOOTSTRAP_SERVER not in environment variables, keep {}".format(app.config.get(
+        app.logger.info("KAFKA_BOOTSTRAP_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
             "KAFKA_BOOTSTRAP_SERVER", None)))
 
     # wait for infrastructure services

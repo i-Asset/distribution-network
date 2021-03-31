@@ -27,6 +27,7 @@ RUN mkdir -p /src/server
 ADD . /src/server
 
 # load the docker-compose environment variables to the container environment
+RUN export $(cat Dockerfile.env | xargs)
 ARG IASSET_SERVER
 ENV IASSET_SERVER $IASSET_SERVER
 ARG SQLALCHEMY_DATABASE_URI
