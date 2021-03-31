@@ -11,6 +11,7 @@ services:
       - kafka1
       - kafka2
       - kafka3
+
 #    # Local deployment:
 #    environment:
 #      IASSET_SERVER: https://iasset.salzburgresearch.at
