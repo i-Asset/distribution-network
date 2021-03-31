@@ -67,12 +67,12 @@ def create_app():
         codes = json.loads(f.read())
         app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
 
-    if os.environ.get("IASSET_SERVER"):
-        app.config.update({"IASSET_SERVER": os.environ.get("IASSET_SERVER")})
-        app.logger.info("Update i-Asset connection to " + app.config["IASSET_SERVER"])
+    if os.environ.get("DNET_IASSET_SERVER"):
+        app.config.update({"DNET_IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER")})
+        app.logger.info("Update i-Asset connection to " + app.config["DNET_IASSET_SERVER"])
     else:
-        app.logger.info("IASSET_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
-            "IASSET_SERVER", None)))
+        app.logger.info("DNET_IASSET_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
+            "DNET_IASSET_SERVER", None)))
 
     if os.environ.get("SQLALCHEMY_DATABASE_URI"):
         app.config.update({"SQLALCHEMY_DATABASE_URI": os.environ.get("SQLALCHEMY_DATABASE_URI")})
@@ -97,7 +97,7 @@ def create_app():
     # ############## test i-asset connection ############# #
     ########################################################
 
-    if not check_iasset_connection(asset_uri=app.config["IASSET_SERVER"]):
+    if not check_iasset_connection(asset_uri=app.config["DNET_IASSET_SERVER"]):
         app.logger.error("The connection to i-Asset server couldn't be established.")
         sys.exit(1)
 
