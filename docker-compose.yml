@@ -13,8 +13,8 @@ services:
       - kafka3
     environment:
       IASSET_SERVER: https://iasset.salzburgresearch.at
-      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
-#      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@172.29.105.167:5432/distributionnetworkdb
+#      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://{BINARY_CONTENT_DB_USERNAME}:{BINARY_CONTENT_DB_PASSWORD}@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
       KAFKA_BOOTSTRAP_SERVER: ${DOCKER_HOST_IP:-127.0.0.1}:9092,${DOCKER_HOST_IP:-127.0.0.1}:9093,${DOCKER_HOST_IP:-127.0.0.1}:9094
 #      KAFKA_BOOTSTRAP_SERVER: 172.29.105.167:9092,172.29.105.167:9093,172.29.105.167:9094
 #    ports:
