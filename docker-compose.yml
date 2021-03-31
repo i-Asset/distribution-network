@@ -20,7 +20,7 @@ services:
 
     # Staging deployment: (on Dockerhub and Jenkins)
     environment:
-      IASSET_SERVER: https://iasset.salzburgresearch.at
+      IASSET_SERVER: iasset
       SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${BINARY_CONTENT_DB_USERNAME}:${BINARY_CONTENT_DB_PASSWORD}@staging-main-db:${BINARY_CONTENT_DB_PORT:-5432}/distributionnetworkdb
       KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
 
