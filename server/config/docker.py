@@ -7,7 +7,7 @@ DEBUG = False
 LOGLEVEL = logging.DEBUG
 
 # set time to wait for other services
-WAIT_TIME = 20
+WAIT_TIME = 10
 
 # extract HOST_IP
 try:
