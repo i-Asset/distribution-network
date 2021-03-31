@@ -11,6 +11,10 @@ node('iasset-jenkins-slave') {
             git(url: 'https://github.com/i-Asset/distribution-network.git', branch: env.BRANCH_NAME)
         }
 
+        stage('Source environment variables for Docker build') {
+            sh 'source ./server/Dockerfile.env'
+        }
+
         stage('Compose Build Docker') {
             sh 'docker build ./server -t iassetplatform/distribution-network:staging'
         }
