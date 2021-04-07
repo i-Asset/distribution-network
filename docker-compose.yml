@@ -20,21 +20,10 @@ services:
       POSTGRES_PASSWORD: postgres
       DNET_DOCKER_HOST_IP: iasset
       DNET_IASSET_SERVER: https://iasset.salzburgresearch.at
+#      DNET_IASSET_SERVER: https://iasset
       DNET_SQLALCHEMY_DATABASE_DRIVER: postgresql+psycopg2
       DNET_SQLALCHEMY_DATABASE_NAME: distributionnetworkdb
       DNET_KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
-
-#    # Staging deployment: (on Dockerhub and Jenkins), not needed as these are built from Dockerfile.env
-#    environment:
-#      POSTGRES_HOST: staging-main-db
-#      POSTGRES_PORT: 5432
-#      POSTGRES_USER: admin
-#      POSTGRES_PASSWORD: IRDMKUYCDTIDNLQG
-#      DNET_DOCKER_HOST_IP: iasset
-#      DNET_IASSET_SERVER: https://iasset.salzburgresearch.at
-#      DNET_SQLALCHEMY_DATABASE_DRIVER: postgresql+psycopg2
-#      DNET_SQLALCHEMY_DATABASE_NAME: distributionnetworkdb
-#      DNET_KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
 
     # no-docker deployment
 #    environment:
