@@ -67,6 +67,10 @@ def create_app():
         codes = json.loads(f.read())
         app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
 
+    if os.environ.get("DNET_WAIT_TIME"):
+        app.config.update({"WAIT_TIME": os.environ.get("DNET_WAIT_TIME")})
+        app.logger.info("Update WAIT_TIME to " + app.config["WAIT_TIME"])
+
     if os.environ.get("DNET_IASSET_SERVER"):
         app.config.update({"DNET_IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER"),
                            "IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER")})

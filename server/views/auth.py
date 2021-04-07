@@ -92,8 +92,6 @@ def login():
 
             # Compare Passwords
             # if password == sha256_crypt.hash(password_candidate, salt=str(abs(data[0]["id"]))):
-            print(password_candidate)
-            print(password)
             if sha256_crypt.verify(password_candidate, hash=password):
                 # Passed
                 session['logged_in'] = True
