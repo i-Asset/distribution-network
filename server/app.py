@@ -68,25 +68,35 @@ def create_app():
         app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
 
     if os.environ.get("DNET_IASSET_SERVER"):
-        app.config.update({"DNET_IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER")})
+        app.config.update({"DNET_IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER"),
+                           "IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER")})
         app.logger.info("Update i-Asset connection to " + app.config["DNET_IASSET_SERVER"])
     else:
+        app.config.update({"IASSET_SERVER": app.config.get("DNET_IASSET_SERVER")})
         app.logger.info("DNET_IASSET_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
             "DNET_IASSET_SERVER", None)))
 
-    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
-        app.config.update({"SQLALCHEMY_DATABASE_URI": os.environ.get("SQLALCHEMY_DATABASE_URI")})
-        app.logger.info("Update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+    if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
+        DNET_DB_URI = f'{app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+        DNET_DB_URI += f'{app.config.get("POSTGRES_USER", "postgres")}:{app.config.get("POSTGRES_PASSWORD", "postgres")}'
+        DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
+        DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
     else:
-        app.logger.info("SQLALCHEMY_DATABASE_URI not in the compose-environment variables, keep {}".format(app.config.get(
-            "SQLALCHEMY_DATABASE_URI", None)))
+        DNET_DB_URI = f'{os.environ.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+        DNET_DB_URI += f'{os.environ.get("POSTGRES_USER", "postgres")}:{os.environ.get("POSTGRES_PASSWORD", "postgres")}'
+        DNET_DB_URI += f'@{os.environ.get("POSTGRES_HOST", "staging-main-db")}:{os.environ.get("POSTGRES_PORT", 5432)}'
+        DNET_DB_URI += f'/{os.environ.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+    app.config.update({"SQLALCHEMY_DATABASE_URI": DNET_DB_URI})
+    app.logger.info("SQLALCHEMY_DATABASE_URI, update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
 
-    if os.environ.get("KAFKA_BOOTSTRAP_SERVER"):
-        app.config.update({"KAFKA_BOOTSTRAP_SERVER": os.environ.get("KAFKA_BOOTSTRAP_SERVER")})
-        app.logger.info("Update Kafka Bootstrap servers to " + app.config["KAFKA_BOOTSTRAP_SERVER"])
+    if os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER"):
+        app.config.update({"DNET_KAFKA_BOOTSTRAP_SERVER": os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER"),
+                           "KAFKA_BOOTSTRAP_SERVER": os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER")})
+        app.logger.info("Update Kafka Bootstrap servers to " + app.config["DNET_KAFKA_BOOTSTRAP_SERVER"])
     else:
-        app.logger.info("KAFKA_BOOTSTRAP_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
-            "KAFKA_BOOTSTRAP_SERVER", None)))
+        app.config.update({"KAFKA_BOOTSTRAP_SERVER": app.config.get("DNET_KAFKA_BOOTSTRAP_SERVER")})
+        app.logger.info("DNET_KAFKA_BOOTSTRAP_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
+            "DNET_KAFKA_BOOTSTRAP_SERVER", None)))
 
     # wait for infrastructure services
     if app.config.get("WAIT_TIME"):

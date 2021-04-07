@@ -14,21 +14,33 @@ services:
 
     # Local deployment:
     environment:
-      IASSET_SERVER: https://iasset.salzburgresearch.at
-      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@dev-main-db:5432/distributionnetworkdb
-      KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
+      POSTGRES_HOST: 172.27.89.198
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DNET_DOCKER_HOST_IP: iasset
+      DNET_IASSET_SERVER: https://iasset.salzburgresearch.at
+      DNET_SQLALCHEMY_DATABASE_DRIVER: postgresql+psycopg2
+      DNET_SQLALCHEMY_DATABASE_NAME: distributionnetworkdb
+      DNET_KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
 
 #    # Staging deployment: (on Dockerhub and Jenkins), not needed as these are built from Dockerfile.env
 #    environment:
-#      IASSET_SERVER: iasset
-#      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${BINARY_CONTENT_DB_USERNAME}:${BINARY_CONTENT_DB_PASSWORD}@staging-main-db:${BINARY_CONTENT_DB_PORT:-5432}/distributionnetworkdb
-#      KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
+#      POSTGRES_HOST: staging-main-db
+#      POSTGRES_PORT: 5432
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: IRDMKUYCDTIDNLQG
+#      DNET_DOCKER_HOST_IP: iasset
+#      DNET_IASSET_SERVER: https://iasset.salzburgresearch.at
+#      DNET_SQLALCHEMY_DATABASE_DRIVER: postgresql+psycopg2
+#      DNET_SQLALCHEMY_DATABASE_NAME: distributionnetworkdb
+#      DNET_KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
 
     # no-docker deployment
 #    environment:
-#      IASSET_SERVER: https://iasset.salzburgresearch.at
-#      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
-#      KAFKA_BOOTSTRAP_SERVER: ${DOCKER_HOST_IP:-127.0.0.1}:9092,${DOCKER_HOST_IP:-127.0.0.1}:9093,${DOCKER_HOST_IP:-127.0.0.1}:9094
+#      DNET_IASSET_SERVER: https://iasset.salzburgresearch.at
+#      DNET_SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
+#      DNET_KAFKA_BOOTSTRAP_SERVER: ${DOCKER_HOST_IP:-127.0.0.1}:9092,${DOCKER_HOST_IP:-127.0.0.1}:9093,${DOCKER_HOST_IP:-127.0.0.1}:9094
     ports:
       - "1908:1908"
 #    network_mode: host

@@ -21,7 +21,7 @@ def check_iasset_connection(asset_uri):
         if res.status_code in [200, 201, 202]:
             return True
         app.logger.error(f"check_iasset_connection: Unknown response with code {res.status_code} and body {res.json()}")
-    except Exception as e:
+    except requests.exceptions.ConnectionError as e:
         app.logger.error(f"check_iasset_connection: Connection error with i-Asset server.")
         app.logger.error(f"check_iasset_connection: i-Asset server: '{url}'")
         app.logger.error(f"check_iasset_connection: Exception: {e}")

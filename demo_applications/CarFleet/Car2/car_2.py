@@ -45,11 +45,16 @@ def produce_metrics(interval=10):
         print(f"The demo car 2 is at [{latitude}, {longitude}],   \twith the temp.: {temperature} °C  \tand had a " +
               f"maximal acceleration of {acceleration} m/s²  \tat {timestamp}")
 
-        # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
-        client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
-                       longitude=longitude, latitude=latitude, attitude=attitude)
-        client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
-                       longitude=longitude, latitude=latitude, attitude=attitude)
+        # # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
+        # client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
+        #                longitude=longitude, latitude=latitude, attitude=attitude)
+        # client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
+        #                longitude=longitude, latitude=latitude, attitude=attitude)
+        data = dict({"phenomenonTime": client.get_iso8601_time(timestamp),
+                     "resultTime": datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat(),
+                     "Datastream": "temperature",
+                     "result": temperature})
+        client.send_to_kafka_bootstrap(kafka_topic=config["system"]+".int", kafka_key=config["client_name"], data=data)
 
         time.sleep(interval)
 
@@ -69,39 +74,27 @@ def consume_metrics():
         received_quantities = client.consume(timeout=1.0)
         for received_quantity in received_quantities:
             # The resolves the all meta-data for an received data-point
-            if received_quantity['Datastream'].get('unitOfMeasurement'):
-                print(f"  -> Received new external data-point from {received_quantity['phenomenonTime']}: "
-                      f"'{received_quantity['Datastream']['name']}' = {received_quantity['result']} "
-                      f"{received_quantity['Datastream'].get('unitOfMeasurement').get('symbol')}.")
-            elif received_quantity.get('rel_distance'):
-                print(f"  -> Received new external data-point from a nearby car {received_quantity['phenomenonTime']}: "
-                      f"'temperature' = {received_quantity['result']} degC"
-                      f", measured {received_quantity.get('rel_distance'):.2f} km away.")
+            print(f"  -> Received new external data-point from {received_quantity['phenomenonTime']}: "
+                  f"'{received_quantity['Datastream']}' = {received_quantity['result']}.")
 
-            # To view the whole data-point in a pretty format, uncomment:
-            # print("Received new data: {}".format(json.dumps(received_quantity, indent=2)))
-            if received_quantity['Datastream'].get('unitOfMeasurement', {}).get('symbol', '') == "degC" \
-                    and received_quantity["result"] < 0:
-                subzero_temp.append(
-                    {"origin": received_quantity["Datastream"]["name"], "temperature": received_quantity["result"]})
-
-        # Check whether there are temperatures are subzero
-        if subzero_temp != list():
-            print("    WARNING, the road could be slippery, see: {}".format(subzero_temp))
+        # # Check whether there are temperatures are subzero
+        # if subzero_temp != list():
+        #     print("    WARNING, the road could be slippery, see: {}".format(subzero_temp))
 
 
 if __name__ == "__main__":
     # Set the configs, create a new Digital Twin Instance and register file structure
     # This config is generated when registering a client application on the platform
     # Make sure that Kafka and GOST are up and running before starting the platform
-    config = {"client_name": "client",
+    config = {
+              "client_name": "car_2",
               "system": "cz.icecars.iot4cps-wp5-CarFleet.Car2",
-              "gost_servers": "localhost:8082",
-              "kafka_bootstrap_servers": "localhost:9092",
+              "submodel_element_collection": "submodel_uri",
+              "kafka_bootstrap_servers": "172.20.38.70:9092,172.20.38.70:9093,172.20.38.70:9094",
               "additional_attributes": "longitude,latitude,attitude"}
     client = DigitalTwinClient(**config)
     client.logger.info("Main: Starting client.")
-    client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
+    # client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
     client.subscribe(subscription_file=SUBSCRIPTIONS)  # Subscribe to datastreams
 
     # Create an instance of the CarSimulator that simulates a car driving on different tracks through Salzburg

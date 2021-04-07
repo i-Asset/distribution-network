@@ -20,7 +20,7 @@ except ImportError:
 
 
 class DigitalTwinClient:
-    def __init__(self, client_name, system, gost_servers, kafka_bootstrap_servers=None, kafka_rest_server=None,
+    def __init__(self, client_name, system, submodel_element_collection, kafka_bootstrap_servers=None, kafka_rest_server=None,
                  additional_attributes=""):
         """
         Load config files
@@ -39,7 +39,7 @@ class DigitalTwinClient:
         # Load config
         self.config = {"client_name": client_name,
                        "system": system,
-                       "gost_servers": gost_servers,
+                       "submodel_element_collection": submodel_element_collection,
                        "kafka_bootstrap_servers": kafka_bootstrap_servers,
                        "kafka_rest_server": kafka_rest_server,
                        # Use a randomized hash for an unique consumer id in an client-wide consumer group
@@ -51,7 +51,7 @@ class DigitalTwinClient:
 
         # Check the connection to the SensorThings server
         self.logger.debug("init: Checking SenorThings server connection")
-        self.check_gost_connection()
+        # self.check_gost_connection()
 
         # Create a mapping for each datastream of the client
         self.mapping = dict()
@@ -69,20 +69,20 @@ class DigitalTwinClient:
         self.instances = None
         self.consumer = None
 
-    def check_gost_connection(self):
-        gost_url = "http://" + self.config["gost_servers"]
-        try:
-            res = requests.get(gost_url + "/v1.0/Things")
-            if res.status_code in [200, 201, 202]:
-                self.logger.info("init: Successfully connected to GOST server {}.".format(gost_url))
-            else:
-                self.logger.error("init: Error, couldn't connect to GOST server: {}, status code: {}, result: {}".
-                                  format(gost_url, res.status_code, res.json()))
-                raise ConnectionError("init: Error, couldn't connect to GOST server: {}, status code: {}, result: {}".
-                                      format(gost_url, res.status_code, res.json()))
-        except Exception as e:
-            self.logger.error("init: Error, couldn't connect to GOST server: {}".format(gost_url))
-            raise e
+    # def check_gost_connection(self):
+    #     gost_url = "http://" + self.config["gost_servers"]
+    #     try:
+    #         res = requests.get(gost_url + "/v1.0/Things")
+    #         if res.status_code in [200, 201, 202]:
+    #             self.logger.info("init: Successfully connected to GOST server {}.".format(gost_url))
+    #         else:
+    #             self.logger.error("init: Error, couldn't connect to GOST server: {}, status code: {}, result: {}".
+    #                               format(gost_url, res.status_code, res.json()))
+    #             raise ConnectionError("init: Error, couldn't connect to GOST server: {}, status code: {}, result: {}".
+    #                                   format(gost_url, res.status_code, res.json()))
+    #     except Exception as e:
+    #         self.logger.error("init: Error, couldn't connect to GOST server: {}".format(gost_url))
+    #         raise e
 
     def check_kafka_connection(self):
         # distinguish to connect to the kafka_bootstrap_servers (preferred) or to kafka_rest
@@ -404,26 +404,26 @@ class DigitalTwinClient:
                 raise Exception(
                     "subscribe: can't create consumer instance, status code: {}".format(res.status_code))
 
-        # Check the subscriptions and create mapping
-        # {4: {'@iot.id': 4, 'name': 'Machine Temperature', '@iot.selfLink': 'http://...}, 5: {....}, ...}
-        gost_url = "http://" + self.config["gost_servers"]
-        # Sort datastreams to pick latest stream datastream in case of duplicates
-        gost_datastreams = sorted(requests.get(gost_url + "/v1.0/Datastreams?$expand=Sensors,Thing,ObservedProperty")
-                                  .json()["value"], key=lambda k: k["@iot.id"])
-        self.subscribed_datastreams = {ds["@iot.id"]: ds for ds in gost_datastreams if ds["name"]
-                                       in subscriptions["subscribed_datastreams"]}
-        if "*" in subscriptions["subscribed_datastreams"]:
-            self.subscribed_datastreams["*"] = {"name": "*"}
+        # # Check the subscriptions and create mapping
+        # # {4: {'@iot.id': 4, 'name': 'Machine Temperature', '@iot.selfLink': 'http://...}, 5: {....}, ...}
+        # gost_url = "http://" + self.config["gost_servers"]
+        # # Sort datastreams to pick latest stream datastream in case of duplicates
+        # gost_datastreams = sorted(requests.get(gost_url + "/v1.0/Datastreams?$expand=Sensors,Thing,ObservedProperty")
+        #                           .json()["value"], key=lambda k: k["@iot.id"])
+        # self.subscribed_datastreams = {ds["@iot.id"]: ds for ds in gost_datastreams if ds["name"]
+        #                                in subscriptions["subscribed_datastreams"]}
+        # if "*" in subscriptions["subscribed_datastreams"]:
+        #     self.subscribed_datastreams["*"] = {"name": "*"}
+        #
+        # for key, value in self.subscribed_datastreams.items():
+        #     self.logger.info("subscribe: Subscribed to datastream: id: '{}' and metadata: '{}'".format(key, value))
+        # if len(self.subscribed_datastreams.keys()) == 0:
+        #     self.logger.warning("subscribe: No subscription matches an existing datastream.")
+        # for stream in subscriptions["subscribed_datastreams"]:
+        #     if stream not in [subscribed_ds["name"] for subscribed_ds in self.subscribed_datastreams.values()]:
+        #         self.logger.warning("subscribe: Couldn't subscribe to {}, datastream is not registered".format(stream))
 
-        for key, value in self.subscribed_datastreams.items():
-            self.logger.info("subscribe: Subscribed to datastream: id: '{}' and metadata: '{}'".format(key, value))
-        if len(self.subscribed_datastreams.keys()) == 0:
-            self.logger.warning("subscribe: No subscription matches an existing datastream.")
-        for stream in subscriptions["subscribed_datastreams"]:
-            if stream not in [subscribed_ds["name"] for subscribed_ds in self.subscribed_datastreams.values()]:
-                self.logger.warning("subscribe: Couldn't subscribe to {}, datastream is not registered".format(stream))
-
-    def consume_via_bootstrap(self, timeout=0.1):
+    def consume_via_bootstrap(self, timeout=0.1, error="ignore"):
         """
         Receives data from the Kafka topics. On new data, it checks if it is valid, filters for subscribed datastreams
         and returns the message augmented with datastream metadata.
@@ -438,10 +438,16 @@ class DigitalTwinClient:
         received_quantities = list()
 
         for msg in msgs:
-            data = json.loads(msg.value().decode('utf-8'))
-            iot_id = data.get("Datastream", {}).get("@iot.id", None)
-            if iot_id in self.subscribed_datastreams.keys():
-                data["Datastream"] = self.subscribed_datastreams[iot_id]
+            try:
+                data = json.loads(msg.value().decode('utf-8', errors='ignore'))
+            except json.decoder.JSONDecodeError as e:
+                if error == "ignore":
+                    continue
+                else:
+                    raise e
+            name = data.get("Datastream", None) # .get("@iot.id", None)
+            if True:  # iot_id in self.subscribed_datastreams.keys():
+                data["Datastream"] = name # self.subscribed_datastreams[iot_id]
                 data["partition"] = msg.partition()
                 data["topic"] = msg.topic()
                 received_quantities.append(data)
@@ -452,7 +458,7 @@ class DigitalTwinClient:
                 received_quantities.append(data)
         return received_quantities
 
-    def consume(self, timeout=1):
+    def consume(self, timeout=1, error="ignore"):
         """
         Receives data from the Kafka topics directly via a bootstrap server (preferred) or via kafka rest.
         On new data, it checks if it is valid and filters for subscribed datastreams
@@ -466,7 +472,7 @@ class DigitalTwinClient:
         """
         # msg = self.consumer.poll(timeout)  # Waits up to 'session.timeout.ms' for a message
         if self.config["kafka_bootstrap_servers"]:
-            return self.consume_via_bootstrap(timeout)
+            return self.consume_via_bootstrap(timeout, error=error)
 
         # Consume data via Kafka Rest
         else:

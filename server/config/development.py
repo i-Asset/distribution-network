@@ -22,7 +22,15 @@ except:
 # Define the database - we are working with
 # Set up SQLAlchemy
 # SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://iot4cps:iot4cps@localhost/iot4cps'
-SQLALCHEMY_DATABASE_URI = f'postgresql+psycopg2://postgres:postgres@{HOST_IP}:5432/distributionnetworkdb'
+POSTGRES_HOST = "172.27.89.198"
+POSTGRES_PORT = "5432"
+POSTGRES_USER = "postgres"
+POSTGRES_PASSWORD = "postgres"
+DNET_DOCKER_HOST_IP = "iasset"
+DNET_IASSET_SERVER = "https://iasset.salzburgresearch.at"
+DNET_SQLALCHEMY_DATABASE_DRIVER = "postgresql+psycopg2"
+DNET_SQLALCHEMY_DATABASE_NAME = "distributionnetworkdb"
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 DB_INSERT_SAMPLE = True
 
@@ -30,9 +38,8 @@ DB_INSERT_SAMPLE = True
 SECRET_KEY = "changeme"
 
 # Bootstrap servers for Kafka: get ip of the local machine, only the first one listed will be used
-KAFKA_BOOTSTRAP_SERVER = f"{HOST_IP}:9092,{HOST_IP}:9093,{HOST_IP}:9094"
+DNET_KAFKA_BOOTSTRAP_SERVER = f"{HOST_IP}:9092,{HOST_IP}:9093,{HOST_IP}:9094"
 
-IASSET_SERVER = "https://iasset.salzburgresearch.at"
 
 # "https://raw.githubusercontent.com/annexare/Countries/27bdd120d5e928a5683d26c95795459c7ee6fefc/data/countries.json",
 # "This must be consistent with the frontend's https://www.npmjs.com/package/countries-list, currently version 2.4.3",
