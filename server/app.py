@@ -67,18 +67,16 @@ def create_app():
         codes = json.loads(f.read())
         app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
 
-    if os.environ.get("DNET_WAIT_TIME"):
-        app.config.update({"WAIT_TIME": os.environ.get("DNET_WAIT_TIME")})
-        app.logger.info("Update WAIT_TIME to " + app.config["WAIT_TIME"])
+    if os.environ.get("DNET_STARTUP_TIME"):
+        app.config.update({"DNET_STARTUP_TIME": os.environ.get("DNET_STARTUP_TIME")})
+        app.logger.info("Update DNET_STARTUP_TIME to " + app.config["DNET_STARTUP_TIME"])
 
-    if os.environ.get("DNET_IASSET_SERVER"):
-        app.config.update({"DNET_IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER"),
-                           "IASSET_SERVER": os.environ.get("DNET_IASSET_SERVER")})
+    if os.environ.get("DNET_IDENTITY_SERVICE"):
+        app.config.update({"DNET_IDENTITY_SERVICE": os.environ.get("DNET_IDENTITY_SERVICE")})
         app.logger.info("Update i-Asset connection to " + app.config["DNET_IASSET_SERVER"])
     else:
-        app.config.update({"IASSET_SERVER": app.config.get("DNET_IASSET_SERVER")})
-        app.logger.info("DNET_IASSET_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
-            "DNET_IASSET_SERVER", None)))
+        app.logger.info("DNET_IDENTITY_SERVICE not in the compose-environment variables, keep {}".format(app.config.get(
+            "DNET_IDENTITY_SERVICE", None)))
 
     if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
         DNET_DB_URI = f'{app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
@@ -103,15 +101,15 @@ def create_app():
             "DNET_KAFKA_BOOTSTRAP_SERVER", None)))
 
     # wait for infrastructure services
-    if app.config.get("WAIT_TIME"):
-        app.logger.info(f"Waiting {app.config.get('WAIT_TIME'):.1f} s for other services.")
-        time.sleep(app.config.get("WAIT_TIME"))
+    if app.config.get("DNET_STARTUP_TIME"):
+        app.logger.info(f"Waiting {app.config.get('DNET_STARTUP_TIME'):.1f} s for other services.")
+        time.sleep(app.config.get("DNET_STARTUP_TIME"))
 
     ########################################################
     # ############## test i-asset connection ############# #
     ########################################################
 
-    if not check_iasset_connection(asset_uri=app.config["DNET_IASSET_SERVER"]):
+    if not check_iasset_connection(asset_uri=app.config["DNET_IDENTITY_SERVICE"]):
         app.logger.error("The connection to i-Asset server couldn't be established.")
         sys.exit(1)
 

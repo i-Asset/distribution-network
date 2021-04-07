@@ -27,7 +27,7 @@ POSTGRES_PORT = "5432"
 POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = "postgres"
 DNET_DOCKER_HOST_IP = "iasset"
-DNET_IASSET_SERVER = "https://iasset.salzburgresearch.at"
+DNET_IDENTITY_SERVICE = "https://iasset.salzburgresearch.at/identity-service"
 DNET_SQLALCHEMY_DATABASE_DRIVER = "postgresql+psycopg2"
 DNET_SQLALCHEMY_DATABASE_NAME = "distributionnetworkdb"
 

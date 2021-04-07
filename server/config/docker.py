@@ -7,7 +7,7 @@ DEBUG = False
 LOGLEVEL = logging.DEBUG
 
 # set time to wait for other services
-WAIT_TIME = 5
+DNET_STARTUP_TIME = 5
 
 # extract HOST_IP
 try:
@@ -27,7 +27,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # POSTGRES_USER = "postgres"
 # POSTGRES_PASSWORD = "postgres"
 # DNET_DOCKER_HOST_IP = "iasset"
-# DNET_IASSET_SERVER = "https://iasset.salzburgresearch.at"
+# DNET_IDENTITY_SERVICE = "https://iasset.salzburgresearch.at/identity-service"
 # DNET_SQLALCHEMY_DATABASE_DRIVER = "postgresql+psycopg2"
 # DNET_SQLALCHEMY_DATABASE_NAME = "distributionnetworkdb"
 
@@ -43,6 +43,7 @@ SECRET_KEY = "changeme"
 DNET_KAFKA_BOOTSTRAP_SERVER = "kafka1:19092,kafka2:19093,kafka3:19094"  # will be overwritten by docker-compose envs
 
 DNET_IASSET_SERVER = "https://iasset.salzburgresearch.at"
+DNET_IDENTITY_SERVICE = "https://iasset.salzburgresearch.at/identity-service"
 
 # "https://raw.githubusercontent.com/annexare/Countries/27bdd120d5e928a5683d26c95795459c7ee6fefc/data/countries.json",
 # "This must be consistent with the frontend's https://www.npmjs.com/package/countries-list, currently version 2.4.3",
