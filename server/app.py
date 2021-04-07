@@ -102,8 +102,8 @@ def create_app():
 
     # wait for infrastructure services
     if app.config.get("DNET_STARTUP_TIME"):
-        app.logger.info(f"Waiting {app.config.get('DNET_STARTUP_TIME'):.1f} s for other services.")
-        time.sleep(app.config.get("DNET_STARTUP_TIME"))
+        app.logger.info(f"Waiting {app.config.get('DNET_STARTUP_TIME')} s for other services.")
+        time.sleep(float(app.config.get("DNET_STARTUP_TIME")))
 
     ########################################################
     # ############## test i-asset connection ############# #
