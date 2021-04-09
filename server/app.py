@@ -156,13 +156,13 @@ def create_app():
     ########################################################
 
     # Register the Swagger ui as blueprint
-    @app.route("/distributionnetwork/api")
-    @app.route("/distributionnetwork/api/<path:path>")
+    @app.route("/api")
+    @app.route("/api/<path:path>")
     def send_api(path):
         return send_from_directory("api", path)
 
     swagger_url = '/distributionnetwork/swagger-ui.html'
-    api_url = '/distributionnetwork/api/swagger.yaml'
+    api_url = '/api/swagger.yaml'
     swaggerui_blueprint = get_swaggerui_blueprint(swagger_url, api_url,
                                                   config={'app_name': "Swagger UI Distribution Network"})
     app.register_blueprint(swaggerui_blueprint, url_prefix=swagger_url)
