@@ -12,7 +12,7 @@ info:
 
 host: "iasset.salzburgresearch.at"
 #host: "localhost:1908"
-basePath: "/distributionnetwork"
+#basePath: "/distributionnetwork"
 schemes:
   - "https"
   - "http"
