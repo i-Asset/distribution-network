@@ -10,9 +10,12 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 
-# host: "iasset.salzburgresearch.at/distribution-network"
-host: "localhost:1908"
+# host: "iasset.salzburgresearch.at/distributionnetwork"
+#host: "localhost:1908"
 # basePath: "/v2"
+schemes:
+  - "https"
+  - "http"
 
 tags:
 - name: "Distribution Network"

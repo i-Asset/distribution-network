@@ -28,7 +28,7 @@ services:
     # postgres vars are listed
 #      DNET_STARTUP_TIME: 5
 #      DNET_HOST: iasset.salzburgresearch.at
-#      DNET_IDENTITY_SERVICE: https://iasset.salzburgresearch.at/identity-service
+#      DNET_IDENTITY_SERVICE: http://identity-service:9096
 #      DNET_SQLALCHEMY_DATABASE_DRIVER=postgresql+psycopg2
 #      DNET_SQLALCHEMY_DATABASE_NAME=distributionnetworkdb
 #      DNET_KAFKA_BOOTSTRAP_SERVER=kafka1:19092,kafka2:19093,kafka3:19094
