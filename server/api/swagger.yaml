@@ -26,7 +26,7 @@ tags:
   description: "API for Stream App requests on the Distribution Network"
 
 paths:
-  /distributionnetwork:
+  /distributionnetwork/:
     get:
       tags:
         - "Distribution Network"
