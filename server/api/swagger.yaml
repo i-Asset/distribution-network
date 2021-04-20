@@ -12,7 +12,7 @@ info:
 
 host: "iasset.salzburgresearch.at"
 #host: "localhost:1908"
-#basePath: "/distributionnetwork"
+#basePath: "/distributionnetwork"  # removed because the basePath is static
 schemes:
   - "https"
   - "http"
@@ -80,6 +80,50 @@ paths:
       tags:
         - "System Request"
       summary: "Create a new system for a company that belongs to a person. Creates also the corresponding Kafka topics."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "system"
+          in: "body"
+          description: "A system object to create, functional part of a company"
+          required: true
+          schema:
+            $ref: "#definitions/SystemBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/SystemsAndAdmins"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "System Request"
+      summary: "Create or update a system for a company that belongs to a person. Creates also the corresponding Kafka topics."
       consumes:
         - "application/json"
       produces:
@@ -210,6 +254,56 @@ paths:
       tags:
         - "Stream App Request"
       summary: "Create a new stream app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "A stream app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/StreamAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Stream App Request"
+      summary: "Create or update a stream app for a system that belongs to a person."
       consumes:
         - "application/json"
       produces:

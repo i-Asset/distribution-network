@@ -1,3 +1,8 @@
+"""
+Configuration for the distribution network
+Edit and restart to update.
+"""
+
 import os
 import logging
 import subprocess

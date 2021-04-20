@@ -9,11 +9,11 @@ from server.utils.useful_functions import is_logged_in, strip_dict
 home_bp = Blueprint("home", __name__)
 
 
-@home_bp.route('/')
-# @cache.cached(timeout=60)
-def index():
-    return redirect(url_for("home.dashboard"))
-
+# @home_bp.route('/')
+# # @cache.cached(timeout=60)
+# def index():
+#     return redirect(url_for("home.dashboard"))
+#
 
 @home_bp.route("/dashboard")
 def dashboard():

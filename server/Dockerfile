@@ -26,7 +26,6 @@ RUN pip install -r requirements.txt
 RUN mkdir -p /src/server
 ADD . /src/server
 
-
 # set configuration file
 RUN echo "\nAPP_CONFIG_FILE=config/docker.py" >> /src/server/.env
 

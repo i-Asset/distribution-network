@@ -77,29 +77,23 @@ def authorize_request(user_id, fct):
 
 
 def get_person_from_identity_service(fct):
-    bearer_token = request.headers["Authorization"].strip()
-    url = os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), "person/")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), "person/"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     return res
 
 
 def get_user_from_identity_service(fct, user_id):
-    bearer_token = request.headers["Authorization"].strip()
-    url = os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"person/{user_id}")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"person/{user_id}"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     return True, res.json(), 200
 
 
 def get_party_from_identity_service(fct, party_id, user_id):
-    bearer_token = request.headers["Authorization"].strip()
-    url = os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"party/{party_id}?includeRoles=true")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"party/{party_id}?includeRoles=true"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     if res.status_code != 200:
         msg = f"Resource Party is not allowed."
         app.logger.warning(f"{fct}: {msg}")
