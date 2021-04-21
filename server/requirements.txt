@@ -52,7 +52,7 @@ pep517==0.8.2
 pluggy==0.13.1
 progress==1.5
 psycopg2==2.8.5
-py==1.9.0
+py==1.10.0
 pycparser==2.20
 PyNaCl==1.4.0
 pyparsing==2.4.6
