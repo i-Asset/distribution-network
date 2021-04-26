@@ -145,7 +145,7 @@ def create_stream_app(user_id, system_url):
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    # 2) check if the system to create has the correct structure
+    # 2) check if the client to create has the correct structure
     req_keys = {"name", "target_system"}
     new_stream_app = request.json
 
@@ -179,6 +179,7 @@ def create_stream_app(user_id, system_url):
         f"WHERE source_system='{system_name}' AND name='{stream_name}';")
     stream_apps = [dict(c.items()) for c in result_proxy.fetchall()]
 
+    # Check if the provided target_system really exists
     target_system = decode_sys_url(new_stream_app.get("target_system", ""))
     result_proxy = conn.execute(f"SELECT count(*) FROM systems WHERE name='{target_system}';")
     target_systems_res = [dict(c.items()) for c in result_proxy.fetchall()]
@@ -205,6 +206,10 @@ def create_stream_app(user_id, system_url):
             msg = f"The stream app with name '{stream_name}' for system '{system_name}' already exists."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
+        else:  # PUT overwrite
+            query = db.update(app.config["tables"]["stream_apps"]).where(
+                ("name" == stream_name and "source_system" == system_name))
+            conn.execute(query, new_stream_apps)
     else:
         query = db.insert(app.config["tables"]["stream_apps"])
         conn.execute(query, new_stream_apps)
@@ -216,7 +221,7 @@ def create_stream_app(user_id, system_url):
 
 @api_stream_app.route(f"{prefix}/delete_stream_app/<string:user_id>/<string:system_url>/<string:stream_name>",
                       methods=['DELETE'])
-def delete_systems(user_id, system_url, stream_name):
+def delete_stream_app(user_id, system_url, stream_name):
     """
     Delete a stream app
     :return: return status json

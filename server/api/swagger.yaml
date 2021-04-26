@@ -24,6 +24,8 @@ tags:
   description: "API for System requests on the Distribution Network"
 - name: "Stream App Request"
   description: "API for Stream App requests on the Distribution Network"
+- name: "Client App Request"
+  description: "API for Client App requests on the Distribution Network"
 
 paths:
   /distributionnetwork/:
@@ -448,6 +450,247 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+  /distributionnetwork/client_apps/{personId}/{system}:
+    get:
+      tags:
+        - "Client App Request"
+      summary: "Return all client apps that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Client App Request"
+      summary: "Create a new client app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client app"
+          in: "body"
+          description: "A client app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/ClientAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Client App Request"
+      summary: "Create or update a client app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client app"
+          in: "body"
+          description: "A client app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/ClientAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/client_apps/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Client App Request"
+      summary: "Return a specific client app that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_client_app/{personId}/{system}/{client_name}:
+    delete:
+      tags:
+        - "Client App Request"
+      summary: "Delete a client app from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
 securityDefinitions:
   Authorization:
     type: "apiKey"
@@ -585,6 +828,42 @@ definitions:
         type: "string"
         required: false
       is_multi_source:
+        type: "boolean"
+        required: false
+      description:
+        type: "string"
+        required: false
+  ClientApps:
+    type: "object"
+    properties:
+      client_apps:
+        type: "array"
+        items:
+          $ref: "#definitions/ClientApp"
+  ClientApp:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+      on_kafka:
+        type: "boolean"
+      keyfile_av:
+        type: "boolean"
+      description:
+        type: "string"
+  ClientAppBody:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+        required: false
+      on_kafka:
         type: "boolean"
         required: false
       description:
