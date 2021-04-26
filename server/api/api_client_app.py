@@ -103,7 +103,7 @@ def client_per_system(user_id, system_url, client_name):
 
     result_proxy = conn.execute(f"""
     SELECT sys.name AS system_name, company_id, sys.kafka_servers, ca.name, ca.system_name, ca.creator_id,  
-    ca.submodel_element_collection, ca.on_kafka, ca.keyfile_av, ca.datetime AS created_at, ca.description
+    ca.submodel_element_collection, ca.on_kafka, ca.key, ca.datetime AS created_at, ca.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN client_apps AS ca on sys.name = ca.system_name
@@ -175,7 +175,7 @@ def create_client_app(user_id, system_url):
                         "submodel_element_collection": new_client_app.get("submodel_element_collection", ""),
                         "on_kafka": new_client_app.get("on_kafka", True),
                         "creator_id": user_id,
-                        "keyfile_av": False,
+                        "key": "",
                         "datetime": get_datetime(),
                         "description": new_client_app.get("description", "")}]
 

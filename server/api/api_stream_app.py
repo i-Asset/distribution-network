@@ -145,7 +145,7 @@ def create_stream_app(user_id, system_url):
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    # 2) check if the client to create has the correct structure
+    # 2) check if the stream app to create has the correct structure
     req_keys = {"name", "target_system"}
     new_stream_app = request.json
 

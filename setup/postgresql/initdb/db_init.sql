@@ -86,7 +86,7 @@ CREATE TABLE if not exists client_apps (
     datetime timestamp with time zone,
     description text,
     on_kafka bool,
-    keyfile_av bool,
+    key text,
     PRIMARY KEY (system_name, name)
 );
 
