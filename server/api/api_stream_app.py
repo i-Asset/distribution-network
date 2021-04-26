@@ -32,7 +32,7 @@ def streams_no_sys(any=None):
 
 
 @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>", methods=['GET'])
-@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
+# @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
 def streams_per_system(user_id, system_url):
     """
     Searches for all stream apps in the distribution network of which the user is admin of and belong to the system.
@@ -79,7 +79,7 @@ def streams_per_system(user_id, system_url):
 
 
 @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>")
-@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>/")
+# @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>/")
 def stream_per_system(user_id, system_url, stream_name):
     """
     Returns a stream app in the distribution network of which the user is admin of and belong to the system.

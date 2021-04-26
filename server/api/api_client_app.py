@@ -21,7 +21,7 @@ def clients_no_sys(any=None):
 
 
 @api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>", methods=['GET'])
-@api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
+# @api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
 def clients_per_system(user_id, system_url):
     """
     Searches for all client apps in the distribution network of which the user is admin of and belong to the system.
@@ -69,7 +69,7 @@ def clients_per_system(user_id, system_url):
 
 
 @api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>/<string:client_name>")
-@api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>/<string:client_name>/")
+# @api_client_app.route(f"{prefix}/client_apps/<string:user_id>/<string:system_url>/<string:client_name>/")
 def client_per_system(user_id, system_url, client_name):
     """
     Returns a specific client app in the distribution network of which the user is admin of and belong to the system.
