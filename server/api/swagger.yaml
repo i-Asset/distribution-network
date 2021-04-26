@@ -10,8 +10,8 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 
-host: "iasset.salzburgresearch.at"
-#host: "localhost:1908"
+#host: "iasset.salzburgresearch.at"
+host: "localhost:1908"
 ## basePath: "/distributionnetwork"  # removed because the basePath is static
 schemes:
   - "https"
@@ -691,11 +691,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-securityDefinitions:
-  Authorization:
-    type: "apiKey"
-    name: "Authorization"
-    in: "header"
+#securityDefinitions:
+#  Authorization:
+#    type: "apiKey"
+#    name: "Authorization"
+#    in: "header"
 
 definitions:
   Status:
