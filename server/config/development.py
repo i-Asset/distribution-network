@@ -8,7 +8,7 @@ import logging
 import subprocess
 
 # Statement for enabling the development environment
-DEBUG = False
+DEBUG = True
 LOGLEVEL = logging.DEBUG
 
 # set time to wait for other services

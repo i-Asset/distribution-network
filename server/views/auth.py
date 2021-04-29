@@ -86,7 +86,7 @@ def login():
             return render_template('/auth/login.html', error=error)
         elif len(data) != 1:
             error = 'Username was found twice. Error'
-            return render_template('login.html', error=error)
+            return render_template('/auth/login.html', error=error)
         else:
             password = data[0]['password']
 

@@ -26,6 +26,16 @@ DEFAULT_SYSTEMS = ["at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
                    "is.iceland.iot4cps-wp5-WeatherService.Stations",
                    "is.iceland.iot4cps-wp5-WeatherService.Services"]
 
+if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
+    DNET_DB_URI = f'{app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+    DNET_DB_URI += f'{app.config.get("POSTGRES_USER", "postgres")}:{app.config.get("POSTGRES_PASSWORD", "postgres")}'
+    DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
+    DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+else:
+    DNET_DB_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
+app.config["SQLALCHEMY_DATABASE_URI"] = DNET_DB_URI
+print(app.config["SQLALCHEMY_DATABASE_URI"])
+
 def check_postgres_connection(db_uri):
     succeeded = False
     try:
@@ -443,9 +453,9 @@ def insert_samples_if_empty(app):
 if __name__ == '__main__':
     app.logger.setLevel(logging.INFO)
 
-    # # Creating the tables
-    # app.logger.info("Drop database distributionnetworkdb.")
-    # drop_tables()
+    # Creating the tables
+    app.logger.info("Drop database distributionnetworkdb.")
+    drop_tables()
 
     # Creating the tables
     app.logger.info("Creating database distributionnetworkdb.")
