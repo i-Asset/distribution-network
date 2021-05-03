@@ -62,7 +62,7 @@ CREATE TABLE if not exists stream_apps (
 CREATE TABLE if not exists aas (
     name varchar(64) NOT NULL,
     creator_id integer NOT NULL REFERENCES users(id),
-    registry_uri text,
+    registry_uri varchar(256),
     datetime timestamp with time zone,
     description text,
     system_name varchar(128) NOT NULL REFERENCES systems(name),
@@ -168,3 +168,11 @@ INSERT INTO client_apps (system_name, name, submodel_element_collection, creator
 ('is.iceland.iot4cps-wp5-WeatherService.Stations', 'weatherstation_2', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
 ('is.iceland.iot4cps-wp5-WeatherService.Services', 'forecast_service', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
 ('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics','datastack-adapter', 'submodel_uri', -4, now(), 'Lorem Ipsum', TRUE, FALSE);
+
+INSERT INTO aas (system_name, name, registry_uri, creator_id, datetime, description) VALUES
+('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'Car 1 AAS', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'Car 2 AAS', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 1', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 2', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('is.iceland.iot4cps-wp5-WeatherService.Services', 'Forecast Service', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics','Datastack Adapter', 'aas_registry.uri', -4, now(), 'Lorem Ipsum');

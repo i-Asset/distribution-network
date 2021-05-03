@@ -10,8 +10,8 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 
-#host: "iasset.salzburgresearch.at"
-host: "localhost:1908"
+host: "iasset.salzburgresearch.at"
+#host: "localhost:1908"
 ## basePath: "/distributionnetwork"  # removed because the basePath is static
 schemes:
   - "https"
@@ -26,6 +26,8 @@ tags:
   description: "API for Stream App requests on the Distribution Network"
 - name: "Client App Request"
   description: "API for Client App requests on the Distribution Network"
+- name: "AAS Connection Request"
+  description: "API for AAS connection requests on the Distribution Network"
 
 paths:
   /distributionnetwork/:
@@ -691,6 +693,247 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+  /distributionnetwork/aas_connections/{personId}/{system}:
+    get:
+      tags:
+        - "AAS Connection Request"
+      summary: "Return all aas connections that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "AAS Connection Request"
+      summary: "Create a new AAS connection for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas connection"
+          in: "body"
+          description: "An AAS connection object to create."
+          required: true
+          schema:
+            $ref: "#definitions/AasConnectionBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "AAS Connection Request"
+      summary: "Create or update an AAS connection for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas connection"
+          in: "body"
+          description: "An AAS connection object to create."
+          required: true
+          schema:
+            $ref: "#definitions/AasConnectionBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/aas_connections/{personId}/{system}/{aas_name}:
+    get:
+      tags:
+        - "AAS Connection Request"
+      summary: "Return a specific AAS connection that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_aas_connection/{personId}/{system}/{aas_name}:
+    delete:
+      tags:
+        - "AAS Connection Request"
+      summary: "Delete an AAS connection from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
 #securityDefinitions:
 #  Authorization:
 #    type: "apiKey"
@@ -865,6 +1108,35 @@ definitions:
         required: false
       on_kafka:
         type: "boolean"
+        required: false
+      description:
+        type: "string"
+        required: false
+  AasConnections:
+    type: "object"
+    properties:
+      client_apps:
+        type: "array"
+        items:
+          $ref: "#definitions/AasConnection"
+  AasConnection:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      registry_uri:
+        type: "string"
+      description:
+        type: "string"
+  AasConnectionBody:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      registry_uri:
+        type: "string"
         required: false
       description:
         type: "string"

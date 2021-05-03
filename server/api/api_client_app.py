@@ -81,7 +81,7 @@ def client_per_system(user_id, system_url, client_name):
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/client_apps/<string:user_id>/<string:system_url>"
+    fct = f"{prefix}/client_apps/<string:user_id>/<string:system_url>/<string:client_name>"
     authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code

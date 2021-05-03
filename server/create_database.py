@@ -34,7 +34,7 @@ if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
 else:
     DNET_DB_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
 app.config["SQLALCHEMY_DATABASE_URI"] = DNET_DB_URI
-print(app.config["SQLALCHEMY_DATABASE_URI"])
+# print(app.config["SQLALCHEMY_DATABASE_URI"])
 
 def check_postgres_connection(db_uri):
     succeeded = False
@@ -61,8 +61,8 @@ def drop_tables():
     DROP TABLE IF EXISTS is_admin_of_sys CASCADE;
     DROP TABLE IF EXISTS client_apps CASCADE;
     DROP TABLE IF EXISTS stream_apps CASCADE;
-    DROP TABLE IF EXISTS aas CASCADE;
     DROP TABLE IF EXISTS mqtt_broker CASCADE;
+    DROP TABLE IF EXISTS aas CASCADE;
     DROP TABLE IF EXISTS datastreams CASCADE;
     DROP TABLE IF EXISTS subscriptions CASCADE;
     """
@@ -166,26 +166,26 @@ def create_tables(app):
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
+        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
         db.Column('datastream_uri', db.VARCHAR(256), nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         # construct a composite foreign key for aas
         db.Column('aas_name', db.VARCHAR(64), nullable=True),
         db.Column('aas_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(['aas_name', 'aas_system_name'], ['aas.name', 'aas.system_name'])
+        db.ForeignKeyConstraint(('aas_name', 'aas_system_name'), ('aas.name', 'aas.system_name'))
     )
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
+        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
 
         db.Column('datastream_short_name', db.VARCHAR(32), primary_key=True),
         db.Column('datastream_system_name', db.VARCHAR(128)),
-        db.ForeignKeyConstraint(['datastream_short_name', 'datastream_system_name'],
-                                ['datastreams.short_name', 'datastreams.system_name'])
+        db.ForeignKeyConstraint(('datastream_short_name', 'datastream_system_name'),
+                                ('datastreams.short_name', 'datastreams.system_name'))
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)
