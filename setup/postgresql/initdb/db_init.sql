@@ -170,8 +170,8 @@ INSERT INTO client_apps (system_name, name, submodel_element_collection, creator
 ('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics','datastack-adapter', 'submodel_uri', -4, now(), 'Lorem Ipsum', TRUE, FALSE);
 
 INSERT INTO aas (system_name, name, registry_uri, creator_id, datetime, description) VALUES
-('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'Car 1 AAS', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
-('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'Car 2 AAS', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'car', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'car', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
 ('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 1', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
 ('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 2', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
 ('is.iceland.iot4cps-wp5-WeatherService.Services', 'Forecast Service', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),

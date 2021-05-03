@@ -195,9 +195,7 @@ def create_tables(app):
 
 def insert_sample(app):
     default_password = "asdf"
-    lorem_ipsum = """Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. 
-    Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec 
-    quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim."""
+    lorem_ipsum = """Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor."""
     # Create context, connection and metadata
     engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     conn = engine.connect()
@@ -364,25 +362,25 @@ def insert_sample(app):
         {'name': "weatherstation_1",
          'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weatherstation_2",
          'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "forecast_service",
          'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Services',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "datastack-adapter",
          'system_name': 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_anna,
          'datetime': get_datetime(),
          'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
@@ -402,7 +400,7 @@ def insert_sample(app):
          'source_system': "cz.icecars.iot4cps-wp5-CarFleet.Car2",
          'target_system': "at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
          'logic': "SELECT * FROM cz.icecars.iot4cps-wp5-CarFleet.Car1;",
-         'creator_id': id_sue,
+         'creator_id': id_anna,
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},
@@ -422,6 +420,47 @@ def insert_sample(app):
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},]
+    ResultProxy = conn.execute(query, values_list)
+
+    # Insert AAS connection
+    query = db.insert(app.config["tables"]["aas"])
+    values_list = [
+        {'name': "car",
+         'system_name': "cz.icecars.iot4cps-wp5-CarFleet.Car1",
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_sue,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "car",
+         'system_name': "cz.icecars.iot4cps-wp5-CarFleet.Car2",
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_sue,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Weatherstation_1",
+         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Weatherstation_2",
+         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "ForecastService",
+         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Services',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "DatastackAdapter",
+         'system_name': 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_anna,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
 
     engine.dispose()
