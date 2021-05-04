@@ -28,6 +28,8 @@ tags:
   description: "API for Client App requests on the Distribution Network"
 - name: "AAS Connection Request"
   description: "API for AAS connection requests on the Distribution Network"
+- name: "Datastream Request"
+  description: "API for Datastream requests on the Distribution Network"
 
 paths:
   /distributionnetwork/:
@@ -934,6 +936,299 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+  /distributionnetwork/datastreams/{personId}/{system}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Datastream Request"
+      summary: "Create new datastreams for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Datastream Request"
+      summary: "Create or update datastreams for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/datastreams_per_client/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to a client application of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+
+  /distributionnetwork/datastreams_per_aas/{personId}/{system}/{aas_name}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to an aas connection of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+
+
+  /distributionnetwork/delete_datastreams/{personId}/{system}:
+    delete:
+      tags:
+        - "Datastream Request"
+      summary: "Delete datastreams from from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream shortnames to delete."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamShortnamesBody"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
 #securityDefinitions:
 #  Authorization:
 #    type: "apiKey"
@@ -1115,7 +1410,7 @@ definitions:
   AasConnections:
     type: "object"
     properties:
-      client_apps:
+      aas_connections:
         type: "array"
         items:
           $ref: "#definitions/AasConnection"
@@ -1141,6 +1436,59 @@ definitions:
       description:
         type: "string"
         required: false
+  Datastreams:
+    type: "object"
+    properties:
+      datastreams:
+        type: "array"
+        items:
+          $ref: "#definitions/Datastream"
+  Datastream:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      client_name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+      aas_name:
+        type: "string"
+      registry_uri:
+        type: "string"
+      datastream_uri:
+        type: "string"
+      contact_mail:
+        type: "string"
+      description:
+        type: "string"
+  DatastreamsBody:
+    type: "array"
+    items:
+      $ref: "#definitions/DatastreamBody"
+  DatastreamBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      client_app:
+        type: "string"
+      aas:
+        type: "string"
+      datastream_uri:
+        type: "string"
+      description:
+        type: "string"
+  DatastreamShortnamesBody:
+    type: "array"
+    items:
+      type: "string"
 
 externalDocs:
   description: "Find out more about Swagger"

@@ -1,36 +1,8 @@
 {
-  "Things": {
-    "car": {
-      "name": "Main",
-      "description": "The main control of the demo Car 1 that is an unique system that provides and consumes data",
-      "properties": {
-        "specification": "https://www.salzburgresearch.at/projekt/iot4cps/"
-      }
-    }
-  },
-  "Sensors": {
-    "temp-sensor": {
-      "name": "PT100 temperature sensor",
-      "description": "PT100 temperature sensor, 3-wire, model number: H2-013",
-      "encodingType": "application/pdf",
-      "metadata": "http://www.reissmann.com/fileadmin/templates/_media/produkte/pdf/st_pt_100_en.pdf"
-    },
-    "acceleration-sensor": {
-      "name": "KAS901-04A acceleration sensor",
-      "description": "1 axis acceleration sensor from Kelag, 4 V/g, model number: KAS901-04A",
-      "encodingType": "application/pdf",
-      "metadata": "https://www.distrelec.de/Web/Downloads/nu/al/KAS90x_eng_manual.pdf"
-    },
-    "GPS-sensor": {
-      "name": "EM-506 GPS module",
-      "description": "EM-506 high performance GPS module, GlobalSat, accuracy of 2.5 m.",
-      "encodingType": "application/pdf",
-      "metadata": "https://www.distrelec.de/Web/Downloads/_t/ds/EM-506_eng_tds.pdf"
-    }
-  },
-  "Datastreams": {
-    "temperature": {
+  "Datastreams": [
+    {
       "name": "Air Temperature",
+      "shortname": "temperature",
       "description": "Air temperature measured in the connected car 1",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
@@ -43,11 +15,12 @@
         "description": "Air temperature measured in the connected car 1",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
       },
-      "Thing": "car",
-      "Sensor": "temp-sensor"
+      "aas": "car",
+      "client_app": "car_1"
     },
-    "acceleration": {
-      "name": "Acceleration",
+    {
+      "name": "Vehicle Acceleration",
+      "shortname": "acceleration",
       "description": "Maximum acceleration of the car that occurred after the previous measurement.",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
@@ -61,11 +34,12 @@
         "description": "Maximum acceleration of the car that occurred after the previous measurement.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Acceleration"
       },
-      "Thing": "car",
-      "Sensor": "acceleration-sensor"
+      "aas": "car",
+      "client_app": "car_1"
     },
-    "GPS-position-latitude": {
-      "name": "Latitude",
+    {
+      "name": "GPS-position-latitude",
+      "shortname": "latitude",
       "description": "Latitude of the car",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
@@ -78,11 +52,12 @@
         "description": "Latitude of the car''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "Thing": "car",
-      "Sensor": "GPS-sensor"
+      "aas": "car",
+      "client_app": "car_1"
     },
-    "GPS-position-longitude": {
-      "name": "Longitude",
+    {
+      "name": "GPS-position-longitude",
+      "shortname": "longitude",
       "description": "Longitude of the car",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
@@ -95,11 +70,12 @@
         "description": "Longitude of the car''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "Thing": "car",
-      "Sensor": "GPS-sensor"
+      "aas": "car",
+      "client_app": "car_1"
     },
-    "GPS-position-attitude": {
-      "name": "Attitude",
+    {
+      "name": "GPS-position-attitude",
+      "shortname": "attitude",
       "description": "Attitude of the car in meter above the sea level.",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
@@ -112,8 +88,8 @@
         "description": "Attitude of the car''s position in meter above the sea level.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Length"
       },
-      "Thing": "car",
-      "Sensor": "GPS-sensor"
+      "aas": "car",
+      "client_app": "car_1"
     }
-  }
+  ]
 }

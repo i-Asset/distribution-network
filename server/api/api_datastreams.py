@@ -53,7 +53,7 @@ def datastreams_per_system(user_id, system_url):
 
     # 3) Fetch all datastreams that belong to the user with id user_id and system_name
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, aas_name, aas.registry_uri, ca.submodel_element_collection,
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
@@ -102,12 +102,14 @@ def datastreams_per_client(user_id, system_url, client_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, datastream_uri, aas_name, 
-        ca.submodel_element_collection, company_id, sys.kafka_servers, ds.description
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
+        creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN client_apps AS ca on sys.name = ca.system_name
-    INNER JOIN datastreams ds on ca.system_name = ds.system_name
+    INNER JOIN aas on sys.name = aas.system_name
+    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN client_apps ca on sys.name = ca.system_name
+    INNER JOIN datastreams ds on sys.name = ds.system_name
     WHERE agf.user_id='{user_id}' AND ca.system_name='{system_name}' AND ca.name='{client_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
@@ -149,12 +151,14 @@ def datastreams_per_aas(user_id, system_url, aas_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, datastream_uri, aas_name, aas.registry_uri, 
-        creator.email AS contact_mail, ds.description, company_id, sys.kafka_servers,
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
+        creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN aas on sys.name = aas.system_name
-    INNER JOIN datastreams ds on aas.system_name = ds.system_name
+    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN client_apps ca on sys.name = ca.system_name
+    INNER JOIN datastreams ds on sys.name = ds.system_name
     WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}' AND aas.name='{aas_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
