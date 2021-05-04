@@ -8,38 +8,36 @@ from ..utils.useful_functions import get_datetime, decode_sys_url, \
     strip_dict
 
 prefix = "/distributionnetwork"  # url_prefix="/distributionnetwork/")
-api_aas = Blueprint("api_aas", __name__)
+api_datastreams = Blueprint("api_datastream", __name__)
 
 
-@api_aas.route(f"{prefix}/aas_connections")
-@api_aas.route(f"{prefix}/aas_connections/")
-@api_aas.route(f"{prefix}/aas_connections/<string:any>")
-@api_aas.route(f"{prefix}/aas_connections/<string:any>/")
-def aas_no_sys(any=None):
+@api_datastreams.route(f"{prefix}/datastreams")
+@api_datastreams.route(f"{prefix}/datastreams/")
+@api_datastreams.route(f"{prefix}/datastreams/<string:any>")
+@api_datastreams.route(f"{prefix}/datastreams/<string:any>/")
+def datastreams_no_sys(any=None):
     return jsonify({"value": "Please specify an user id and a system name.",
-                    "url": f"{prefix}/aas_connections/<string:user_id>/<string:system_name>", "status_code": 406}), 406
+                    "url": f"{prefix}/datastreams/<string:user_id>/<string:system_name>", "status_code": 406}), 406
 
 
-@api_aas.route(f"{prefix}/aas_connections/<string:user_id>/<string:system_url>", methods=['GET'])
-# @api_client_app.route(f"{prefix}/aas_connections/<string:user_id>/<string:system_url>/", methods=['GET'])
-def aass_per_system(user_id, system_url):
+@api_datastreams.route(f"{prefix}/datastreams/<string:user_id>/<string:system_url>", methods=['GET'])
+def datastreams_per_system(user_id, system_url):
     """
-    Searches for all aas connections in the distribution network of which the user is admin of and belong to the system.
+    Searches for all datastreams in the distribution network of which the user is admin of and belong to the system.
     The user_id must be authenticated on the identity-service.
     :param user_id: personId of the Identity-service, or (if negative) the user_id of the demo Digital Twin platform
     :param system_url: system identifier whose levels are separated by '_' or '.'
-    :return: Json of all found aas connections
+    :return: Json of all found datastreams
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/aas_connections/<string:user_id>/<string:system_url>"
+    fct = f"{prefix}/datastreams/<string:user_id>/<string:system_url>"
     user_id = get_user_id(fct, user_id)
     authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    # 2) Fetch all aas connections that belong to the user with id user_id and system_name
-    # cases without authorization are returned, here the user is definitely permitted to request the data
+    # 2) Cases without authorization are returned, here the user is definitely permitted to request the data
     system_name = decode_sys_url(system_url)
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
@@ -53,39 +51,42 @@ def aass_per_system(user_id, system_url):
         app.logger.warning(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
+    # 3) Fetch all datastreams that belong to the user with id user_id and system_name
     result_proxy = conn.execute(f"""
-    SELECT aas.system_name, aas.name, aas.registry_uri, creator.email AS contact_mail, aas.datetime AS created_at, 
-        aas.description
+    SELECT ds.system_name, client_name, shortname, ds.name, aas_name, aas.registry_uri, ca.submodel_element_collection,
+        creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN aas on sys.name = aas.system_name
     INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN client_apps ca on sys.name = ca.system_name
+    INNER JOIN datastreams ds on sys.name = ds.system_name
     WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}';""")
     engine.dispose()
-    aas_cons = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
-    # 3) Return the client apps
-    return jsonify({"aas_connections": aas_cons})
+    # 3) Return the datastreams
+    return jsonify({"datastreams": datastreams})
 
 
-@api_aas.route(f"{prefix}/aas_connections/<string:user_id>/<string:system_url>/<string:aas_name>")
-def aas_per_system(user_id, system_url, aas_name):
+@api_datastreams.route(f"{prefix}/datastreams_per_client/<string:user_id>/<string:system_url>/<string:client_name>")
+def datastreams_per_client(user_id, system_url, client_name):
     """
-    Returns a specific aas connection in the distribution network of which the user is admin of and belong to the system.
+    Returns the datastream that belong to a client app in the distribution network of which the user is admin of.
     The user_id must be authenticated on the identity-service.
     :param user_id: personId of the Identity-service, or (if negative) the user_id of the demo Digital Twin platform
     :param system_url: system identifier whose levels are separated by '_' or '.'
-    :param aas_name: name of the connected aas, unique within the system.
-    :return: Json of all found client apps
+    :param client_name: name of the client app, unique within the system.
+    :return: Json of all datastreams of the client app
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/aas_connections/<string:user_id>/<string:system_url>/<string:aas_name>"
+    fct = f"{prefix}/datastreams_per_client/<string:user_id>/<string:system_url>/<string:client_name>"
     authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    # 2) Fetch all aas connections that belong to the user with id user_id and system_name
+    # 2) Fetch all datastreams that belong to the user with id user_id and system_name
     # cases without authorization are returned, here the user is definitely permitted to request the data
     system_name = decode_sys_url(system_url)
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
@@ -101,34 +102,85 @@ def aas_per_system(user_id, system_url, aas_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT aas.system_name, aas.name, aas.registry_uri, creator.email AS contact_mail, aas.datetime AS created_at, 
-        aas.description
+    SELECT ds.system_name, client_name, shortname, ds.name, datastream_uri, aas_name, 
+        ca.submodel_element_collection, company_id, sys.kafka_servers, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN aas on sys.name = aas.system_name
-    INNER JOIN users as creator ON creator.id=aas.creator_id
-    WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}' AND aas.name='{aas_name}';""")
+    INNER JOIN client_apps AS ca on sys.name = ca.system_name
+    INNER JOIN datastreams ds on ca.system_name = ds.system_name
+    WHERE agf.user_id='{user_id}' AND ca.system_name='{system_name}' AND ca.name='{client_name}';""")
     engine.dispose()
-    aas_cons = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
-    # 3) Return the single aas connection
-    return jsonify({"aas_connections": aas_cons})
+    # 3) Return the datastreams of the client
+    return jsonify({"datastreams": datastreams})
 
 
-@api_aas.route(f"{prefix}/aas_connections/<string:user_id>/<string:system_url>", methods=['POST', 'PUT'])
-def create_aas_con(user_id, system_url):
+@api_datastreams.route(f"{prefix}/datastreams_per_aas/<string:user_id>/<string:system_url>/<string:aas_name>")
+def datastreams_per_aas(user_id, system_url, aas_name):
     """
-    Create an aas connection by sending a json like:
-    {
-        "name": "aas_conn_1",
-        "registry_uri": "https://iasset.salzburgresearch.at/registry/sec_uuid",
-        "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit."
-    }
-    :return: return a json with the new aas connection and metadata
+    Returns the datastream that belong to an aas connection in the distribution network of which the user is admin of.
+    The user_id must be authenticated on the identity-service.
+    :param user_id: personId of the Identity-service, or (if negative) the user_id of the demo Digital Twin platform
+    :param system_url: system identifier whose levels are separated by '_' or '.'
+    :param aas_name: name of the aas connection, unique within the system.
+    :return: Json of all datastreams of the client app
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/aas_connections/<string:user_id>/<string:system_url>"
+    fct = f"{prefix}/datastreams_per_aas/<string:user_id>/<string:system_url>/<string:aas_name>"
+    authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
+    if not authorized:
+        return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
+
+    # 2) Fetch all datastreams that belong to the user with id user_id and system_name
+    # cases without authorization are returned, here the user is definitely permitted to request the data
+    system_name = decode_sys_url(system_url)
+    engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    conn = engine.connect()
+    result_proxy = conn.execute(f"""
+    SELECT count(*) FROM is_admin_of_sys AS iaos 
+    WHERE iaos.user_id='{user_id}' AND iaos.system_name='{system_name}';""")
+    iaos = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    if iaos[0].get("count", 0) == 0:
+        engine.dispose()
+        msg = f"The user '{user_id}' is not an admin of system '{system_name}' or it doesn't exist."
+        app.logger.warning(f"{fct}: {msg}")
+        return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
+
+    result_proxy = conn.execute(f"""
+    SELECT ds.system_name, client_name, shortname, ds.name, datastream_uri, aas_name, aas.registry_uri, 
+        creator.email AS contact_mail, ds.description, company_id, sys.kafka_servers,
+    FROM systems AS sys
+    INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
+    INNER JOIN aas on sys.name = aas.system_name
+    INNER JOIN datastreams ds on aas.system_name = ds.system_name
+    WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}' AND aas.name='{aas_name}';""")
+    engine.dispose()
+    datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+
+    # 3) Return the datastreams of the aas connection
+    return jsonify({"datastreams": datastreams})
+
+
+@api_datastreams.route(f"{prefix}/datastreams/<string:user_id>/<string:system_url>", methods=['POST', 'PUT'])
+def create_datastreams(user_id, system_url):
+    """
+    Create datastreams by sending a json like:
+    [
+        {
+            "name": "Air Temperature",
+            "shortname": "temperature",
+            "description": "Air temperature measured in the connected car 1",
+            "aas": "car",
+            "client_app": "car_1"
+        }
+    ]
+    :return: return an json with the new datastreams and metadata
+    """
+    # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
+    #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
+    fct = f"{prefix}/datastreams/<string:user_id>/<string:system_url>"
     system_name = decode_sys_url(system_url)
     user_id = get_user_id(fct, user_id)
     authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
@@ -136,17 +188,22 @@ def create_aas_con(user_id, system_url):
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
     # 2) check if the client to create has the correct structure
-    req_keys = {"name"}
-    new_aas_conn = request.json
+    req_keys = {"name", "shortname", "aas", "client_app"}
+    new_datastreams = request.json
 
-    if not isinstance(new_aas_conn, dict):
-        msg = f"The new aas connection can't be found in request json."
+    if not isinstance(new_datastreams, list):
+        msg = f"The datastreams must be in an array."
         app.logger.error(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
-    if not req_keys.issubset(set(new_aas_conn.keys())):
-        msg = f"The aas connection must contain the keys '{req_keys}', missing '{req_keys - set(new_aas_conn.keys())}'."
-        app.logger.error(f"{fct}: {msg}")
-        return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
+    for new_ds in new_datastreams:
+        if not isinstance(new_ds, dict):
+            msg = f"The new datastreams can't be found in request json: '{new_ds}'."
+            app.logger.error(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
+        if not req_keys.issubset(set(new_ds.keys())):
+            msg = f"The datastream must contain the keys '{req_keys}', missing '{req_keys - set(new_ds.keys())}': '{new_ds}'."
+            app.logger.error(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
 
     # 3) check if the user is allowed to get the system
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
@@ -161,53 +218,74 @@ def create_aas_con(user_id, system_url):
         app.logger.warning(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
-    # 4) create the aas conn or warn if it exists.
-    # If the aas conn exists and the method is POST, return without change. If the method is PUT, overwrite
-    aas_conn_name = new_aas_conn["name"]
+    # 5) Load the existing datastreams of the system
+    all_client_apps = "'" + "','".join(tuple({ds["client_app"] for ds in new_datastreams})) + "'"
+    all_aas_conns = "'" + "','".join(tuple({ds["aas"] for ds in new_datastreams})) + "'"
+
     result_proxy = conn.execute(
-        f"SELECT system_name, name FROM aas "
-        f"WHERE system_name='{system_name}' AND name='{aas_conn_name}';")
-    aas_conn_apps = [dict(c.items()) for c in result_proxy.fetchall()]
+        f"SELECT DISTINCT ca.system_name, aas.name AS aas_name, ca.name AS client_name, ds.name, ds.shortname "
+        f"FROM datastreams AS ds "
+        f"INNER JOIN aas ON aas.name=ds.aas_name "
+        f"INNER JOIN client_apps AS ca ON ca.name=ds.client_name "
+        f"WHERE ca.system_name='{system_name}' "
+        f"AND ca.name IN ({all_client_apps}) AND aas.name IN ({all_aas_conns});")
+    existing_datastreams = [dict(c.items()) for c in result_proxy.fetchall()]
 
-    new_aas_conn = [{"name": aas_conn_name,
-                     "system_name": system_name,
-                     "registry_uri": new_aas_conn.get("registry_uri", ""),
-                     "creator_id": user_id,
-                     "datetime": get_datetime(),
-                     "description": new_aas_conn.get("description", "")}]
+    new_ds = list()
+    already_existing = list()
+    for ds in new_datastreams:
+        for ex_ds in existing_datastreams:
+            if ds["shortname"] == ex_ds["shortname"] and ds["client_app"] == ex_ds["client_name"] and \
+                    ds["aas"] == ex_ds["aas_name"]:
+                already_existing.append(ds["shortname"])
+        new_ds.append({
+            "system_name": system_name,
+            "client_name": ds["client_app"],
+            "shortname": ds["shortname"],
+            "name": ds["name"],
+            "aas_system_name": system_name,
+            "aas_name": ds["aas"],
+            "description": ds.get("description", "")
+            # "creator_id": user_id,
+            # "datetime": get_datetime()
+        })
+    # return jsonify({"aas_connections": existing_datastreams})
 
-    if len(aas_conn_apps) > 0:
-        # If the aas-conn exists and the method is POST, return without change. If the method is PUT, overwrite
+    # 4) create the datastreams or warn if at least one of the datastreams already exist.
+    if len(already_existing) > 0:
+        # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
         if request.method == "POST":
             engine.dispose()
-            msg = f"The aas connection with name '{aas_conn_name}' for system '{system_name}' already exists."
+            msg = f"The datastreams '{already_existing}' for system '{system_name}' already exist, abort all."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
 
         else:  # PUT
-            query = db.update(app.config["tables"]["aas"]).where(
-                ("name" == aas_conn_name and "system_name" == system_name))
-            conn.execute(query, new_aas_conn)
+            for ds in new_ds:
+                upsert_stmt = db.update(app.config["tables"]["datastreams"]).where(
+                    (app.config["tables"]["datastreams"].c.shortname == ds["shortname"] and
+                     app.config["tables"]["datastreams"].c.system_name == ds["system_name"])
+                ).values(ds)
+                conn.execute(upsert_stmt)
 
     else:  # doesn't exist yet
-        query = db.insert(app.config["tables"]["aas"])
-        conn.execute(query, new_aas_conn)
+        query = db.insert(app.config["tables"]["datastreams"])
+        conn.execute(query, new_ds)
 
     engine.dispose()
-    # return created client app
-    return jsonify({"aas_connections": new_aas_conn})
+    # return created datastreams
+    return jsonify({"datastreams": new_ds})
 
 
-@api_aas.route(f"{prefix}/delete_aas_connection/<string:user_id>/<string:system_url>/<string:aas_conn_name>",
-               methods=['DELETE'])
-def delete_aas_conn(user_id, system_url, aas_conn_name):
+@api_datastreams.route(f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>", methods=['DELETE'])
+def delete_datastreams(user_id, system_url):
     """
-    Delete an aas connection
+    Delete datastreams that are posted in the requests
     :return: return status json
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/delete_aas_connection/<string:user_id>/<string:system_url>/<string:client_name>"
+    fct = f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>"
     user_id = get_user_id(fct, user_id)
     system_name = decode_sys_url(system_url)
     authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
@@ -219,21 +297,36 @@ def delete_aas_conn(user_id, system_url, aas_conn_name):
     conn = engine.connect()
     result_proxy = conn.execute(
         f"SELECT '1' FROM is_admin_of_sys "
-        f"INNER JOIN aas on is_admin_of_sys.system_name = aas.system_name "
-        f"WHERE user_id='{str(user_id)}' AND aas.system_name='{system_name}' AND name='{aas_conn_name}';")
+        f"WHERE user_id='{str(user_id)}' AND system_name='{system_name}';")
     sys_admins = [dict(c.items()) for c in result_proxy.fetchall()]
     if len(sys_admins) == 0:
         engine.dispose()
-        msg = f"User '{user_id}' isn't allowed to delete from the system '{system_name}' or the aas connection doesn't exist."
+        msg = f"User '{user_id}' isn't allowed to delete from the system '{system_name}' or it doesn't exist."
         app.logger.warning(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 400}), 400
 
-    # 3) delete aas connection
-    query = f"""DELETE FROM aas
-        WHERE system_name='{system_name}' AND name='{aas_conn_name}';"""
-    conn.execute(query)
+    # 3) check if the datastreams to delete has the correct structure
+    datastreams_to_delete = request.json
+
+    if not isinstance(datastreams_to_delete, list):
+        msg = f"The datastreams must be in an array."
+        app.logger.error(f"{fct}: {msg}")
+        return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
+    for ds_to_del in datastreams_to_delete:
+        if not isinstance(ds_to_del, str):
+            msg = f"The datastreams must be an array of strings: '{ds_to_del}'."
+            app.logger.error(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
+
+    # 4) delete aas connection
+    for ds_to_del in datastreams_to_delete:
+        delete_stmt = db.delete(app.config["tables"]["datastreams"]).where(
+                        (app.config["tables"]["datastreams"].c.shortname == ds_to_del and
+                         app.config["tables"]["datastreams"].c.system_name == system_name)
+                    )
+        conn.execute(delete_stmt)
     engine.dispose()
 
     # 5) return
-    app.logger.info(f"{fct}: User '{user_id}' deleted aas connection '{aas_conn_name}' from system '{system_name}'.")
+    app.logger.info(f"{fct}: User '{user_id}' deleted datastreams '{datastreams_to_delete}' from system '{system_name}'.")
     return jsonify({"url": fct, "status_code": 204}), 204

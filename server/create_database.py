@@ -162,7 +162,7 @@ def create_tables(app):
     )
     app.config["tables"]["datastreams"] = db.Table(
         'datastreams', app.config['metadata'],
-        db.Column('short_name', db.VARCHAR(32), primary_key=True),
+        db.Column('shortname', db.VARCHAR(32), primary_key=True),
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
@@ -182,10 +182,10 @@ def create_tables(app):
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
 
-        db.Column('datastream_short_name', db.VARCHAR(32), primary_key=True),
+        db.Column('datastream_shortname', db.VARCHAR(32), primary_key=True),
         db.Column('datastream_system_name', db.VARCHAR(128)),
-        db.ForeignKeyConstraint(('datastream_short_name', 'datastream_system_name'),
-                                ('datastreams.short_name', 'datastreams.system_name'))
+        db.ForeignKeyConstraint(('datastream_shortname', 'datastream_system_name'),
+                                ('datastreams.shortname', 'datastreams.system_name'))
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)

@@ -94,13 +94,13 @@ CREATE TABLE if not exists datastreams
 (
     system_name     varchar(128)   NOT NULL,
     client_name     varchar(32) NOT NULL,
-    short_name      varchar(32)    NOT NULL,
+    shortname      varchar(32)    NOT NULL,
     name            varchar(128),
     datastream_uri  text,
     description     text,
     aas_name        varchar(32),
     aas_system_name varchar(128),
-    PRIMARY KEY (system_name, short_name),
+    PRIMARY KEY (system_name, shortname),
     FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
     FOREIGN KEY (aas_system_name, aas_name) REFERENCES aas(system_name, name)
 );
@@ -108,11 +108,11 @@ CREATE TABLE if not exists datastreams
 CREATE TABLE if not exists subscriptions (
     system_name     varchar(128)   NOT NULL,
     client_name     varchar(32) NOT NULL,
-    datastream_short_name   varchar(32)    NOT NULL,
+    datastream_shortname  varchar(32)    NOT NULL,
     datastream_system       varchar(128)   NOT NULL,
-    PRIMARY KEY (system_name, client_name, datastream_short_name),
+    PRIMARY KEY (system_name, client_name, datastream_shortname),
     FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
-    FOREIGN KEY (datastream_system, datastream_short_name) REFERENCES datastreams(system_name, short_name)
+    FOREIGN KEY (datastream_system, datastream_shortname) REFERENCES datastreams(system_name, shortname)
 );
 
 -- ########################################################

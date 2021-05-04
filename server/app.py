@@ -25,6 +25,7 @@ from server.api.api_system import api_system
 from server.api.api_stream_app import api_stream_app
 from server.api.api_client_app import api_client_app
 from server.api.api_aas_connection import api_aas
+from server.api.api_datastreams import api_datastreams
 from server.api.api_auth import check_iasset_connection
 
 # Import application-specific functions
@@ -56,6 +57,7 @@ def create_app():
     app.register_blueprint(api_stream_app)
     app.register_blueprint(api_client_app)
     app.register_blueprint(api_aas)
+    app.register_blueprint(api_datastreams)
 
     ########################################################
     # ########### load and update env variables ########## #
