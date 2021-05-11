@@ -23,6 +23,12 @@ from datetime import datetime
 from client.digital_twin_client import DigitalTwinClient
 from demo_applications.simulator.CarSimulator import CarSimulator
 
+CLIENT_NAME = "car_1"
+SYSTEM_NAME = "cz.icecars.iot4cps-wp5-CarFleet.Car1"
+IASSET_SERVER = "localhost:1908"
+KAFKA_BOOTSTRAP_SERVER = ":9092" # , "iasset.salzburgresearch.at:9092"
+# ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
+
 # load files relative to this file
 dirname = os.path.dirname(os.path.abspath(__file__))
 INSTANCES = os.path.join(dirname, "instances.json")
@@ -34,7 +40,7 @@ def produce_metrics(interval=10):
         # unix epoch and ISO 8601 UTC are both valid
         timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
 
-        # Measure metrics
+        # Get metrics
         temperature = car.temp.get_temp()
         acceleration = car.get_acceleration()
         latitude = car.get_latitude()
@@ -45,30 +51,11 @@ def produce_metrics(interval=10):
         print(f"The demo car 1 is at [{latitude}, {longitude}],   \twith the temp.: {temperature} °C  \tand had a " +
               f"maximal acceleration of {acceleration} m/s²  \tat {timestamp}")
 
-        # # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
-        # client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
-        #                longitude=longitude, latitude=latitude, attitude=attitude)
-        # client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
-        #                longitude=longitude, latitude=latitude, attitude=attitude)
-        # create data record with additional attributes
-        data = dict({"phenomenonTime": client.get_iso8601_time(timestamp),
-                     "resultTime": datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat(),
-                     "datastream": {
-                         "thing": "Car1",
-                         "quantity": "temperature"
-                         },
-                     "result": temperature,
-                     "attributes": {
-                         "latitude": latitude,
-                         "longitude": longitude
-                        }
-                     })
-        client.send_to_kafka_bootstrap(kafka_topic=config["system"]+".int",
-                                       kafka_key=config["client_name"], data=data)
-        data["datastream"]["quantity"] = "acceleration"
-        data["result"] = acceleration
-        client.send_to_kafka_bootstrap(kafka_topic=config["system"] + ".int",
-                                       kafka_key=config["client_name"], data=data)
+        # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
+        client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
+                       longitude=longitude, latitude=latitude, attitude=attitude)
+        client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
+                       longitude=longitude, latitude=latitude, attitude=attitude)
         time.sleep(interval)
 
 
@@ -81,7 +68,7 @@ def consume_metrics():
         # Data of the same instance can be consumed directly via the class method
         temperature = car.temp.get_temp()
         if temperature < 0:
-            subzero_temp.append({"origin": config["system"], "temperature": temperature})
+            subzero_temp.append({"origin": config["system_name"], "temperature": temperature})
 
         # Data of other instances (and also the same one) can be consumed via the client, commits very timeout
         received_quantities = client.consume(timeout=1.0, error="ignore")
@@ -98,16 +85,16 @@ def consume_metrics():
 if __name__ == "__main__":
     # Set the configs, create a new Digital Twin Instance and register file structure
     # This config is generated when registering a client application on the platform
-    # Make sure that Kafka and GOST are up and running before starting the platform
+    # Make sure that Kafka and Postgres are up and running before starting the platform
     config = {
-              "client_name": "car_1",
-              "system": "cz.icecars.iot4cps-wp5-CarFleet.Car1",
-              "submodel_element_collection": "submodel_uri",
-              "kafka_bootstrap_servers": "172.29.105.167:9092,172.29.105.167:9093,172.29.105.167:9094",
-              "additional_attributes": "longitude,latitude,attitude"}
+              "client_name": CLIENT_NAME,
+              "system_name": SYSTEM_NAME,
+              "server_uri": IASSET_SERVER,
+              "kafka_bootstrap_servers": KAFKA_BOOTSTRAP_SERVER
+        }
     client = DigitalTwinClient(**config)
     client.logger.info("Main: Starting client.")
-    # client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
+    client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
     client.subscribe(subscription_file=SUBSCRIPTIONS)  # Subscribe to datastreams
 
     # Create an instance of the CarSimulator that simulates a car driving on different tracks through Salzburg

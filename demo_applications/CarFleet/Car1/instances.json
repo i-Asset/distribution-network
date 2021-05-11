@@ -15,8 +15,13 @@
         "description": "Air temperature measured in the connected car 1",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
       },
-      "aas": "car",
-      "client_app": "car_1"
+      "thing": "car",
+      "client": "car_1",
+      "additional_attributes": [
+        "longitude",
+        "latitude",
+        "attitude"
+      ]
     },
     {
       "name": "Vehicle Acceleration",
@@ -34,8 +39,13 @@
         "description": "Maximum acceleration of the car that occurred after the previous measurement.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Acceleration"
       },
-      "aas": "car",
-      "client_app": "car_1"
+      "thing": "car",
+      "client": "car_1",
+      "additional_attributes": [
+        "longitude",
+        "latitude",
+        "attitude"
+      ]
     },
     {
       "name": "GPS-position-latitude",
@@ -52,8 +62,8 @@
         "description": "Latitude of the car''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "aas": "car",
-      "client_app": "car_1"
+      "thing": "car",
+      "client": "car_1"
     },
     {
       "name": "GPS-position-longitude",
@@ -70,8 +80,8 @@
         "description": "Longitude of the car''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "aas": "car",
-      "client_app": "car_1"
+      "thing": "car",
+      "client": "car_1"
     },
     {
       "name": "GPS-position-attitude",
@@ -88,8 +98,8 @@
         "description": "Attitude of the car''s position in meter above the sea level.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Length"
       },
-      "aas": "car",
-      "client_app": "car_1"
+      "thing": "car",
+      "client": "car_1"
     }
   ]
 }
