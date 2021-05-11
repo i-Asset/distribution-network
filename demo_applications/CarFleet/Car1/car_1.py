@@ -71,12 +71,12 @@ def consume_metrics():
             subzero_temp.append({"origin": config["system_name"], "temperature": temperature})
 
         # Data of other instances (and also the same one) can be consumed via the client, commits very timeout
-        received_quantities = client.consume(timeout=1.0, error="ignore")
+        received_quantities = client.consume(timeout=1.0, on_error="warn")
         for received_quantity in received_quantities:
             # The resolves the all meta-data for an received data-point
             print(f"  -> Received new external data-point from {received_quantity['phenomenonTime']}: "
-                  f"'{received_quantity['Datastream']}' = {received_quantity['result']}.")
-        #
+                  f"'{received_quantity['datastream']}' = {received_quantity['result']}.")
+
         # # Check whether there are temperatures are subzero
         # if subzero_temp != list():
         #     print("    WARNING, the road could be slippery, see: {}".format(subzero_temp))
