@@ -24,8 +24,8 @@ except ImportError:
 class DigitalTwinClient:
     """The Digital Twin Client Class that serves to connect an application for data streaming."""
 
-    def __init__(self, client_name, system_name, server_uri, kafka_bootstrap_servers, additional_attributes="",
-                 produce_via=None, break_on_errors=True):
+    def __init__(self, client_name, system_name, server_uri, kafka_bootstrap_servers,
+                 communicate_via=None, break_on_errors=True):
         """Client library of devices for streaming semantically enriched data.
         :parameter client_name (string): Name of the client device this application runs on.
         :parameter system_name (string): Name of the system this application is dedicated to.
@@ -33,8 +33,6 @@ class DigitalTwinClient:
         :parameter kafka_bootstrap_servers (string): If the Kafka servers run on a different cluster it can be
             specified using this argument. The servers are specified using a comma-separated string like:
             kafka1:9092,kafka2:9093,kafka2:9094
-        :keyword additional_attributes (string, None): The message payload can have additional attributes that should
-            be noted here with in a comma-separated string, like: "longitude,latitude,attitude".
         :keyword produce_via (string, None): Choose the protocol to produce to, default: None="kafka"
         :keyword break_on_errors (boolean): Break on errors like an onmatched key, default is True
         """
@@ -53,19 +51,18 @@ class DigitalTwinClient:
                        # "kafka_rest_server": kafka_rest_server,
                        # Use a randomized hash for an unique consumer id in an client-wide consumer group
                        "kafka_group_id": "{}.{}".format(system_name, client_name),
-                       "kafka_consumer_id": "consumer_%04x" % random.getrandbits(16),
-                       # parse additional attributes sent as metadata in each record
-                       "additional_attributes": [att.strip() for att in additional_attributes.split(",") if att != ""]}
+                       "kafka_consumer_id": "consumer_%04x" % random.getrandbits(16)}
         self.logger.debug("Config for client is: {}".format(self.config))
 
-        # Check the connection to the SensorThings server
-        self.logger.debug("init: Checking SenorThings server connection")
+        # # Check the connection to the SensorThings server
+        # self.logger.debug("init: Checking SenorThings server connection")
         # self.check_gost_connection()
 
         # Create a mapping for each datastream of the client
         self.mapping = dict()
         self.mapping["logging"] = {"name": "logging", "@iot.id": -1,  # TODO logging should not be part of the mapping
                                    "kafka-topic": self.config["system_name"] + ".log"}
+        self.subscriptions = set()
         self.break_on_errors = break_on_errors
 
         # Check the connection to Kafka, note that the connection to the brokers are preferred
@@ -77,12 +74,30 @@ class DigitalTwinClient:
         self.instances = None
         self.consumer = None
 
+        if self.config["kafka_bootstrap_servers"]:
+            # Create Kafka Producer
+            self.producer = confluent_kafka.Producer({'bootstrap.servers': self.config["kafka_bootstrap_servers"],
+                                                      'client.id': self.config["client_name"],
+                                                      'request.timeout.ms': 10000,  # wait up to 10 seconds
+                                                      'default.topic.config': {'acks': 'all'}})
+            # poll some seconds until the producer has processed pending events (not all)
+            _ = self.producer.poll(3)
+
+            # Create Kafka Consumer
+            conf = {'bootstrap.servers': self.config["kafka_bootstrap_servers"],
+                    'session.timeout.ms': 6000,
+                    'auto.offset.reset': 'latest',
+                    'group.id': self.config["kafka_group_id"]}
+            self.consumer = confluent_kafka.Consumer(**conf)
+
         # select how to produce a datapoint, mqtt and rest could be implemented
         self.produce = self.produce_via_kafka
-        if produce_via and produce_via.lower() == "kafka":
+        self.consume = self.consume_via_bootstrap
+        if communicate_via and communicate_via.lower() == "kafka":
             self.produce = self.produce_via_kafka
+            self.consume = self.consume_via_bootstrap
 
-        self.check_kafka_connection()  # TODO check if the system already exists
+        # self.check_kafka_connection()  # TODO check if the system already exists
 
     # def check_gost_connection(self):
     #     gost_url = "http://" + self.config["gost_servers"]
@@ -401,31 +416,46 @@ class DigitalTwinClient:
         :return:
         """
         self.logger.debug("subscribe: Subscribing on {}, loading instances".format(subscription_file))
-        # {"subscribed_datastreams": ["domain.enterprise...system.thing.ds_1", ... ]}
+        # {"subscribed_datastreams": ["domain.enterprise.work-center.system.shortname", ... ]}
+        # Load from subscription_file or create empty one if not exists
         try:
             with open(subscription_file) as f:
                 subscriptions = json.loads(f.read())
         except FileNotFoundError:
             self.logger.warning("subscribe: FileNotFound, creating empty subscription file")
-            subscriptions = json.loads('{"subscribed_datastreams": []}')
-        # Make structure pretty
+            subscriptions = json.loads('{"subscriptions": []}')
         with open(subscription_file, "w") as f:
             f.write(json.dumps(subscriptions, indent=2))
+        if not (isinstance(subscriptions, dict) and "subscriptions" in subscriptions.keys() and
+                isinstance(subscriptions["subscriptions"], list)):
+            msg = (f'subscribe: The subscriptions must contain a list of datastream idenifiers of the form: '
+                   f'{{"subscriptions": ["interal_shortname", ..., "domain.enterprise.work-center.system.external_shortname", ...]}} '
+                   f'with "*" as placeholder. Provided was {subscriptions}.')
+            self.logger.error(msg)
+            raise Exception(msg)
 
-        self.logger.info("subscribe: Subscribing to datastreams with names: {}".format(
-            subscriptions["subscribed_datastreams"]))
+        # load the datastreams
+        sub_int = sub_ext = False
+        for ds in subscriptions["subscriptions"]:
+            if ds.count(".") == 0:
+                sub_int = True
+            if ds.count(".") == 4:
+                sub_ext = True
+            if ds.count(".") not in [0, 4]:
+                raise Exception(f"Invalid topic / system name in '{subscription_file}': '{ds}'.")
+            self.subscriptions.add(ds)
+
+        self.logger.info("subscribe: Subscribing to datastreams with names: {}".format(subscriptions["subscriptions"]))
 
         # Either consume from kafka bootstrap, or to kafka rest endpoint
         if self.config["kafka_bootstrap_servers"]:
-            # Create consumer
-            conf = {'bootstrap.servers': self.config["kafka_bootstrap_servers"],
-                    'session.timeout.ms': 6000,
-                    'auto.offset.reset': 'latest',
-                    'group.id': self.config["kafka_group_id"]}
-            self.consumer = confluent_kafka.Consumer(**conf)
-
-            # Subscribe to topics
-            self.consumer.subscribe([self.config["system_name"] + ".int", self.config["system_name"] + ".ext"])
+            # Subscribe to topics that are needed to get the data
+            topic_subs = list()
+            if sub_int:
+                topic_subs.append(self.config["system_name"] + ".int")
+            if sub_ext:
+                topic_subs.append(self.config["system_name"] + ".ext")
+            self.consumer.subscribe(topic_subs)
 
         else:
             # Create consumer
@@ -478,15 +508,20 @@ class DigitalTwinClient:
         #     if stream not in [subscribed_ds["name"] for subscribed_ds in self.subscribed_datastreams.values()]:
         #         self.logger.warning("subscribe: Couldn't subscribe to {}, datastream is not registered".format(stream))
 
-    def consume_via_bootstrap(self, timeout=0.1, error="ignore"):
+    def consume_via_bootstrap(self, timeout=1.0, on_error="ignore"):
         """
         Receives data from the Kafka topics. On new data, it checks if it is valid, filters for subscribed datastreams
         and returns the message augmented with datastream metadata.
-        :param timeout: duration how long to wait to reveive data
-        :return: either None or data in SensorThings format and augmented with metadata for each received and
-        subscribed datastream. e.g.
-        {'phenomenonTime': '2018-12-03T16:08:03.366855+00:00', 'resultTime': '2018-12-03T16:08:03.367045+00:00',
-        'result': 50.44982168968592, 'Datastream': {'@iot.id': 4, ...}
+        :param timeout: duration how long to wait to receive data
+        :param on_error: behaviour on invalid consumed data, "ignore" (default) | "warn" | "break"
+        :return: either None or data augmented with metadata for each received and subscribed datastream, e.g.:
+            {'phenomenonTime': '2018-12-03T16:08:03.366855+00:00', '
+             resultTime': '2018-12-03T16:08:03.367045+00:00',
+             'result': 5.44982168968592,
+             'datastream': {'thing': 4, 'quantity: 'temperature', system: 'dom.comp.work-center.station'},
+             'topic': 'dom.comp.work-center.station.ext'
+             'partition': 0
+            }
         """
         # Waits up to 'session.timeout.ms' for a message, batches of maximal 100 messages are consumed at once
         msgs = self.consumer.consume(num_messages=100, timeout=timeout)
@@ -496,24 +531,47 @@ class DigitalTwinClient:
             try:
                 data = json.loads(msg.value().decode('utf-8', errors='ignore'))
             except json.decoder.JSONDecodeError as e:
-                if error == "ignore":
+                if on_error == "ignore":
+                    continue
+                elif on_error == "warn":
+                    self.logger.warning(e)
                     continue
                 else:
                     raise e
-            name = data.get("Datastream", None) # .get("@iot.id", None)
-            if True:  # iot_id in self.subscribed_datastreams.keys():
-                data["Datastream"] = name # self.subscribed_datastreams[iot_id]
+
+            quantity = data.get("datastream", dict()).get("quantity", None)
+            if quantity in self.subscriptions and msg.topic().endswith(".int"):  # hashed access
                 data["partition"] = msg.partition()
                 data["topic"] = msg.topic()
                 received_quantities.append(data)
-            elif "*" in self.subscribed_datastreams.keys() and msg.topic().endswith(".ext"):
-                data["Datastream"] = self.subscribed_datastreams["*"]
+                print(f"found {quantity} in internal topics")
+
+            elif msg.topic().endswith(".ext"):  # check for matches in each candidate
                 data["partition"] = msg.partition()
-                data["topic"] = msg.topic()
-                received_quantities.append(data)
+                data["topic"] = msg.topic()  # system + ".ext"
+
+                if data["topic"].count(".") != 4:
+                    raise Exception(f"Invalid topic / system name: '{data['topic']}'.")
+                data["datastream"]["system"] = data["topic"].replace(".ext", "")
+
+                domain, company, workcenter, station, topic_type = data["topic"].split(".")
+                for can in self.subscriptions:
+                    if can.count(".") != 4:
+                        continue  # is required for testing
+                    c_domain, c_company, c_workcenter, c_station, c_quantity = can.split(".")
+                    if (
+                            (c_domain == domain or c_domain == "*") and
+                            (c_company == company or c_company == "*") and
+                            (c_workcenter == workcenter or c_workcenter == "*") and
+                            (c_station == station or c_station == "*") and
+                            (c_quantity == quantity or c_quantity == "*")
+                    ):
+                        received_quantities.append(data)
+                        break
+
         return received_quantities
 
-    def consume(self, timeout=1, error="ignore"):
+    def consume_wrapper(self, timeout=1, on_error="ignore"):
         """
         Receives data from the Kafka topics directly via a bootstrap server (preferred) or via kafka rest.
         On new data, it checks if it is valid and filters for subscribed datastreams
@@ -527,7 +585,7 @@ class DigitalTwinClient:
         """
         # msg = self.consumer.poll(timeout)  # Waits up to 'session.timeout.ms' for a message
         if self.config["kafka_bootstrap_servers"]:
-            return self.consume_via_bootstrap(timeout, error=error)
+            return self.consume_via_bootstrap(timeout, on_error=on_error)
 
         # Consume data via Kafka Rest
         else:
