@@ -12,6 +12,14 @@ Demo Scenario: Connected Cars
         A Weather Service provider that conducts multiple Stations that measure weather conditions, as well as a
         central service to forecast the Weather. Additionally, the temperature data is of interest for the CarFleet and
         therefore shared with them.
+
+Message Schema:
+{
+    "phenomenonTime": ISO-8601, "resultTime": ISO-8601,
+    "datastream": {"quantity": string, "client_app": string, "thing": string},
+    "result": bool, integer, double, string, dict, list,
+    "attributes": dict of string: bool, integer, double, string, dict or list (optional)
+}
 """
 
 import os
@@ -23,11 +31,16 @@ from datetime import datetime
 from client.digital_twin_client import DigitalTwinClient
 from demo_applications.simulator.CarSimulator import CarSimulator
 
-CLIENT_NAME = "car_1"
-SYSTEM_NAME = "cz.icecars.iot4cps-wp5-CarFleet.Car1"
-IASSET_SERVER = "localhost:1908"
-KAFKA_BOOTSTRAP_SERVER = ":9092" # , "iasset.salzburgresearch.at:9092"
-# ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
+# This config is used to registering a client application on the platform
+# Make sure that Kafka and Postgres are up and running before starting the platform
+CONFIG = {
+    "client_name": "car_1",
+    "system_name": "cz.icecars.iot4cps-wp5-CarFleet.Car1",
+    "server_uri": "localhost:1908",
+    "kafka_bootstrap_servers": ":9092"  # , "iasset.salzburgresearch.at:9092"
+    # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
+}
+INTERVAL = 5  # interval at which to produce (s)
 
 # load files relative to this file
 dirname = os.path.dirname(os.path.abspath(__file__))
@@ -68,7 +81,7 @@ def consume_metrics():
         # Data of the same instance can be consumed directly via the class method
         temperature = car.temp.get_temp()
         if temperature < 0:
-            subzero_temp.append({"origin": config["system_name"], "temperature": temperature})
+            subzero_temp.append({"origin": CONFIG["system_name"], "temperature": temperature})
 
         # Data of other instances (and also the same one) can be consumed via the client, commits very timeout
         received_quantities = client.consume(timeout=1.0, on_error="warn")
@@ -84,15 +97,7 @@ def consume_metrics():
 
 if __name__ == "__main__":
     # Set the configs, create a new Digital Twin Instance and register file structure
-    # This config is generated when registering a client application on the platform
-    # Make sure that Kafka and Postgres are up and running before starting the platform
-    config = {
-              "client_name": CLIENT_NAME,
-              "system_name": SYSTEM_NAME,
-              "server_uri": IASSET_SERVER,
-              "kafka_bootstrap_servers": KAFKA_BOOTSTRAP_SERVER
-        }
-    client = DigitalTwinClient(**config)
+    client = DigitalTwinClient(**CONFIG)
     client.logger.info("Main: Starting client.")
     client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
     client.subscribe(subscription_file=SUBSCRIPTIONS)  # Subscribe to datastreams
@@ -101,15 +106,14 @@ if __name__ == "__main__":
     car = CarSimulator(track_id=1, time_factor=100, speed=30, cautiousness=1,
                        temp_day_amplitude=4, temp_year_amplitude=-4, temp_average=3, seed=1)
     client.logger.info("Main: Created instance of CarSimulator.")
-
-    client.logger.info("Main: Starting producer and consumer threads.")
     halt_event = threading.Event()
 
+    client.logger.info("Main: Starting producer and consumer threads.")
     # Create and start the receiver Thread that consumes data via the client
     consumer = threading.Thread(target=consume_metrics)
     consumer.start()
     # Create and start the receiver Thread that publishes data via the client
-    producer = threading.Thread(target=produce_metrics, kwargs=({"interval": 5}))
+    producer = threading.Thread(target=produce_metrics, kwargs=({"interval": INTERVAL}))
     producer.start()
 
     # set halt signal to stop the threads if a KeyboardInterrupt occurs
