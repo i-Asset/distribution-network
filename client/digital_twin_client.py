@@ -219,6 +219,10 @@ class DigitalTwinClient:
 
         # Check each entry of the instance file and store into mapping with the shortname as key
         for ds in datastreams["Datastreams"]:
+            if not isinstance(ds, dict):
+                msg = (f"register_new: Wrong format in {instance_file}, each item must have {req_keys}")
+                self.logger.error(msg)
+                raise Exception(msg)
             if not req_keys.issubset(ds.keys()):
                 msg = (f"register_new: Missing keys {set(ds.keys()).difference(req_keys)} in {instance_file}"
                        f" in instance {ds.items()}")

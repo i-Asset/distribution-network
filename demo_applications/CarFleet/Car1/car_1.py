@@ -34,7 +34,7 @@ from demo_applications.simulator.CarSimulator import CarSimulator
 # This config is used to registering a client application on the platform
 # Make sure that Kafka and Postgres are up and running before starting the platform
 CONFIG = {
-    "client_name": "car_1",
+    "client_name": "car",
     "system_name": "cz.icecars.iot4cps-wp5-CarFleet.Car1",
     "server_uri": "localhost:1908",
     "kafka_bootstrap_servers": ":9092"  # , "iasset.salzburgresearch.at:9092"

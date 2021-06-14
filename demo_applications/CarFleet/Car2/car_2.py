@@ -12,6 +12,14 @@ Demo Scenario: Connected Cars
         A Weather Service provider that conducts multiple Stations that measure weather conditions, as well as a
         central service to forecast the Weather. Additionally, the temperature data is of interest for the CarFleet and
         therefore shared with them.
+
+Message Schema:
+{
+    "phenomenonTime": ISO-8601, "resultTime": ISO-8601,
+    "datastream": {"quantity": string, "client_app": string, "thing": string},
+    "result": bool, integer, double, string, dict, list,
+    "attributes": dict of string: bool, integer, double, string, dict or list (optional)
+}
 """
 
 import os
@@ -22,6 +30,17 @@ from datetime import datetime
 
 from client.digital_twin_client import DigitalTwinClient
 from demo_applications.simulator.CarSimulator import CarSimulator
+
+# This config is used to registering a client application on the platform
+# Make sure that Kafka and Postgres are up and running before starting the platform
+CONFIG = {
+    "client_name": "car",
+    "system_name": "cz.icecars.iot4cps-wp5-CarFleet.Car2",
+    "server_uri": "localhost:1908",
+    "kafka_bootstrap_servers": ":9092"  # , "iasset.salzburgresearch.at:9092"
+    # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
+}
+INTERVAL = 5  # interval at which to produce (s)
 
 # load files relative to this file
 dirname = os.path.dirname(os.path.abspath(__file__))
@@ -34,7 +53,7 @@ def produce_metrics(interval=10):
         # unix epoch and ISO 8601 UTC are both valid
         timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
 
-        # Measure metrics
+        # Get metrics
         temperature = car.temp.get_temp()
         acceleration = car.get_acceleration()
         latitude = car.get_latitude()
@@ -45,17 +64,11 @@ def produce_metrics(interval=10):
         print(f"The demo car 2 is at [{latitude}, {longitude}],   \twith the temp.: {temperature} °C  \tand had a " +
               f"maximal acceleration of {acceleration} m/s²  \tat {timestamp}")
 
-        # # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
-        # client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
-        #                longitude=longitude, latitude=latitude, attitude=attitude)
-        # client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
-        #                longitude=longitude, latitude=latitude, attitude=attitude)
-        data = dict({"phenomenonTime": client.get_iso8601_time(timestamp),
-                     "resultTime": datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat(),
-                     "Datastream": "temperature",
-                     "result": temperature})
-        client.send_to_kafka_bootstrap(kafka_topic=config["system"]+".int", kafka_key=config["client_name"], data=data)
-
+        # Send the metrics via the client, it is suggested to use the same timestamp for later analytics
+        client.produce(quantity="temperature", result=temperature, timestamp=timestamp,
+                       longitude=longitude, latitude=latitude, attitude=attitude)
+        client.produce(quantity="acceleration", result=acceleration, timestamp=timestamp,
+                       longitude=longitude, latitude=latitude, attitude=attitude)
         time.sleep(interval)
 
 
@@ -68,14 +81,14 @@ def consume_metrics():
         # Data of the same instance can be consumed directly via the class method
         temperature = car.temp.get_temp()
         if temperature < 0:
-            subzero_temp.append({"origin": config["system"], "temperature": temperature})
+            subzero_temp.append({"origin": CONFIG["system_name"], "temperature": temperature})
 
         # Data of other instances (and also the same one) can be consumed via the client, commits very timeout
-        received_quantities = client.consume(timeout=1.0)
+        received_quantities = client.consume(timeout=1.0, on_error="warn")
         for received_quantity in received_quantities:
             # The resolves the all meta-data for an received data-point
             print(f"  -> Received new external data-point from {received_quantity['phenomenonTime']}: "
-                  f"'{received_quantity['Datastream']}' = {received_quantity['result']}.")
+                  f"'{received_quantity['datastream']}' = {received_quantity['result']}.")
 
         # # Check whether there are temperatures are subzero
         # if subzero_temp != list():
@@ -84,32 +97,23 @@ def consume_metrics():
 
 if __name__ == "__main__":
     # Set the configs, create a new Digital Twin Instance and register file structure
-    # This config is generated when registering a client application on the platform
-    # Make sure that Kafka and GOST are up and running before starting the platform
-    config = {
-              "client_name": "car_2",
-              "system": "cz.icecars.iot4cps-wp5-CarFleet.Car2",
-              "submodel_element_collection": "submodel_uri",
-              "kafka_bootstrap_servers": "172.20.38.70:9092,172.20.38.70:9093,172.20.38.70:9094",
-              "additional_attributes": "longitude,latitude,attitude"}
-    client = DigitalTwinClient(**config)
+    client = DigitalTwinClient(**CONFIG)
     client.logger.info("Main: Starting client.")
-    # client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
+    client.register(instance_file=INSTANCES)  # Register new instances could be outsourced to the platform
     client.subscribe(subscription_file=SUBSCRIPTIONS)  # Subscribe to datastreams
 
     # Create an instance of the CarSimulator that simulates a car driving on different tracks through Salzburg
-    car = CarSimulator(track_id=2, time_factor=100, speed=35, cautiousness=1.3,
-                       temp_day_amplitude=5, temp_year_amplitude=-6, temp_average=3.5, seed=1)
+    car = CarSimulator(track_id=1, time_factor=100, speed=30, cautiousness=1,
+                       temp_day_amplitude=4, temp_year_amplitude=-4, temp_average=3, seed=1)
     client.logger.info("Main: Created instance of CarSimulator.")
-
-    client.logger.info("Main: Starting producer and consumer threads.")
     halt_event = threading.Event()
 
+    client.logger.info("Main: Starting producer and consumer threads.")
     # Create and start the receiver Thread that consumes data via the client
     consumer = threading.Thread(target=consume_metrics)
     consumer.start()
     # Create and start the receiver Thread that publishes data via the client
-    producer = threading.Thread(target=produce_metrics, kwargs=({"interval": 5}))
+    producer = threading.Thread(target=produce_metrics, kwargs=({"interval": INTERVAL}))
     producer.start()
 
     # set halt signal to stop the threads if a KeyboardInterrupt occurs

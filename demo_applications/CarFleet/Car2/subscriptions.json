@@ -1,11 +1,12 @@
 {
-  "subscribed_datastreams": [
-    "*",
-    "cz.icecars.iot4cps-wp5-CarFleet.Car1.Main.Air Temperature",
-    "cz.icecars.iot4cps-wp5-CarFleet.Car1.Main.Acceleration",
-    "cz.icecars.iot4cps-wp5-CarFleet.Car1.Main.Latitude",
-    "cz.icecars.iot4cps-wp5-CarFleet.Car1.Main.Longitude",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.Station_1.Air Temperature",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.Station_2.Air Temperature"
+  "subscriptions": [
+    "placeholder",
+    "*.*.*.*.temperature",
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.temperature",
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.acceleration",
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.latitude",
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.longitude",
+    "is.iceland.iot4cps-wp5-WeatherService.Stations.station_1_temperature",
+    "is.iceland.iot4cps-wp5-WeatherService.Stations.station_2_temperature"
   ]
 }
