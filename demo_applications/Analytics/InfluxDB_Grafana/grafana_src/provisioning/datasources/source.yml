@@ -6,12 +6,12 @@ datasources:
     access: proxy
     orgId: 1
     url: http://influxdb:8086
-    database: ${DATABASE}
+    database: ${INFLUXDB_DB}
     isDefault: true
     editable: true
     jsonData:
       httpMode: GET
       sslmode: disable
-    user: iasset
+    user: ${INFLUXDB_USER}
     secureJsonData:
-      password: iasset
+      password: ${INFLUXDB_USER_PASSWORD}

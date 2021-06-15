@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1623679768775,
+  "iteration": 1623748476848,
   "links": [],
   "panels": [
     {
@@ -59,21 +59,21 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
                 "quantity"
               ],
               "type": "tag"
             },
             {
               "params": [
-                "null"
+                "thing"
               ],
-              "type": "fill"
+              "type": "tag"
+            },
+            {
+              "params": [
+                "client_app"
+              ],
+              "type": "tag"
             }
           ],
           "measurement": "cz.icecars.iot4cps-wp5-CarFleet.Car1",
@@ -88,10 +88,6 @@
                   "result"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
               }
             ]
           ],
@@ -102,7 +98,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Data from System cz.icecars.iot4cps-wp5-CarFleet.Car1",
+      "title": "All Data",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -141,6 +137,7 @@
       }
     }
   ],
+  "refresh": "10s",
   "schemaVersion": 18,
   "style": "dark",
   "tags": [],
@@ -161,7 +158,7 @@
           {
             "selected": false,
             "text": "All",
-            "value": "$__all"
+            "value": ""
           },
           {
             "selected": true,
@@ -210,7 +207,7 @@
     ]
   },
   "timezone": "",
-  "title": "Dashboard",
+  "title": "Dashboard for System cz.icecars.iot4cps-wp5-CarFleet.Car1",
   "uid": "Mb6AqSR7z",
   "version": 1
 }

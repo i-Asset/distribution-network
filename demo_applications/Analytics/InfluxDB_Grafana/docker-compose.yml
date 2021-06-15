@@ -7,16 +7,13 @@ services:
     container_name: grafana
     restart: always
     ports:
-      - 3000:3000
+      - ${GRAFANA_PORT}:3000
     networks:
       - monitoring
-    environment:
-      GF_SECURITY_ADMIN_USER: iasset
-      GF_SECURITY_ADMIN_PASSWORD: iasset
-#      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
-      DATABASE: "cz.icecars.iot4cps-wp5-CarFleet.Car1"
-      # "[cz.icecars.iot4cps-wp5-CarFleet.Car1-]YYYY.MM"
-      # "[at.datahouse.Analytics.RoadAnalytics-]YYYY.MM"
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
 #    volumes:
 #      - ./grafanadata:/var/lib/grafana
 
@@ -25,7 +22,7 @@ services:
     container_name: influxdb
     restart: always
     ports:
-      - 8086:8086
+      - ${INFLUXDB_PORT}:8086
     networks:
       - monitoring
     env_file:
@@ -38,9 +35,3 @@ services:
 networks:
   monitoring:
     driver: bridge
-
-#volumes:
-#  grafana-volume:
-#    external: true
-#  influxdb-volume:
-#    external: true
