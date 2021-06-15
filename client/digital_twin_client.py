@@ -14,7 +14,7 @@ import confluent_kafka
 
 # confluent_kafka is based on librdkafka, details in requirements.txt
 try:
-    from .registerHelper import SensorThingsRegisterHelper
+    from .sensorThingsRegisterHelper import SensorThingsRegisterHelper
     from .type_mappings import type_mappings
 except ImportError:
     from client.sensorThingsRegisterHelper import SensorThingsRegisterHelper
@@ -540,11 +540,13 @@ class DigitalTwinClient:
                     raise e
 
             quantity = data.get("datastream", dict()).get("quantity", None)
-            if quantity in self.subscriptions and msg.topic().endswith(".int"):  # hashed access
+
+            if msg.topic().endswith(".int") and (quantity in self.subscriptions or
+                                                 self.config["system_name"] + "." + quantity in self.subscriptions):
                 data["partition"] = msg.partition()
                 data["topic"] = msg.topic()
                 received_quantities.append(data)
-                print(f"found {quantity} in internal topics")
+                # print(f"found '{quantity}' in internal topics")
 
             elif msg.topic().endswith(".ext"):  # check for matches in each candidate
                 data["partition"] = msg.partition()

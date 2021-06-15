@@ -1,0 +1,8 @@
+{
+  "subscriptions": [
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.temperature",
+    "cz.icecars.iot4cps-wp5-CarFleet.Car1.acceleration",
+    "*",
+    "domain.enterprise.work-center.station.quantity"
+  ]
+}
