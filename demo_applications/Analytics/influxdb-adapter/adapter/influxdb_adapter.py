@@ -49,7 +49,11 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 # INSTANCES = os.path.join(dirname, "instances.json")
 SUBSCRIPTIONS = os.path.join(dirname, "subscriptions.json")
 
-verbose = True
+verbose = os.environ.get("VERBOSE", "True")
+if verbose.lower().strip() == "false":
+    verbose = False
+else:
+    verbose = True
 
 # InfluxDB host
 INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")  # "192.168.48.71"
@@ -83,7 +87,7 @@ try:
 
             # send to influxdb
             # all tags and the time create together the key and must be unique
-            rows_to_insert.append({
+            new_row = {
                 "measurement": CONFIG["system_name"],
                 "tags": {
                     "quantity": received_quantity["datastream"]["quantity"],
@@ -93,9 +97,13 @@ try:
                 "time": received_quantity["phenomenonTime"],
                 "fields": {
                     "result": received_quantity["result"]
-                    # TODO append the attributes in fields (tags are indicated and could lead to a huge index)
                 }
-            })
+            }
+            for att, value in received_quantity.get("attributes", {}).items():
+                new_row["fields"][att] = value
+
+            rows_to_insert.append(new_row)
+
         influx_client.write_points(rows_to_insert)
 
 except KeyboardInterrupt:
