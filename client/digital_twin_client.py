@@ -15,10 +15,10 @@ import confluent_kafka
 # confluent_kafka is based on librdkafka, details in requirements.txt
 try:
     from .sensorThingsRegisterHelper import SensorThingsRegisterHelper
-    from .type_mappings import type_mappings
+    # from .type_mappings import type_mappings
 except ImportError:
     from client.sensorThingsRegisterHelper import SensorThingsRegisterHelper
-    from client.type_mappings import type_mappings
+    # from client.type_mappings import type_mappings
 
 
 class DigitalTwinClient:
