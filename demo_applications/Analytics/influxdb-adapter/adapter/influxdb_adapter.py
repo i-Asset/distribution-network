@@ -83,7 +83,7 @@ try:
 
         for received_quantity in received_quantities:
             if verbose:
-                print("Received new data: {}".format(json.dumps(received_quantity, indent=2)))
+                print(f'New data: {received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
 
             # send to influxdb
             # all tags and the time create together the key and must be unique

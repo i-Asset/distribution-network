@@ -4,7 +4,7 @@
 
 Update the configurations in the environment file `InfluxDB_Grafana/.env`.
 **Change the password immediately and never commit this file if the service is available from other 
-nodes!** The `.env`-file could look like this:
+nodes!** The `.env`-file in `InfluxDB_Grafana` could look like this:
 
 ```.env
 SYSTEM_NAME=at.datahouse.Analytics.RoadAnalytics
