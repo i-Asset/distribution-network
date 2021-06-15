@@ -134,3 +134,5 @@ dmypy.json
 /server.save/
 /server/views/keys/
 !/server/views/keys/.gitkeep
+/demo_applications/Analytics/InfluxDB_Grafana/grafanadata/
+/demo_applications/Analytics/InfluxDB_Grafana/influxdata/

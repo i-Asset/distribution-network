@@ -17,11 +17,9 @@ RUN grafana-cli plugins install grafana-worldmap-panel
 # the files Dashboard-system.json, dashboard.yml and source.yml are generic and adabtable using the .env-file
 RUN mkdir -p /var/lib/grafana/dashboards
 ADD ./Dashboard-system.json /var/lib/grafana/dashboards
-ADD ./Dashboard-system.json /etc/grafana/provisioning/dashboards
 ADD ./provisioning/dashboards/dashboard.yml /etc/grafana/provisioning/dashboards
 ADD ./provisioning/datasources/source.yml /etc/grafana/provisioning/datasources
 
 ENTRYPOINT envsubst < /etc/grafana/provisioning/datasources/source.yml > tmp.yml && mv tmp.yml /etc/grafana/provisioning/datasources/source.yml \
   && envsubst < /var/lib/grafana/dashboards/Dashboard-system.json > tmp.yml && mv tmp.yml /var/lib/grafana/dashboards/Dashboard-system.json \
-  && envsubst < /etc/grafana/provisioning/dashboards/Dashboard-system.json > tmp.yml && mv tmp.yml /etc/grafana/provisioning/dashboards/Dashboard-system.json \
   && su grafana && sh /run.sh

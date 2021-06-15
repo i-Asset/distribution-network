@@ -5,6 +5,7 @@ providers:
   org_id: 1
   folder: ''
   type: 'file'
+  editable: true
   options:
     path: '/var/lib/grafana/dashboards'
     foldersFromFilesStructure: true

@@ -4,10 +4,11 @@
       {
         "builtIn": 1,
         "datasource": "default",
-        "enable": true,
+        "enable": false,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "showIn": 0,
         "type": "dashboard"
       }
     ]
@@ -15,7 +16,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1623748476848,
+  "iteration": 1623749250124,
   "links": [],
   "panels": [
     {
@@ -142,40 +143,7 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": [
-      {
-        "allValue": null,
-        "current": {
-          "text": "temperature",
-          "value": "temperature"
-        },
-        "hide": 2,
-        "includeAll": true,
-        "label": null,
-        "multi": false,
-        "name": "quantity",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": ""
-          },
-          {
-            "selected": true,
-            "text": "temperature",
-            "value": "temperature"
-          },
-          {
-            "selected": false,
-            "text": "acceleration",
-            "value": "acceleration"
-          }
-        ],
-        "query": "temperature, acceleration",
-        "skipUrlSync": false,
-        "type": "custom"
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-3h",
