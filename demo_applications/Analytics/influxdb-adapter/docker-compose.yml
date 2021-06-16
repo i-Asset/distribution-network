@@ -6,7 +6,7 @@ services:
     build: .
     network_mode: host
     environment:
-      VERBOSE: "true"
+      VERBOSE_ADAPTER: "true"
       # InfluxDB configuration
       INFLUXDB_HOST: "localhost"
       # Panta Rhei configuration

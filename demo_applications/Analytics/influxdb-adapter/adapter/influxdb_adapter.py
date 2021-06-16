@@ -38,7 +38,7 @@ from client.digital_twin_client import DigitalTwinClient
 # Make sure that Kafka and Postgres are up and running before starting the platform
 CONFIG = {
     "client_name": os.environ.get("CLIENT_NAME", "analytics"),
-    "system_name": os.environ.get("SYSTEM_NAME", "cz.icecars.iot4cps-wp5-CarFleet.Car1"),  # TODO change to "at.datahouse.Analytics.RoadAnalytics"
+    "system_name": os.environ.get("SYSTEM_NAME", "cz.icecars.iot4cps-wp5-CarFleet.Car1"),
     "server_uri": os.environ.get("SERVER_URI", "localhost:1908"),
     "kafka_bootstrap_servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", ":9092")  # , "iasset.salzburgresearch.at:9092"
     # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
@@ -49,7 +49,7 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 # INSTANCES = os.path.join(dirname, "instances.json")
 SUBSCRIPTIONS = os.path.join(dirname, "subscriptions.json")
 
-verbose = os.environ.get("VERBOSE", "True")
+verbose = os.environ.get("VERBOSE_ADAPTER", "True")
 if verbose.lower().strip() == "false":
     verbose = False
 else:

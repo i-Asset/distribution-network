@@ -5,18 +5,12 @@ services:
     image: 127.0.0.1:5001/datastore-adapter
     build: ./influxdb-adapter
     container_name: datastore-adapter
-    network_mode: host
-    environment:
-      VERBOSE: "true"
-      # InfluxDB configuration
-      INFLUXDB_HOST: "localhost"
-      # Panta Rhei configuration
-      CLIENT_NAME: "analytic"
-      SYSTEM_NAME: "cz.icecars.iot4cps-wp5-CarFleet.Car1"
-      SERVER_URI: "localhost:1908"
-      KAFKA_BOOTSTRAP_SERVERS: ":9092"
-      # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"
     restart: always
+    network_mode: host
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
 
   grafana:
     image: 127.0.0.1:5001/grafana
@@ -28,7 +22,7 @@ services:
     networks:
       - monitoring
     env_file:
-      - InfluxDB_Grafana/.env
+      - .env
     depends_on:
       - influxdb
 #    volumes:
@@ -43,7 +37,7 @@ services:
     networks:
       - monitoring
     env_file:
-      - ./InfluxDB_Grafana/.env
+      - .env
     environment:
       - bla=12
     volumes:

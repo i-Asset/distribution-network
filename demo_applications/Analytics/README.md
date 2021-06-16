@@ -1,15 +1,26 @@
-# InfluxDB and Grafana
+# DataStore
+
+#### The DataStore is a provisioned backend with InfluxDB and Grafana that consumes streaming data from the system 'at.datahouse.Analytics.RoadAnalytics' of the Distribution-Network.
 
 ## Setup
 
-Update the configurations in the environment file `InfluxDB_Grafana/.env`.
+All configurations are stored in the environment file `.env`. 
+Please create one if not already done.
 **Change the password immediately and never commit this file if the service is available from other 
-nodes!** The `.env`-file in `InfluxDB_Grafana` could look like this:
+nodes!**
 
 ```.env
+GRAFANA_PORT=30001
+INFLUXDB_PORT=80861
+
+VERBOSE_ADAPTER: "true"
+INFLUXDB_HOST: "influxdb"
+
+# Adapter configuration for the Distribution Network
+CLIENT_NAME=analytic
 SYSTEM_NAME=at.datahouse.Analytics.RoadAnalytics
-GRAFANA_PORT=3000
-INFLUXDB_PORT=8086
+SERVER_URI=localhost:1908
+KAFKA_BOOTSTRAP_SERVERS=:9092
 
 INFLUXDB_DB=at.datahouse.Analytics.RoadAnalytics
 INFLUXDB_ADMIN_ENABLED=true
@@ -18,33 +29,15 @@ INFLUXDB_ADMIN_PASSWORD=admin
 INFLUXDB_USER=dev
 INFLUXDB_USER_PASSWORD=dev
 
-GF_SECURITY_ADMIN_USER=iasset
-GF_SECURITY_ADMIN_PASSWORD=iasset
+GF_SECURITY_ADMIN_USER=dev
+GF_SECURITY_ADMIN_PASSWORD=dev
 ```
 
 To start InfluxDB and also Grafana, run`
 ```bash
-cd InfluxDB_Grafana
+cd demo_applications/Analytics
 docker-compose up --build -d
 ``` 
-
-To validate, if InfluxDB is running correctly, curl the service 
-using:
-
-```bash
-curl -sl -I http://localhost:8086/ping
-# Expected result, note the status code 204
-HTTP/1.1 204 No Content
-Content-Type: application/json
-Request-Id: 2f7091fb-9daa-11ea-8002-0242ac110002
-X-Influxdb-Build: OSS
-X-Influxdb-Version: 1.8.0
-X-Request-Id: 2f7091fb-9daa-11ea-8002-0242ac110002
-Date: Sun, 24 May 2020 10:34:45 GMT
-```
-
-Grafana should run with access to InfluxDB on [localhost:3000](http://localhost:3000).
-
 
 To investigate the services or 
 to stop them, run:
@@ -55,17 +48,51 @@ docker-compose logs -f
 docker-compose stop
 ```
 
+## Adapter configuration
+
+Datastreams that should be consumed can be configured in `influxdb-adapter/adapter/subscriptions.json`.
+This config-file takes a list of global quantity names of the 
+form `"domain.enterprise.work-center.station.quantity_name"` for global quantities and 
+`"quantity_name"` for local (same-system) quantities.
+
+```json
+{
+  "subscriptions": [
+    "cz.icecars.iot4cps-wp5-CarFleet.*.temperature",
+    "cz.icecars.iot4cps-wp5-CarFleet.*.acceleration",
+    "local_network_utilization"
+  ]
+}
+```  
+Note that `"*"` is the wildcard-character that allows any instance of the hierarchy or quantity.
+
+
 ## First steps in InfluxDB
+
+To validate, if InfluxDB is running correctly, curl the service 
+using:
+
+```bash
+curl -sl -I http://localhost:80861/ping
+# Expected result, note the status code 204
+HTTP/1.1 204 No Content
+Content-Type: application/json
+Request-Id: 2f7091fb-9daa-11ea-8002-0242ac110002
+X-Influxdb-Build: OSS
+X-Influxdb-Version: 1.8.0
+X-Request-Id: 2f7091fb-9daa-11ea-8002-0242ac110002
+Date: Sun, 24 May 2020 10:34:45 GMT
+```
 
 InfluxDB provides a RestAPI that can be executed via `curl`
 
 ```bash
-curl -XPOST 'http://localhost:8086/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
-curl -XPOST 'http://localhost:8086/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
-curl -G 'http://localhost:8086/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
+curl -XPOST 'http://localhost:80861/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
+curl -XPOST 'http://localhost:80861/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
+curl -G 'http://localhost:80861/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
 
 # or for this database:
-curl -G 'http://localhost:8086/query?db=at.srfg.iot.dtz' --data-urlencode 'q=SELECT * FROM "at.srfg.iot.dtz"'
+curl -G 'http://localhost:80861/query?db=at.srfg.iot.dtz' --data-urlencode 'q=SELECT * FROM "at.srfg.iot.dtz"'
 ```
 More API interface examples can be found [here](https://docs.influxdata.com/influxdb/v1.8/tools/api/).
 
@@ -80,15 +107,17 @@ Test the Influx-Python API using `db_interface.py`.
 ## First steps in Grafana
 
 Grafana is started with InfluxDB and is reachable on
-[localhost:3000](http://localhost:3000).
+[localhost:30001](http://localhost:30001).
 
-To retrieve data from the InfluxDB, add a new data source by 
-clicking on `Configuration -> Data Sources -> Add data source`.
+For this instance a demo dashboard should be provided that is configured in `InfluxDB_Grafana/grafana_src`.
+
+To create an new `InfluxDB` data source, 
+click on `Configuration -> Data Sources -> Add data source`.
 Then fill the fields as shown in this screenshot:
 
 ![source](InfluxDB_Grafana/grafana_source.png)   
 
-The password is set in the environment file `InfluxDB_Grafana/.env`.
+The password is set in the environment file `.env`.
 As you can see in the green box, the test was successful!
 
 Afterwards, a dashboard can be created that retrieves data from
@@ -98,3 +127,9 @@ a dashboard that was previously exported.
 Note that there should already be a provisioned dashboard.
 
 
+## Modifying the consumer adapter
+
+The provided code-snippets follow a generic behaviour.
+In order to adapt the code, it is useful to modify the adapter-script `influxdb-adapter/adapter/influxdb_adapter.py`.
+It is useful to just start `InfluxDB` and `Grafana` by running `InfluxDB_Grafana/docker-compose.yml`
+and the run the adapter-script in Python.
