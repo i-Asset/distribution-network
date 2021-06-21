@@ -58,8 +58,8 @@ form `"domain.enterprise.work-center.station.quantity_name"` for global quantiti
 ```json
 {
   "subscriptions": [
-    "cz.icecars.iot4cps-wp5-CarFleet.*.temperature",
-    "cz.icecars.iot4cps-wp5-CarFleet.*.acceleration",
+    "at.srfg.MachineFleet.*.temperature",
+    "at.srfg.MachineFleet.*.acceleration",
     "local_network_utilization"
   ]
 }

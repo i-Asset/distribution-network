@@ -136,43 +136,41 @@ INSERT INTO is_admin_of_com (user_id, company_id, creator_id, datetime) VALUES
 (-4, -13, -4, now());
 
 INSERT INTO systems (name, workcenter, station, datetime, description, company_id) VALUES
-('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'iot4cps-wp5-CarFleet', 'Car1', now(), 'Lorem Ipsum', -11),
-('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'iot4cps-wp5-CarFleet', 'Car2', now(), 'Lorem Ipsum', -11),
-('is.iceland.iot4cps-wp5-WeatherService.Stations', 'iot4cps-wp5-WeatherService', 'Stations', now(), 'Lorem Ipsum', -12),
-('is.iceland.iot4cps-wp5-WeatherService.Services', 'iot4cps-wp5-WeatherService', 'Services', now(), 'Lorem Ipsum', -12),
-('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics', 'iot4cps-wp5-Analytics', 'RoadAnalytics', now(), 'Lorem Ipsum', -13);
+('at.srfg.MachineFleet.Machine1', 'MachineFleet', 'Machine1', now(), 'Lorem Ipsum', -11),
+('at.srfg.MachineFleet.Machine2', 'MachineFleet', 'Machine2', now(), 'Lorem Ipsum', -11),
+('at.srfg.WeatherService.Stations', 'WeatherService', 'Stations', now(), 'Lorem Ipsum', -12),
+('at.srfg.Analytics.MachineAnalytics', 'Analytics', 'MachineAnalytics', now(), 'Lorem Ipsum', -13);
 
 INSERT INTO is_admin_of_sys (user_id, system_name, creator_id, datetime) VALUES
-(-1, 'cz.icecars.iot4cps-wp5-CarFleet.Car1', -1, now()),
-(-3, 'cz.icecars.iot4cps-wp5-CarFleet.Car1', -1, now()),
-(-1, 'cz.icecars.iot4cps-wp5-CarFleet.Car2', -1, now()),
-(-3, 'cz.icecars.iot4cps-wp5-CarFleet.Car2', -1, now()),
-(-2, 'is.iceland.iot4cps-wp5-WeatherService.Stations', -2, now()),
-(-2, 'is.iceland.iot4cps-wp5-WeatherService.Services', -2, now()),
-(-4, 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics', -4, now());
+(-1, 'at.srfg.MachineFleet.Machine1', -1, now()),
+(-3, 'at.srfg.MachineFleet.Machine1', -1, now()),
+(-1, 'at.srfg.MachineFleet.Machine2', -1, now()),
+(-3, 'at.srfg.MachineFleet.Machine2', -1, now()),
+(-2, 'at.srfg.WeatherService.Stations', -2, now()),
+(-4, 'at.srfg.Analytics.MachineAnalytics', -4, now());
 
 INSERT INTO stream_apps (name, source_system, target_system, creator_id, logic, status, datetime, description) VALUES
-('car1analytics', 'cz.icecars.iot4cps-wp5-CarFleet.Car1', 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics', -1,
- 'SELECT * FROM cz.icecars.iot4cps-wp5-CarFleet.Car1;', 'init', now(), 'Lorem Ipsum'),
-('car2analytics', 'cz.icecars.iot4cps-wp5-CarFleet.Car2', 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics', -1,
- 'SELECT * FROM cz.icecars.iot4cps-wp5-CarFleet.Car2;', 'init', now(), 'Lorem Ipsum'),
-('weather2car1', 'is.iceland.iot4cps-wp5-WeatherService.Stations', 'cz.icecars.iot4cps-wp5-CarFleet.Car1', -2,
- 'SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations;', 'init', now(), 'Lorem Ipsum'),
-('weather2car2', 'is.iceland.iot4cps-wp5-WeatherService.Stations', 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics', -2,
- 'SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations;', 'init', now(), 'Lorem Ipsum');
+('car1analytics', 'at.srfg.MachineFleet.Machine1', 'at.srfg.Analytics.MachineAnalytics', -1,
+ 'SELECT * FROM at.srfg.MachineFleet.Machine1;', 'init', now(), 'Lorem Ipsum'),
+('car2analytics', 'at.srfg.MachineFleet.Machine2', 'at.srfg.Analytics.MachineAnalytics', -1,
+ 'SELECT * FROM at.srfg.MachineFleet.Machine2;', 'init', now(), 'Lorem Ipsum'),
+('weather2car1', 'at.srfg.WeatherService.Stations', 'at.srfg.MachineFleet.Machine1', -2,
+ 'SELECT * FROM at.srfg.WeatherService.Stations;', 'init', now(), 'Lorem Ipsum'),
+('weather2car2', 'at.srfg.WeatherService.Stations', 'at.srfg.Analytics.MachineAnalytics', -2,
+ 'SELECT * FROM at.srfg.WeatherService.Stations;', 'init', now(), 'Lorem Ipsum');
 
 INSERT INTO client_apps (system_name, name, submodel_element_collection, creator_id, datetime, description, on_kafka, keyfile_av) VALUES
-('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'car_1', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
-('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'car_2', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
-('is.iceland.iot4cps-wp5-WeatherService.Stations', 'weatherstation_1', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('is.iceland.iot4cps-wp5-WeatherService.Stations', 'weatherstation_2', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('is.iceland.iot4cps-wp5-WeatherService.Services', 'forecast_service', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics','datastack-adapter', 'submodel_uri', -4, now(), 'Lorem Ipsum', TRUE, FALSE);
+('at.srfg.MachineFleet.Machine1', 'machine_1', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
+('at.srfg.MachineFleet.Machine2', 'machine_2', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
+('at.srfg.WeatherService.Stations', 'weatherstation_1', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
+('at.srfg.WeatherService.Stations', 'weatherstation_2', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
+('at.srfg.WeatherService.Stations', 'weather_analytics', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
+('at.srfg.Analytics.MachineAnalytics','datastack-adapter', 'submodel_uri', -4, now(), 'Lorem Ipsum', TRUE, FALSE);
 
 INSERT INTO aas (system_name, name, registry_uri, creator_id, datetime, description) VALUES
-('cz.icecars.iot4cps-wp5-CarFleet.Car1', 'car', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
-('cz.icecars.iot4cps-wp5-CarFleet.Car2', 'car', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
-('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 1', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('is.iceland.iot4cps-wp5-WeatherService.Stations', 'Weatherstation 2', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('is.iceland.iot4cps-wp5-WeatherService.Services', 'Forecast Service', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics','Datastack Adapter', 'aas_registry.uri', -4, now(), 'Lorem Ipsum');
+('at.srfg.MachineFleet.Machine1', 'machine', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('at.srfg.MachineFleet.Machine2', 'machine', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weatherstation 1', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weatherstation 2', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weather_analytics', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.Analytics.MachineAnalytics','Datastack Adapter', 'aas_registry.uri', -4, now(), 'Lorem Ipsum');

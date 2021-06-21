@@ -2,11 +2,11 @@
   "subscriptions": [
     "placeholder",
     "*.*.*.*.temperature",
-    "cz.icecars.iot4cps-wp5-CarFleet.Machine2.temperature",
-    "cz.icecars.iot4cps-wp5-CarFleet.Machine2.acceleration",
-    "cz.icecars.iot4cps-wp5-CarFleet.Machine2.latitude",
-    "cz.icecars.iot4cps-wp5-CarFleet.Machine2.longitude",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.station_1_temperature",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.station_2_temperature"
+    "at.srfg.MachineFleet.Machine2.temperature",
+    "at.srfg.MachineFleet.Machine2.acceleration",
+    "at.srfg.MachineFleet.Machine2.latitude",
+    "at.srfg.MachineFleet.Machine2.longitude",
+    "at.srfg.WeatherService.Stations.temperature_1",
+    "at.srfg.WeatherService.Stations.temperature_2"
   ]
 }

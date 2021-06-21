@@ -586,7 +586,7 @@ class DigitalTwinClient:
     #     :param timeout: duration how long to wait to receive data
     #     :return: either None or data in SensorThings format and augmented with metadata for each received and
     #     subscribed datastream. e.g.
-    #     [{"topic": "eu.srfg.iot-iot4cps-wp5.car1.int","key": "eu.srfg.iot-iot4cps-wp5.car1.Demo Car 1",
+    #     [{"topic": "at.srfg.MachineFleet.Machine1.int","key": "at.srfg.MachineFleet.Machine1.Demo Car 1",
     #     "value": {"phenomenonTime": "2019-04-08T09:47:35.408785+00:00","resultTime": "2019-04-08T09:47:35.408950+00:00",
     #     "Datastream": {"@iot.id": 11},"result": 2.9698054997459593},"partition": 0,"offset": 1},...]
     #     """
