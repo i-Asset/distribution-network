@@ -138,3 +138,4 @@ dmypy.json
 /demo_applications/Analytics/InfluxDB_Grafana/influxdata/
 
 *.env
+/demo_applications/WeatherService/WeatherAnalytics/InfluxDB_Grafana/influxdata/
