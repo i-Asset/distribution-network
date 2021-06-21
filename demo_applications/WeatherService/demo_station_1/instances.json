@@ -1,0 +1,23 @@
+{
+  "Datastreams": [
+    {
+      "name": "Air Temperature 1",
+      "shortname": "temperature_1",
+      "description": "Air Temperature measured in the weather station 1",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "Degree Celsius",
+        "symbol": "degC",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#DegreeCelsius"
+      },
+      "ObservedProperty": {
+        "name": "Air Temperature",
+        "description": "Air Temperature at the demo station 1",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
+      },
+      "thing": "Station_1",
+      "client": "weatherstation_1",
+      "additional_attributes": []
+    }
+  ]
+}

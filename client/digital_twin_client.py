@@ -437,15 +437,20 @@ class DigitalTwinClient:
         # load the datastreams
         sub_int = sub_ext = False
         for ds in subscriptions["subscriptions"]:
-            if ds.count(".") == 0:
+            if ds.count(".") == 0:  # add intra-system datastream name to subscriptions
                 sub_int = True
-            if ds.count(".") == 4:
-                sub_ext = True
+                self.subscriptions.add(ds)
+            if ds.count(".") == 4:    # add intra-system datastream name to subscriptions
+                if ds.startswith(self.config["system_name"]):  # intra-system datastream with global definition
+                    self.subscriptions.add(ds.split(".")[-1])  # cast the definition as local
+                    sub_int = True
+                else:  # inter-system datastream with global definition
+                    self.subscriptions.add(ds)
+                    sub_ext = True
             if ds.count(".") not in [0, 4]:
                 raise Exception(f"Invalid topic / system name in '{subscription_file}': '{ds}'.")
-            self.subscriptions.add(ds)
 
-        self.logger.info("subscribe: Subscribing to datastreams with names: {}".format(subscriptions["subscriptions"]))
+        self.logger.info("subscribe: Subscribing to datastreams with names: {}".format(self.subscriptions))
 
         # Either consume from kafka bootstrap, or to kafka rest endpoint
         if self.config["kafka_bootstrap_servers"]:
