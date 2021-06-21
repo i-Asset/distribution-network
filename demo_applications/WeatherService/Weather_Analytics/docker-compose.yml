@@ -1,0 +1,49 @@
+version: "3.4"
+
+services:
+  datastore-adapter:
+    image: 127.0.0.1:5001/datastore-adapter
+    build: ./influxdb-adapter
+    container_name: ${SYSTEM_NAME}_datastore-adapter
+    restart: always
+    network_mode: host
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
+
+  grafana:
+    image: 127.0.0.1:5001/grafana
+    build: ./InfluxDB_Grafana/grafana_src
+    container_name: ${SYSTEM_NAME}_grafana
+    restart: always
+    ports:
+      - ${GRAFANA_PORT}:3000
+    networks:
+      - weather_monitoring
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
+#    volumes:
+#      - ./InfluxDB_Grafana/grafanadata:/var/lib/grafana
+
+  influxdb:
+    image: influxdb:1.8.3
+    container_name: ${SYSTEM_NAME}_influxdb
+    restart: always
+    ports:
+      - ${INFLUXDB_PORT}:8086
+    networks:
+      - weather_monitoring
+    env_file:
+      - .env
+    environment:
+      - bla=12
+    volumes:
+      - ./InfluxDB_Grafana/influxdata:/var/lib/influxdb
+
+
+networks:
+  weather_monitoring:
+    driver: bridge

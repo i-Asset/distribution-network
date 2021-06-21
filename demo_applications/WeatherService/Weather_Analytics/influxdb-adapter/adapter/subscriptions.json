@@ -1,0 +1,6 @@
+{
+  "subscriptions": [
+    "is.iceland.iot4cps-wp5-WeatherService.Stations.temperature_1",
+    "is.iceland.iot4cps-wp5-WeatherService.Stations.temperature_2"
+  ]
+}
