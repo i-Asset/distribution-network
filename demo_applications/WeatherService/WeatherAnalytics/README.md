@@ -1,6 +1,6 @@
 # DataStore
 
-#### The DataStore is a provisioned backend with InfluxDB and Grafana that consumes streaming data from the system 'is.iceland.iot4cps-wp5-WeatherService.Stations' of the Distribution-Network.
+#### The DataStore is a provisioned backend with InfluxDB and Grafana that consumes streaming data from the system 'at.srfg.WeatherService.Stations' of the Distribution-Network.
 
 ## Setup
 
@@ -14,17 +14,17 @@ GRAFANA_PORT=3001
 INFLUXDB_PORT=8087
 
 VERBOSE_ADAPTER=true
-INFLUXDB_HOST=is.iceland.iot4cps-wp5-WeatherService.Stations_influxdb
+INFLUXDB_HOST=at.srfg.WeatherService.Stations_influxdb
 
 # Adapter configuration for the Distribution Network
 CLIENT_NAME=weather_analytics
-SYSTEM_NAME=is.iceland.iot4cps-wp5-WeatherService.Stations
+SYSTEM_NAME=at.srfg.WeatherService.Stations
 SERVER_URI=localhost:1908
 KAFKA_BOOTSTRAP_SERVERS=:9092
 ADAPTER_INFLUXDB_HOST=localhost
 ADAPTER_INFLUXDB_PORT=8087
 
-INFLUXDB_DB=is.iceland.iot4cps-wp5-WeatherService.Stations
+INFLUXDB_DB=at.srfg.WeatherService.Stations
 INFLUXDB_ADMIN_ENABLED=true
 INFLUXDB_ADMIN_USER=admin
 INFLUXDB_ADMIN_PASSWORD=admin
@@ -60,9 +60,9 @@ form `"domain.enterprise.work-center.station.quantity_name"` for global quantiti
 ```json
 {
   "subscriptions": [
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.temperature_1",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.temperature_2",
-    "is.iceland.iot4cps-wp5-WeatherService.Stations.*"
+    "at.srfg.WeatherService.Stations.temperature_1",
+    "at.srfg.WeatherService.Stations.temperature_2",
+    "at.srfg.WeatherService.Stations.*"
   ]
 }
 ```  

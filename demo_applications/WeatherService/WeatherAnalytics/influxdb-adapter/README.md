@@ -8,7 +8,7 @@ The adapter is based on the Panta Rhei (or Digital Twin) client which allows the
 from client.digital_twin_client import DigitalTwinClient
 config = {
     "client_name": "demo_app1", 
-    "system_name": "is.iceland.iot4cps-wp5-WeatherService.Stations",
+    "system_name": "at.srfg.WeatherService.Stations",
     "kafka_bootstrap_servers": "localhost:9092", 
     "server_uri": "localhost:1908"
 }
@@ -49,7 +49,7 @@ services:
   datastore-adapter:
     image: 127.0.0.1:5001/datastore-adapter
     build: .
-    container_name: "is.iceland.iot4cps-wp5-WeatherService.Stations_datastore-adapter"
+    container_name: "at.srfg.WeatherService.Stations_datastore-adapter"
     network_mode: host
     environment:
       VERBOSE_ADAPTER: "true"
@@ -58,7 +58,7 @@ services:
       INFLUXDB_PORT: 8087
       # Panta Rhei configuration
       CLIENT_NAME: "weather_analytics"
-      SYSTEM_NAME: "is.iceland.iot4cps-wp5-WeatherService.Stations"
+      SYSTEM_NAME: "at.srfg.WeatherService.Stations"
       SERVER_URI: "localhost:1908"
       KAFKA_BOOTSTRAP_SERVERS: ":9092"
       # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"

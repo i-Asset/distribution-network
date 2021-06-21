@@ -1,7 +1,7 @@
 import json
 from influxdb import InfluxDBClient
 
-system_name = "at.datahouse.Analytics.RoadAnalytics"
+system_name = "at.srfg.Analytics.MachineAnalytics"
 
 # create InfluxDB Connector and create database if not already done
 client = InfluxDBClient('localhost', 8086, 'root', 'root', system_name)

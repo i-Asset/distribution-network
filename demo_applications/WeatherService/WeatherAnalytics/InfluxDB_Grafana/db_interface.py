@@ -1,7 +1,7 @@
 import json
 from influxdb import InfluxDBClient
 
-system_name = "is.iceland.iot4cps-wp5-WeatherService.Stations"
+system_name = "at.srfg.WeatherService.Stations"
 INFLUXDB_PORT = 8087
 
 # create InfluxDB Connector and create database if not already done

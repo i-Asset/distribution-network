@@ -3,7 +3,7 @@
     {
       "name": "Air Temperature",
       "shortname": "temperature",
-      "description": "Air temperature measured in the connected car 1",
+      "description": "Air temperature measured in the connected machine 1",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "DegreeCelsius",
@@ -12,11 +12,11 @@
       },
       "ObservedProperty": {
         "name": "Air Temperature",
-        "description": "Air temperature measured in the connected car 1",
+        "description": "Air temperature measured in the connected machine 1",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
       },
-      "thing": "car",
-      "client": "car_1",
+      "thing": "machine",
+      "client": "machine_1",
       "additional_attributes": [
         "longitude",
         "latitude",
@@ -26,7 +26,7 @@
     {
       "name": "Vehicle Acceleration",
       "shortname": "acceleration",
-      "description": "Maximum acceleration of the car that occurred after the previous measurement.",
+      "description": "Maximum acceleration of the machine that occurred after the previous measurement.",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "MeterPerSecondSquared",
@@ -36,11 +36,11 @@
       },
       "ObservedProperty": {
         "name": "Maximum Acceleration",
-        "description": "Maximum acceleration of the car that occurred after the previous measurement.",
+        "description": "Maximum acceleration of the machine that occurred after the previous measurement.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Acceleration"
       },
-      "thing": "car",
-      "client": "car_1",
+      "thing": "machine",
+      "client": "machine_1",
       "additional_attributes": [
         "longitude",
         "latitude",
@@ -50,7 +50,7 @@
     {
       "name": "GPS-position-latitude",
       "shortname": "latitude",
-      "description": "Latitude of the car",
+      "description": "Latitude of the machine",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "DegreeAngle",
@@ -59,16 +59,16 @@
       },
       "ObservedProperty": {
         "name": "Latitude",
-        "description": "Latitude of the car''s position.",
+        "description": "Latitude of the machine''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "thing": "car",
-      "client": "car_1"
+      "thing": "machine",
+      "client": "machine_1"
     },
     {
       "name": "GPS-position-longitude",
       "shortname": "longitude",
-      "description": "Longitude of the car",
+      "description": "Longitude of the machine",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "DegreeAngle",
@@ -77,16 +77,16 @@
       },
       "ObservedProperty": {
         "name": "Longitude",
-        "description": "Longitude of the car''s position.",
+        "description": "Longitude of the machine''s position.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
-      "thing": "car",
-      "client": "car_1"
+      "thing": "machine",
+      "client": "machine_1"
     },
     {
       "name": "GPS-position-attitude",
       "shortname": "attitude",
-      "description": "Attitude of the car in meter above the sea level.",
+      "description": "Attitude of the machine in meter above the sea level.",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "Meter",
@@ -95,11 +95,11 @@
       },
       "ObservedProperty": {
         "name": "Attitude",
-        "description": "Attitude of the car''s position in meter above the sea level.",
+        "description": "Attitude of the machine''s position in meter above the sea level.",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Length"
       },
-      "thing": "car",
-      "client": "car_1"
+      "thing": "machine",
+      "client": "machine_1"
     }
   ]
 }
