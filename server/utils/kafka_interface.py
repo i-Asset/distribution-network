@@ -85,7 +85,7 @@ class KafkaInterface:
                 if not all_in:
                     self.create_system_topics(system_name)
             # Update kafka topics
-            self.system_topics = self.k_admin_client.list_topics(timeout=3.0).topics
+            self.system_topics = self.k_admin_client.list_topics(timeout=5.0).topics
 
     def create_system_topics(self, system_name):
         # Create the set of Kafka topics for system_name

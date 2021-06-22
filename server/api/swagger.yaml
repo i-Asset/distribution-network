@@ -10,9 +10,12 @@ info:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 
-# host: "iasset.salzburgresearch.at/distribution-network"
-host: "localhost:1908"
-# basePath: "/v2"
+host: "iasset.salzburgresearch.at"
+#host: "localhost:1908"
+## basePath: "/distributionnetwork"  # removed because the basePath is static
+schemes:
+  - "https"
+  - "http"
 
 tags:
 - name: "Distribution Network"
@@ -21,9 +24,15 @@ tags:
   description: "API for System requests on the Distribution Network"
 - name: "Stream App Request"
   description: "API for Stream App requests on the Distribution Network"
+- name: "Client App Request"
+  description: "API for Client App requests on the Distribution Network"
+- name: "AAS Connection Request"
+  description: "API for AAS connection requests on the Distribution Network"
+- name: "Datastream Request"
+  description: "API for Datastream requests on the Distribution Network"
 
 paths:
-  /distributionnetwork:
+  /distributionnetwork/:
     get:
       tags:
         - "Distribution Network"
@@ -77,6 +86,50 @@ paths:
       tags:
         - "System Request"
       summary: "Create a new system for a company that belongs to a person. Creates also the corresponding Kafka topics."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "system"
+          in: "body"
+          description: "A system object to create, functional part of a company"
+          required: true
+          schema:
+            $ref: "#definitions/SystemBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/SystemsAndAdmins"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "System Request"
+      summary: "Create or update a system for a company that belongs to a person. Creates also the corresponding Kafka topics."
       consumes:
         - "application/json"
       produces:
@@ -253,6 +306,56 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+    put:
+      tags:
+        - "Stream App Request"
+      summary: "Create or update a stream app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "A stream app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/StreamAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
   /distributionnetwork/stream_apps/{personId}/{system}/{stream_name}:
     get:
       tags:
@@ -351,11 +454,786 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-securityDefinitions:
-  Authorization:
-    type: "apiKey"
-    name: "Authorization"
-    in: "header"
+  /distributionnetwork/client_apps/{personId}/{system}:
+    get:
+      tags:
+        - "Client App Request"
+      summary: "Return all client apps that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Client App Request"
+      summary: "Create a new client app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client app"
+          in: "body"
+          description: "A client app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/ClientAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Client App Request"
+      summary: "Create or update a client app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client app"
+          in: "body"
+          description: "A client app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/ClientAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/client_apps/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Client App Request"
+      summary: "Return a specific client app that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ClientApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_client_app/{personId}/{system}/{client_name}:
+    delete:
+      tags:
+        - "Client App Request"
+      summary: "Delete a client app from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/aas_connections/{personId}/{system}:
+    get:
+      tags:
+        - "AAS Connection Request"
+      summary: "Return all aas connections that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "AAS Connection Request"
+      summary: "Create a new AAS connection for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas connection"
+          in: "body"
+          description: "An AAS connection object to create."
+          required: true
+          schema:
+            $ref: "#definitions/AasConnectionBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "AAS Connection Request"
+      summary: "Create or update an AAS connection for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas connection"
+          in: "body"
+          description: "An AAS connection object to create."
+          required: true
+          schema:
+            $ref: "#definitions/AasConnectionBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/aas_connections/{personId}/{system}/{aas_name}:
+    get:
+      tags:
+        - "AAS Connection Request"
+      summary: "Return a specific AAS connection that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/AasConnections"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_aas_connection/{personId}/{system}/{aas_name}:
+    delete:
+      tags:
+        - "AAS Connection Request"
+      summary: "Delete an AAS connection from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/datastreams/{personId}/{system}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Datastream Request"
+      summary: "Create new datastreams for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Datastream Request"
+      summary: "Create or update datastreams for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/datastreams_per_client/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to a client application of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+
+  /distributionnetwork/datastreams_per_aas/{personId}/{system}/{aas_name}:
+    get:
+      tags:
+        - "Datastream Request"
+      summary: "Return all datastreams that belong to an aas connection of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "aas_name"
+          in: "path"
+          description: "AAS connection name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Datastreams"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+
+
+  /distributionnetwork/delete_datastreams/{personId}/{system}:
+    delete:
+      tags:
+        - "Datastream Request"
+      summary: "Delete datastreams from from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "datastreams"
+          in: "body"
+          description: "An array of datastream shortnames to delete."
+          required: true
+          schema:
+            $ref: "#definitions/DatastreamShortnamesBody"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+#securityDefinitions:
+#  Authorization:
+#    type: "apiKey"
+#    name: "Authorization"
+#    in: "header"
 
 definitions:
   Status:
@@ -493,6 +1371,124 @@ definitions:
       description:
         type: "string"
         required: false
+  ClientApps:
+    type: "object"
+    properties:
+      client_apps:
+        type: "array"
+        items:
+          $ref: "#definitions/ClientApp"
+  ClientApp:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+      on_kafka:
+        type: "boolean"
+      key:
+        type: "string"
+      description:
+        type: "string"
+  ClientAppBody:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+        required: false
+      on_kafka:
+        type: "boolean"
+        required: false
+      description:
+        type: "string"
+        required: false
+  AasConnections:
+    type: "object"
+    properties:
+      aas_connections:
+        type: "array"
+        items:
+          $ref: "#definitions/AasConnection"
+  AasConnection:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      registry_uri:
+        type: "string"
+      description:
+        type: "string"
+  AasConnectionBody:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      registry_uri:
+        type: "string"
+        required: false
+      description:
+        type: "string"
+        required: false
+  Datastreams:
+    type: "object"
+    properties:
+      datastreams:
+        type: "array"
+        items:
+          $ref: "#definitions/Datastream"
+  Datastream:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      client_name:
+        type: "string"
+      submodel_element_collection:
+        type: "string"
+      aas_name:
+        type: "string"
+      registry_uri:
+        type: "string"
+      datastream_uri:
+        type: "string"
+      contact_mail:
+        type: "string"
+      description:
+        type: "string"
+  DatastreamsBody:
+    type: "array"
+    items:
+      $ref: "#definitions/DatastreamBody"
+  DatastreamBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      client_app:
+        type: "string"
+      aas:
+        type: "string"
+      datastream_uri:
+        type: "string"
+      description:
+        type: "string"
+  DatastreamShortnamesBody:
+    type: "array"
+    items:
+      type: "string"
 
 externalDocs:
   description: "Find out more about Swagger"

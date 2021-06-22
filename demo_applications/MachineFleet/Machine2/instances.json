@@ -1,0 +1,105 @@
+{
+  "Datastreams": [
+    {
+      "name": "Air Temperature",
+      "shortname": "temperature",
+      "description": "Air temperature measured in the connected machine 1",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "DegreeCelsius",
+        "symbol": "degC",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#DegreeCelsius"
+      },
+      "ObservedProperty": {
+        "name": "Air Temperature",
+        "description": "Air temperature measured in the connected machine 1",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
+      },
+      "thing": "machine",
+      "client": "machine_1",
+      "additional_attributes": [
+        "longitude",
+        "latitude",
+        "attitude"
+      ]
+    },
+    {
+      "name": "Vehicle Acceleration",
+      "shortname": "acceleration",
+      "description": "Maximum acceleration of the machine that occurred after the previous measurement.",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "MeterPerSecondSquared",
+        "symbol": "m s^-2",
+        "abbreviation": "m/s^2",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#MeterPerSecondSquared"
+      },
+      "ObservedProperty": {
+        "name": "Maximum Acceleration",
+        "description": "Maximum acceleration of the machine that occurred after the previous measurement.",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Acceleration"
+      },
+      "thing": "machine",
+      "client": "machine_1",
+      "additional_attributes": [
+        "longitude",
+        "latitude",
+        "attitude"
+      ]
+    },
+    {
+      "name": "GPS-position-latitude",
+      "shortname": "latitude",
+      "description": "Latitude of the machine",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "DegreeAngle",
+        "symbol": "deg",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#DegreeAngle"
+      },
+      "ObservedProperty": {
+        "name": "Latitude",
+        "description": "Latitude of the machine''s position.",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
+      },
+      "thing": "machine",
+      "client": "machine_1"
+    },
+    {
+      "name": "GPS-position-longitude",
+      "shortname": "longitude",
+      "description": "Longitude of the machine",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "DegreeAngle",
+        "symbol": "deg",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#DegreeAngle"
+      },
+      "ObservedProperty": {
+        "name": "Longitude",
+        "description": "Longitude of the machine''s position.",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
+      },
+      "thing": "machine",
+      "client": "machine_1"
+    },
+    {
+      "name": "GPS-position-attitude",
+      "shortname": "attitude",
+      "description": "Attitude of the machine in meter above the sea level.",
+      "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+      "unitOfMeasurement": {
+        "name": "Meter",
+        "symbol": "m",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html#Meter"
+      },
+      "ObservedProperty": {
+        "name": "Attitude",
+        "description": "Attitude of the machine''s position in meter above the sea level.",
+        "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Length"
+      },
+      "thing": "machine",
+      "client": "machine_1"
+    }
+  ]
+}

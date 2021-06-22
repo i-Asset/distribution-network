@@ -1,0 +1,12 @@
+{
+  "subscriptions": [
+    "placeholder",
+    "*.*.*.*.temperature",
+    "at.srfg.MachineFleet.Machine1.temperature",
+    "at.srfg.MachineFleet.Machine1.acceleration",
+    "at.srfg.MachineFleet.Machine1.latitude",
+    "at.srfg.MachineFleet.Machine1.longitude",
+    "at.srfg.WeatherService.Stations.temperature_1",
+    "at.srfg.WeatherService.Stations.temperature_2"
+  ]
+}

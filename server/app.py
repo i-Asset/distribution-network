@@ -23,6 +23,9 @@ from server.views.aas import aas
 # import api
 from server.api.api_system import api_system
 from server.api.api_stream_app import api_stream_app
+from server.api.api_client_app import api_client_app
+from server.api.api_aas_connection import api_aas
+from server.api.api_datastreams import api_datastreams
 from server.api.api_auth import check_iasset_connection
 
 # Import application-specific functions
@@ -52,6 +55,9 @@ def create_app():
     # Register api as blueprint
     app.register_blueprint(api_system)
     app.register_blueprint(api_stream_app)
+    app.register_blueprint(api_client_app)
+    app.register_blueprint(api_aas)
+    app.register_blueprint(api_datastreams)
 
     ########################################################
     # ########### load and update env variables ########## #
@@ -67,37 +73,49 @@ def create_app():
         codes = json.loads(f.read())
         app.config["COUNTRY_CODES"] = {v["name"]: k for k,v in codes.items() if not k.startswith("__")}
 
-    if os.environ.get("IASSET_SERVER"):
-        app.config.update({"IASSET_SERVER": os.environ.get("IASSET_SERVER")})
-        app.logger.info("Update i-Asset connection to " + app.config["IASSET_SERVER"])
-    else:
-        app.logger.info("IASSET_SERVER not in environment variables, keep {}".format(app.config.get(
-            "IASSET_SERVER", None)))
+    if os.environ.get("DNET_STARTUP_TIME"):
+        app.config.update({"DNET_STARTUP_TIME": os.environ.get("DNET_STARTUP_TIME")})
+        app.logger.info("Update DNET_STARTUP_TIME to " + app.config["DNET_STARTUP_TIME"])
 
-    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
-        app.config.update({"SQLALCHEMY_DATABASE_URI": os.environ.get("SQLALCHEMY_DATABASE_URI")})
-        app.logger.info("Update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+    if os.environ.get("DNET_IDENTITY_SERVICE"):
+        app.config.update({"DNET_IDENTITY_SERVICE": os.environ.get("DNET_IDENTITY_SERVICE")})
+        app.logger.info("Update i-Asset connection to " + app.config["DNET_IASSET_SERVER"])
     else:
-        app.logger.info("SQLALCHEMY_DATABASE_URI not in environment variables, keep {}".format(app.config.get(
-            "SQLALCHEMY_DATABASE_URI", None)))
+        app.logger.info("DNET_IDENTITY_SERVICE not in the compose-environment variables, keep {}".format(app.config.get(
+            "DNET_IDENTITY_SERVICE", None)))
 
-    if os.environ.get("KAFKA_BOOTSTRAP_SERVER"):
-        app.config.update({"KAFKA_BOOTSTRAP_SERVER": os.environ.get("KAFKA_BOOTSTRAP_SERVER")})
-        app.logger.info("Update Kafka Bootstrap servers to " + app.config["KAFKA_BOOTSTRAP_SERVER"])
+    if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
+        DNET_DB_URI = f'{app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+        DNET_DB_URI += f'{app.config.get("POSTGRES_USER", "postgres")}:{app.config.get("POSTGRES_PASSWORD", "postgres")}'
+        DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
+        DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
     else:
-        app.logger.info("KAFKA_BOOTSTRAP_SERVER not in environment variables, keep {}".format(app.config.get(
-            "KAFKA_BOOTSTRAP_SERVER", None)))
+        DNET_DB_URI = f'{os.environ.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+        DNET_DB_URI += f'{os.environ.get("POSTGRES_USER", "postgres")}:{os.environ.get("POSTGRES_PASSWORD", "postgres")}'
+        DNET_DB_URI += f'@{os.environ.get("POSTGRES_HOST", "staging-main-db")}:{os.environ.get("POSTGRES_PORT", 5432)}'
+        DNET_DB_URI += f'/{os.environ.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+    app.config.update({"SQLALCHEMY_DATABASE_URI": DNET_DB_URI})
+    app.logger.info("SQLALCHEMY_DATABASE_URI, update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+
+    if os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER"):
+        app.config.update({"DNET_KAFKA_BOOTSTRAP_SERVER": os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER"),
+                           "KAFKA_BOOTSTRAP_SERVER": os.environ.get("DNET_KAFKA_BOOTSTRAP_SERVER")})
+        app.logger.info("Update Kafka Bootstrap servers to " + app.config["DNET_KAFKA_BOOTSTRAP_SERVER"])
+    else:
+        app.config.update({"KAFKA_BOOTSTRAP_SERVER": app.config.get("DNET_KAFKA_BOOTSTRAP_SERVER")})
+        app.logger.info("DNET_KAFKA_BOOTSTRAP_SERVER not in the compose-environment variables, keep {}".format(app.config.get(
+            "DNET_KAFKA_BOOTSTRAP_SERVER", None)))
 
     # wait for infrastructure services
-    if app.config.get("WAIT_TIME"):
-        app.logger.info(f"Waiting {app.config.get('WAIT_TIME'):.1f} s for other services.")
-        time.sleep(app.config.get("WAIT_TIME"))
+    if app.config.get("DNET_STARTUP_TIME"):
+        app.logger.info(f"Waiting {app.config.get('DNET_STARTUP_TIME')} s for other services.")
+        time.sleep(float(app.config.get("DNET_STARTUP_TIME")))
 
     ########################################################
     # ############## test i-asset connection ############# #
     ########################################################
 
-    if not check_iasset_connection(asset_uri=app.config["IASSET_SERVER"]):
+    if not check_iasset_connection(asset_uri=app.config["DNET_IDENTITY_SERVICE"]):
         app.logger.error("The connection to i-Asset server couldn't be established.")
         sys.exit(1)
 
@@ -143,14 +161,15 @@ def create_app():
     # ################ register swagger ui ################ #
     ########################################################
 
+    swagger_url = '/distributionnetwork/swagger-ui.html'
+
     # Register the Swagger ui as blueprint
-    @app.route("/api")
-    @app.route("/api/<path:path>")
+    @app.route(f"{swagger_url}/api")
+    @app.route(f"/{swagger_url}/api/<path:path>")
     def send_api(path):
         return send_from_directory("api", path)
 
-    swagger_url = '/distributionnetwork/swagger-ui.html'
-    api_url = '/api/swagger.yaml'
+    api_url = 'api/swagger.yaml'
     swaggerui_blueprint = get_swaggerui_blueprint(swagger_url, api_url,
                                                   config={'app_name': "Swagger UI Distribution Network"})
     app.register_blueprint(swaggerui_blueprint, url_prefix=swagger_url)

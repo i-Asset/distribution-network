@@ -1,0 +1,17 @@
+apiVersion: 2
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://influxdb:8086
+    database: ${INFLUXDB_DB}
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMode: GET
+      sslmode: disable
+    user: ${INFLUXDB_USER}
+    secureJsonData:
+      password: ${INFLUXDB_USER_PASSWORD}

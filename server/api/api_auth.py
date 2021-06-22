@@ -1,6 +1,5 @@
+import os
 import json
-import urllib
-
 import requests
 import sqlalchemy as db
 
@@ -15,13 +14,13 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session,
 # api_auth = Blueprint("api_auth", __name__)
 
 def check_iasset_connection(asset_uri):
-    url = urllib.parse.urljoin(asset_uri, f"/identity/statistics/")
+    url = os.path.join(asset_uri, "statistics/")
     try:
         res = requests.get(url=url, headers={'content-type': 'application/json'})
         if res.status_code in [200, 201, 202]:
             return True
-        app.logger.error(f"check_iasset_connection: Unknown response with code {res.status_code} and body {res.json()}")
-    except Exception as e:
+        app.logger.error(f"check_iasset_connection: Bad response with code {res.status_code} and body {res.json()}")
+    except requests.exceptions.ConnectionError as e:
         app.logger.error(f"check_iasset_connection: Connection error with i-Asset server.")
         app.logger.error(f"check_iasset_connection: i-Asset server: '{url}'")
         app.logger.error(f"check_iasset_connection: Exception: {e}")
@@ -78,29 +77,23 @@ def authorize_request(user_id, fct):
 
 
 def get_person_from_identity_service(fct):
-    bearer_token = request.headers["Authorization"].strip()
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/person/")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), "person/"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     return res
 
 
 def get_user_from_identity_service(fct, user_id):
-    bearer_token = request.headers["Authorization"].strip()
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/person/{user_id}")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"person/{user_id}"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     return True, res.json(), 200
 
 
 def get_party_from_identity_service(fct, party_id, user_id):
-    bearer_token = request.headers["Authorization"].strip()
-    url = urllib.parse.urljoin(app.config.get("IASSET_SERVER"), f"/identity/party/{party_id}?includeRoles=true")
-    res = requests.get(url=url,
+    res = requests.get(url=os.path.join(app.config.get("DNET_IDENTITY_SERVICE"), f"party/{party_id}?includeRoles=true"),
                        headers={'content-type': 'application/json',
-                                'Authorization': bearer_token})
+                                'Authorization': request.headers["Authorization"].strip()})
     if res.status_code != 200:
         msg = f"Resource Party is not allowed."
         app.logger.warning(f"{fct}: {msg}")

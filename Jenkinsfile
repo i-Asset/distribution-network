@@ -20,7 +20,7 @@ node('iasset-jenkins-slave') {
         }
 
         stage('Deploy') {
-            sh 'ssh staging "cd /srv/docker_setup/staging/ && ./run-staging.sh restart-single distribution-network"'
+            sh 'ssh staging "cd /srv/docker-setup/staging/ && ./run-staging.sh restart-single distribution-network"'
         }
     }
 

@@ -11,17 +11,32 @@ services:
       - kafka1
       - kafka2
       - kafka3
+
+    # Local docker deployment
     environment:
-      IASSET_SERVER: https://iasset.salzburgresearch.at
-      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@${DOCKER_HOST_IP:-127.0.0.1}:5432/distributionnetworkdb
-#      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@172.29.105.167:5432/distributionnetworkdb
-      KAFKA_BOOTSTRAP_SERVER: ${DOCKER_HOST_IP:-127.0.0.1}:9092,${DOCKER_HOST_IP:-127.0.0.1}:9093,${DOCKER_HOST_IP:-127.0.0.1}:9094
-#      KAFKA_BOOTSTRAP_SERVER: 172.29.105.167:9092,172.29.105.167:9093,172.29.105.167:9094
-#    ports:
-#      - "1908:1908"
-    network_mode: host
-#    networks:
-#      - infra
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DNET_STARTUP_TIME: 5
+      DNET_HOST: iasset.salzburgresearch.at
+      DNET_IDENTITY_SERVICE: https://iasset.salzburgresearch.at/identity-service
+      DNET_SQLALCHEMY_DATABASE_DRIVER: postgresql+psycopg2
+      DNET_SQLALCHEMY_DATABASE_NAME: distributionnetworkdb
+      DNET_KAFKA_BOOTSTRAP_SERVER: kafka1:19092,kafka2:19093,kafka3:19094
+    # deployment, envs are listed on the iasset server in server/env_vars-staging
+    # postgres vars are listed
+#      DNET_STARTUP_TIME: 5
+#      DNET_HOST: iasset.salzburgresearch.at
+#      DNET_IDENTITY_SERVICE: http://identity-service:9096
+#      DNET_SQLALCHEMY_DATABASE_DRIVER=postgresql+psycopg2
+#      DNET_SQLALCHEMY_DATABASE_NAME=distributionnetworkdb
+#      DNET_KAFKA_BOOTSTRAP_SERVER=kafka1:19092,kafka2:19093,kafka3:19094
+    ports:
+      - "1908:1908"
+#    network_mode: host
+    networks:
+      - infra
     restart: always
 
 #  postgresdb:
@@ -46,8 +61,8 @@ services:
       ZOO_MY_ID: 1
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/zoo1/data:/data
 #      - ./zk-multiple-kafka-multiple/zoo1/datalog:/datalog
@@ -61,8 +76,8 @@ services:
       ZOO_MY_ID: 2
       ZOO_PORT: 2182
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/zoo2/data:/data
 #      - ./zk-multiple-kafka-multiple/zoo2/datalog:/datalog
@@ -76,8 +91,8 @@ services:
       ZOO_MY_ID: 3
       ZOO_PORT: 2183
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/zoo3/data:/data
 #      - ./zk-multiple-kafka-multiple/zoo3/datalog:/datalog
@@ -95,8 +110,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181,zoo2:2182,zoo3:2183"
       KAFKA_BROKER_ID: 1
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/kafka1/data:/var/lib/kafka/data
     depends_on:
@@ -121,8 +136,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181,zoo2:2182,zoo3:2183"
       KAFKA_BROKER_ID: 2
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/kafka2/data:/var/lib/kafka/data
     depends_on:
@@ -147,8 +162,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181,zoo2:2182,zoo3:2183"
       KAFKA_BROKER_ID: 3
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-#    networks:
-#      - infra
+    networks:
+      - infra
 #    volumes:
 #      - ./zk-multiple-kafka-multiple/kafka3/data:/var/lib/kafka/data
     depends_on:
@@ -161,7 +176,7 @@ services:
 #      interval: 10s
 #      retries: 10
 
-#networks:
-#  infra:
-#    external:
-#      name: iassetprod_default
+networks:
+  infra:
+    external:
+      name: iassetinfrastaging_default

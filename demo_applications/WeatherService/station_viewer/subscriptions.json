@@ -1,0 +1,6 @@
+{
+  "subscriptions": [
+    "at.srfg.WeatherService.Stations.temperature_1",
+    "at.srfg.WeatherService.Stations.temperature_2"
+  ]
+}

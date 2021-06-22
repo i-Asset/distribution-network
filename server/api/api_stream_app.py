@@ -32,7 +32,7 @@ def streams_no_sys(any=None):
 
 
 @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>", methods=['GET'])
-@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
+# @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/", methods=['GET'])
 def streams_per_system(user_id, system_url):
     """
     Searches for all stream apps in the distribution network of which the user is admin of and belong to the system.
@@ -79,7 +79,7 @@ def streams_per_system(user_id, system_url):
 
 
 @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>")
-@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>/")
+# @api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>/")
 def stream_per_system(user_id, system_url, stream_name):
     """
     Returns a stream app in the distribution network of which the user is admin of and belong to the system.
@@ -90,7 +90,7 @@ def stream_per_system(user_id, system_url, stream_name):
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/stream_apps/<string:user_id>/<string:system_url>"
+    fct = f"{prefix}/stream_apps/<string:user_id>/<string:system_url>/<string:stream_name>"
     authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
@@ -124,7 +124,7 @@ def stream_per_system(user_id, system_url, stream_name):
     return jsonify({"stream_apps": streams})
 
 
-@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>", methods=['POST'])
+@api_stream_app.route(f"{prefix}/stream_apps/<string:user_id>/<string:system_url>", methods=['POST', 'PUT'])
 def create_stream_app(user_id, system_url):
     """
     Create a stream app by sending a json like:
@@ -145,7 +145,7 @@ def create_stream_app(user_id, system_url):
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
-    # 2) check if the system to create has the correct structure
+    # 2) check if the stream app to create has the correct structure
     req_keys = {"name", "target_system"}
     new_stream_app = request.json
 
@@ -172,12 +172,14 @@ def create_stream_app(user_id, system_url):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     # 4) create the stream app or warn if it exists.
+    # If the stream-app exists and the method is POST, return without change. If the method is PUT, overwrite
     stream_name = new_stream_app["name"]
     result_proxy = conn.execute(
         f"SELECT source_system, name FROM stream_apps "
         f"WHERE source_system='{system_name}' AND name='{stream_name}';")
     stream_apps = [dict(c.items()) for c in result_proxy.fetchall()]
 
+    # Check if the provided target_system really exists
     target_system = decode_sys_url(new_stream_app.get("target_system", ""))
     result_proxy = conn.execute(f"SELECT count(*) FROM systems WHERE name='{target_system}';")
     target_systems_res = [dict(c.items()) for c in result_proxy.fetchall()]
@@ -198,10 +200,16 @@ def create_stream_app(user_id, system_url):
                         "datetime": get_datetime(),
                         "description": new_stream_app.get("description", "")}]
     if len(stream_apps) > 0:
-        engine.dispose()
-        msg = f"The stream app with name '{stream_name}' for system '{system_name}' already exists."
-        app.logger.warning(f"{fct}: {msg}")
-        return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
+        # If the stream-app exists and the method is POST, return without change. If the method is PUT, overwrite
+        if request.method == "POST":
+            engine.dispose()
+            msg = f"The stream app with name '{stream_name}' for system '{system_name}' already exists."
+            app.logger.warning(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
+        else:  # PUT overwrite
+            query = db.update(app.config["tables"]["stream_apps"]).where(
+                ("name" == stream_name and "source_system" == system_name))
+            conn.execute(query, new_stream_apps)
     else:
         query = db.insert(app.config["tables"]["stream_apps"])
         conn.execute(query, new_stream_apps)
@@ -213,7 +221,7 @@ def create_stream_app(user_id, system_url):
 
 @api_stream_app.route(f"{prefix}/delete_stream_app/<string:user_id>/<string:system_url>/<string:stream_name>",
                       methods=['DELETE'])
-def delete_systems(user_id, system_url, stream_name):
+def delete_stream_app(user_id, system_url, stream_name):
     """
     Delete a stream app
     :return: return status json

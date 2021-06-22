@@ -25,7 +25,6 @@ url_sep = "_"
 
 
 def encode_sys_url(system_name):
-
     return system_name.replace(".", url_sep)
 
 

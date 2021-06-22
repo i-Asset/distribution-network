@@ -26,14 +26,6 @@ RUN pip install -r requirements.txt
 RUN mkdir -p /src/server
 ADD . /src/server
 
-# load the docker-compose environment variables to the container environment
-ARG IASSET_SERVER
-ENV IASSET_SERVER $IASSET_SERVER
-ARG SQLALCHEMY_DATABASE_URI
-ENV SQLALCHEMY_DATABASE_URI $SQLALCHEMY_DATABASE_URI
-ARG KAFKA_BOOTSTRAP_SERVER
-ENV KAFKA_BOOTSTRAP_SERVER $KAFKA_BOOTSTRAP_SERVER
-
 # set configuration file
 RUN echo "\nAPP_CONFIG_FILE=config/docker.py" >> /src/server/.env
 

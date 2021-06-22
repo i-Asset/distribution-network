@@ -95,7 +95,7 @@ def systems_by_person(user_id):
     return jsonify({"systems": systems})
 
 
-@api_system.route(f"{prefix}/systems_by_person/<string:user_id>", methods=['POST'])
+@api_system.route(f"{prefix}/systems_by_person/<string:user_id>", methods=['POST', 'PUT'])
 def create_systems_by_person(user_id):
     """
     Create a system by sending a json like:
@@ -228,6 +228,7 @@ def create_systems_by_person(user_id):
     system_name = f"{domain}.{enterprise}.{workcenter}.{station}"
 
     # Insert new system
+    # If the system exists and the method is POST, return without change. If the method is PUT, overwrite
     result_proxy = conn.execute(
         f"SELECT name FROM systems "
         f"WHERE name='{system_name}';")
@@ -240,14 +241,16 @@ def create_systems_by_person(user_id):
                     "datetime": get_datetime(),
                     "description": new_system.get("description", "")}]
     if len(systems) > 0:
-        msg = f"The system with name '{system_name}' already exists."
-        app.logger.warning(f"{fct}: {msg}")
-        # return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
+        # If the system exists and the method is POST, return without change. If the method is PUT, overwrite
+        if request.method == "POST":
+            msg = f"The system with name '{system_name}' already exists."
+            app.logger.warning(f"{fct}: {msg}")
+            return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
     else:
         query = db.insert(app.config["tables"]["systems"])
         conn.execute(query, new_systems)
 
-    # Insert admin of new
+    # Insert admin of new system
     result_proxy = conn.execute(
         f"SELECT system_name, user_id FROM is_admin_of_sys "
         f"WHERE system_name='{system_name}' AND user_id='{user_id}';")

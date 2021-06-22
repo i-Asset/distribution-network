@@ -20,11 +20,20 @@ app = Flask(__name__)
 # app.config.from_object('config')
 app.config.from_envvar('APP_CONFIG_FILE')
 
-DEFAULT_SYSTEMS = ["at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
-                   "cz.icecars.iot4cps-wp5-CarFleet.Car1",
-                   "cz.icecars.iot4cps-wp5-CarFleet.Car2",
-                   "is.iceland.iot4cps-wp5-WeatherService.Stations",
-                   "is.iceland.iot4cps-wp5-WeatherService.Services"]
+DEFAULT_SYSTEMS = ["at.srfg.Analytics.MachineAnalytics",
+                   "at.srfg.MachineFleet.Machine1",
+                   "at.srfg.MachineFleet.Machine2",
+                   "at.srfg.WeatherService.Stations"]
+
+if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
+    DNET_DB_URI = f'{app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+    DNET_DB_URI += f'{app.config.get("POSTGRES_USER", "postgres")}:{app.config.get("POSTGRES_PASSWORD", "postgres")}'
+    DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
+    DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+else:
+    DNET_DB_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
+app.config["SQLALCHEMY_DATABASE_URI"] = DNET_DB_URI
+# print(app.config["SQLALCHEMY_DATABASE_URI"])
 
 def check_postgres_connection(db_uri):
     succeeded = False
@@ -51,8 +60,8 @@ def drop_tables():
     DROP TABLE IF EXISTS is_admin_of_sys CASCADE;
     DROP TABLE IF EXISTS client_apps CASCADE;
     DROP TABLE IF EXISTS stream_apps CASCADE;
-    DROP TABLE IF EXISTS aas CASCADE;
     DROP TABLE IF EXISTS mqtt_broker CASCADE;
+    DROP TABLE IF EXISTS aas CASCADE;
     DROP TABLE IF EXISTS datastreams CASCADE;
     DROP TABLE IF EXISTS subscriptions CASCADE;
     """
@@ -152,30 +161,30 @@ def create_tables(app):
     )
     app.config["tables"]["datastreams"] = db.Table(
         'datastreams', app.config['metadata'],
-        db.Column('short_name', db.VARCHAR(32), primary_key=True),
+        db.Column('shortname', db.VARCHAR(32), primary_key=True),
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
+        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
         db.Column('datastream_uri', db.VARCHAR(256), nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         # construct a composite foreign key for aas
         db.Column('aas_name', db.VARCHAR(64), nullable=True),
         db.Column('aas_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(['aas_name', 'aas_system_name'], ['aas.name', 'aas.system_name'])
+        db.ForeignKeyConstraint(('aas_name', 'aas_system_name'), ('aas.name', 'aas.system_name'))
     )
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(32), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(['client_name', 'system_name'], ['client_apps.name', 'client_apps.system_name']),
+        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
 
-        db.Column('datastream_short_name', db.VARCHAR(32), primary_key=True),
+        db.Column('datastream_shortname', db.VARCHAR(32), primary_key=True),
         db.Column('datastream_system_name', db.VARCHAR(128)),
-        db.ForeignKeyConstraint(['datastream_short_name', 'datastream_system_name'],
-                                ['datastreams.short_name', 'datastreams.system_name'])
+        db.ForeignKeyConstraint(('datastream_shortname', 'datastream_system_name'),
+                                ('datastreams.shortname', 'datastreams.system_name'))
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)
@@ -185,9 +194,7 @@ def create_tables(app):
 
 def insert_sample(app):
     default_password = "asdf"
-    lorem_ipsum = """Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. 
-    Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec 
-    quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim."""
+    lorem_ipsum = """Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor."""
     # Create context, connection and metadata
     engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     conn = engine.connect()
@@ -226,27 +233,27 @@ def insert_sample(app):
     ResultProxy = conn.execute(query, values_list)
 
     # Insert companies
-    id_icecars = -11
+    id_machine_comp = -11
     id_iceland = -12
     id_datahouse = -13
     query = db.insert(app.config["tables"]["companies"])
     values_list = [
-        {'id': id_icecars,
-         'name': 'Icecars Inc.',
-         'domain': 'cz',
-         'enterprise': 'icecars',
+        {'id': id_machine_comp,
+         'name': 'Machine Inc.',
+         'domain': 'at',
+         'enterprise': 'srfg',
          'description': lorem_ipsum,
          'datetime': get_datetime()},
         {'id': id_iceland,
          'name': 'Iceland Gov',
-         'domain': 'is',
-         'enterprise': 'iceland',
+         'domain': 'at',
+         'enterprise': 'srfg',
          'description': lorem_ipsum,
          'datetime': get_datetime()},
         {'id': id_datahouse,
          'name': 'Datahouse Analytics GmbH',
          'domain': 'at',
-         'enterprise': 'datahouse',
+         'enterprise': 'srfg',
          'description': lorem_ipsum,
          'datetime': get_datetime()}]
     ResultProxy = conn.execute(query, values_list)
@@ -255,7 +262,7 @@ def insert_sample(app):
     query = db.insert(app.config["tables"]["is_admin_of_com"])
     values_list = [
         {'user_id': id_sue,
-         'company_id': id_icecars,
+         'company_id': id_machine_comp,
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_stefan,
@@ -271,34 +278,28 @@ def insert_sample(app):
     # Insert systems
     query = db.insert(app.config["tables"]["systems"])
     values_list = [
-        {'name': 'cz.icecars.iot4cps-wp5-CarFleet.Car1',
-         'company_id': id_icecars,
-         'workcenter': "iot4cps-wp5-CarFleet",
-         'station': "Car1",
+        {'name': 'at.srfg.MachineFleet.Machine1',
+         'company_id': id_machine_comp,
+         'workcenter': "MachineFleet",
+         'station': "Machine",
          'description': lorem_ipsum,
          'datetime': get_datetime()},
-        {'name': 'cz.icecars.iot4cps-wp5-CarFleet.Car2',
-         'company_id': id_icecars,
-         'workcenter': "iot4cps-wp5-CarFleet",
-         'station': "Car2",
+        {'name': 'at.srfg.MachineFleet.Machine2',
+         'company_id': id_machine_comp,
+         'workcenter': "MachineFleet",
+         'station': "Machine2",
          'description': lorem_ipsum,
          'datetime': get_datetime()},
-        {'name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
+        {'name': 'at.srfg.WeatherService.Stations',
          'company_id': id_iceland,
-         'workcenter': "iot4cps-wp5-WeatherService",
+         'workcenter': "WeatherService",
          'station': "Stations",
          'description': lorem_ipsum,
          'datetime': get_datetime()},
-        {'name': 'is.iceland.iot4cps-wp5-WeatherService.Services',
-         'company_id': id_iceland,
-         'workcenter': "iot4cps-wp5-WeatherService",
-         'station': "Services",
-         'description': lorem_ipsum,
-         'datetime': get_datetime()},
-        {'name': 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics',
+        {'name': 'at.srfg.Analytics.MachineAnalytics',
          'company_id': id_datahouse,
-         'workcenter': "iot4cps-wp5-Analytics",
-         'station': "RoadAnalytics",
+         'workcenter': "Analytics",
+         'station': "MachineAnalytics",
          'description': lorem_ipsum,
          'datetime': get_datetime()}]
     ResultProxy = conn.execute(query, values_list)
@@ -307,31 +308,27 @@ def insert_sample(app):
     query = db.insert(app.config["tables"]["is_admin_of_sys"])
     values_list = [
         {'user_id': id_sue,
-         'system_name': 'cz.icecars.iot4cps-wp5-CarFleet.Car1',
+         'system_name': 'at.srfg.MachineFleet.Machine1',
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_peter,
-         'system_name': 'cz.icecars.iot4cps-wp5-CarFleet.Car1',
+         'system_name': 'at.srfg.MachineFleet.Machine1',
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_sue,
-         'system_name': 'cz.icecars.iot4cps-wp5-CarFleet.Car2',
+         'system_name': 'at.srfg.MachineFleet.Machine2',
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_peter,
-         'system_name': 'cz.icecars.iot4cps-wp5-CarFleet.Car2',
+         'system_name': 'at.srfg.MachineFleet.Machine2',
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_stefan,
-         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
-         'creator_id': id_stefan,
-         'datetime': get_datetime()},
-        {'user_id': id_stefan,
-         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Services',
+         'system_name': 'at.srfg.WeatherService.Stations',
          'creator_id': id_stefan,
          'datetime': get_datetime()},
         {'user_id': id_anna,
-         'system_name': 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics',
+         'system_name': 'at.srfg.Analytics.MachineAnalytics',
          'creator_id': id_anna,
          'datetime': get_datetime()}]
     ResultProxy = conn.execute(query, values_list)
@@ -339,40 +336,40 @@ def insert_sample(app):
     # Insert client
     query = db.insert(app.config["tables"]["client_apps"])
     values_list = [
-        {'name': "car_1",
-         'system_name': "cz.icecars.iot4cps-wp5-CarFleet.Car1",
+        {'name': "machine",
+         'system_name': "at.srfg.MachineFleet.Machine1",
          'submodel_element_collection': "submodel_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "car_2",
-         'system_name': "cz.icecars.iot4cps-wp5-CarFleet.Car2",
+        {'name': "machine",
+         'system_name': "at.srfg.MachineFleet.Machine2",
          'submodel_element_collection': "submodel_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weatherstation_1",
-         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
+         'system_name': 'at.srfg.WeatherService.Stations',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weatherstation_2",
-         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Stations',
+         'system_name': 'at.srfg.WeatherService.Stations',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "forecast_service",
-         'system_name': 'is.iceland.iot4cps-wp5-WeatherService.Services',
+        {'name': "weather_analytics",
+         'system_name': 'at.srfg.WeatherService.Stations',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "datastack-adapter",
-         'system_name': 'at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics',
+        {'name': "analytics",
+         'system_name': 'at.srfg.Analytics.MachineAnalytics',
          'submodel_element_collection': "submodel_uri",
-         'creator_id': id_sue,
+         'creator_id': id_anna,
          'datetime': get_datetime(),
          'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
@@ -380,38 +377,79 @@ def insert_sample(app):
     # Insert streams
     query = db.insert(app.config["tables"]["stream_apps"])
     values_list = [
-        {'name': "car1analytics",
-         'source_system': "cz.icecars.iot4cps-wp5-CarFleet.Car1",
-         'target_system': "at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
-         'logic': "SELECT * FROM cz.icecars.iot4cps-wp5-CarFleet.Car1;",
+        {'name': "machine1analytics",
+         'source_system': "at.srfg.MachineFleet.Machine1",
+         'target_system': "at.srfg.Analytics.MachineAnalytics",
+         'logic': "SELECT * FROM at.srfg.MachineFleet.Machine1;",
          'creator_id': id_sue,
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "car2analytics",
-         'source_system': "cz.icecars.iot4cps-wp5-CarFleet.Car2",
-         'target_system': "at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
-         'logic': "SELECT * FROM cz.icecars.iot4cps-wp5-CarFleet.Car1;",
-         'creator_id': id_sue,
+        {'name': "machine2analytics",
+         'source_system': "at.srfg.MachineFleet.Machine2",
+         'target_system': "at.srfg.Analytics.MachineAnalytics",
+         'logic': "SELECT * FROM at.srfg.MachineFleet.Machine2;",
+         'creator_id': id_anna,
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "weather2car1",
-         'source_system': "is.iceland.iot4cps-wp5-WeatherService.Stations",
-         'target_system': "cz.icecars.iot4cps-wp5-CarFleet.Car1",
-         'logic': "SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations;",
+        {'name': "weather2machine1",
+         'source_system': "at.srfg.WeatherService.Stations",
+         'target_system': "at.srfg.MachineFleet.Machine1",
+         'logic': "SELECT * FROM at.srfg.WeatherService.Stations;",
          'creator_id': id_stefan,
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weather2analytics",
-         'source_system': "is.iceland.iot4cps-wp5-WeatherService.Stations",
-         'target_system': "at.datahouse.iot4cps-wp5-Analytics.RoadAnalytics",
-         'logic': "SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations;",
+         'source_system': "at.srfg.WeatherService.Stations",
+         'target_system': "at.srfg.Analytics.MachineAnalytics",
+         'logic': "SELECT * FROM at.srfg.WeatherService.Stations;",
          'creator_id': id_stefan,
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},]
+    ResultProxy = conn.execute(query, values_list)
+
+    # Insert AAS connection
+    query = db.insert(app.config["tables"]["aas"])
+    values_list = [
+        {'name': "machine",
+         'system_name': "at.srfg.MachineFleet.Machine1",
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_sue,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "machine",
+         'system_name': "at.srfg.MachineFleet.Machine2",
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_sue,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Weatherstation_1",
+         'system_name': 'at.srfg.WeatherService.Stations',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Weatherstation_2",
+         'system_name': 'at.srfg.WeatherService.Stations',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Analytics-Software",
+         'system_name': 'at.srfg.WeatherService.Stations',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_stefan,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum},
+        {'name': "Datastack",
+         'system_name': 'at.srfg.Analytics.MachineAnalytics',
+         'registry_uri': "aas_registry.uri",
+         'creator_id': id_anna,
+         'datetime': get_datetime(),
+         'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
 
     engine.dispose()
@@ -443,9 +481,9 @@ def insert_samples_if_empty(app):
 if __name__ == '__main__':
     app.logger.setLevel(logging.INFO)
 
-    # # Creating the tables
-    # app.logger.info("Drop database distributionnetworkdb.")
-    # drop_tables()
+    # Creating the tables
+    app.logger.info("Drop database distributionnetworkdb.")
+    drop_tables()
 
     # Creating the tables
     app.logger.info("Creating database distributionnetworkdb.")

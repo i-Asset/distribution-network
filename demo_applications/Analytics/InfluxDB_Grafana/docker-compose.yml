@@ -1,0 +1,37 @@
+version: "3.4"
+
+services:
+  grafana:
+    image: 127.0.0.1:5001/grafana
+    build: ./grafana_src
+    container_name: grafana
+    restart: always
+    ports:
+      - ${GRAFANA_PORT}:3000
+    networks:
+      - monitoring
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
+#    volumes:
+#      - ./grafanadata:/var/lib/grafana
+
+  influxdb:
+    image: influxdb:1.8.3
+    container_name: influxdb
+    restart: always
+    ports:
+      - ${INFLUXDB_PORT}:8086
+    networks:
+      - monitoring
+    env_file:
+      - .env
+    environment:
+      - bla=12
+    volumes:
+      - ./influxdata:/var/lib/influxdb
+
+networks:
+  monitoring:
+    driver: bridge

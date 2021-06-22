@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+  datastore-adapter:
+    image: 127.0.0.1:5001/datastore-adapter
+    build: .
+    network_mode: host
+    environment:
+      VERBOSE_ADAPTER: "true"
+      # InfluxDB configuration
+      INFLUXDB_HOST: "localhost"
+      # Panta Rhei configuration
+      CLIENT_NAME: "analytic"
+      SYSTEM_NAME: "cz.icecars.iot4cps-wp5-CarFleet.Car1"
+      SERVER_URI: "localhost:1908"
+      KAFKA_BOOTSTRAP_SERVERS: ":9092"
+      # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"
+    restart: always

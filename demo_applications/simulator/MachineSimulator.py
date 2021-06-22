@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-This class has the purpose to simulate a car's movement on a track in Salzburg, on which temperature data
-and breaking events occur. This class is aimed to be used by the car instances within the CarFleet
+This class has the purpose to simulate a machine's movement on a track in Salzburg, on which temperature data
+and breaking events occur. This class is aimed to be used by the machine instances within the MachineFleet
 demonstration company.
 """
 import math
@@ -21,7 +21,7 @@ TRACK_MAP = {1: "openroute_SRFG-round.json", 2: "openroute_Mirabellplatz-round.j
 UPDATE_THRESHOLD = 0.001  # threshold, update positions if this is surpassed in coordinate getter.
 
 
-class CarSimulator:
+class MachineSimulator:
     def __init__(self, track_id=-1, time_factor=100.0, speed=30, cautiousness=1,
                  temp_day_amplitude=5, temp_year_amplitude=-5, temp_average=2.5, seed=None):
         # Store start_time
@@ -45,10 +45,10 @@ class CarSimulator:
             random.seed(seed)
 
         logging.basicConfig(level=logging.WARNING)
-        self.logger = logging.getLogger("CarSimulator")
+        self.logger = logging.getLogger("MachineSimulator")
         self.logger.setLevel(logging.INFO)
 
-        self.logger.info("Created instance of class CarSimulator.")
+        self.logger.info("Created instance of class MachineSimulator.")
         self.temp = SimulateTemperatures(time_factor=time_factor, day_amplitude=temp_day_amplitude,
                                          year_amplitude=temp_year_amplitude, average=temp_average, seed=seed)
 
@@ -97,7 +97,7 @@ class CarSimulator:
             next_vertex_dist = self.get_next_vertex_dist()
             self.logger.debug("next_vertex_dist: {} m".format(round(next_vertex_dist, 2)))
             if step < 1:
-                self.logger.debug("Update not done, the car has moved less than 1 meter.")
+                self.logger.debug("Update not done, the machine has moved less than 1 meter.")
                 return None
 
             # iterate to the index after which there is the new position
@@ -178,12 +178,12 @@ class CarSimulator:
 
 
 if __name__ == "__main__":
-    print("Creating an instance of a simulated car.")
-    car = CarSimulator(track_id=3, time_factor=10, speed=30, cautiousness=1,
-                       temp_day_amplitude=5, temp_year_amplitude=-5, temp_average=2.5, seed=0)
+    print("Creating an instance of a simulated machine.")
+    machine = MachineSimulator(track_id=3, time_factor=10, speed=30, cautiousness=1,
+                               temp_day_amplitude=5, temp_year_amplitude=-5, temp_average=2.5, seed=0)
 
     while True:
-        car.update_positions()
-        print("The car is at [{}, {}], measures the temperature: {} °C and had a highest acceleration of {} m/s²".
-              format(car.get_latitude(), car.get_longitude(), car.temp.get_temp(), car.get_acceleration()))
+        machine.update_positions()
+        print("The machine is at [{}, {}], measures the temperature: {} °C and had a highest acceleration of {} m/s²".
+              format(machine.get_latitude(), machine.get_longitude(), machine.temp.get_temp(), machine.get_acceleration()))
         time.sleep(1)
