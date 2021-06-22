@@ -233,13 +233,13 @@ def insert_sample(app):
     ResultProxy = conn.execute(query, values_list)
 
     # Insert companies
-    id_icecars = -11
+    id_machine_comp = -11
     id_iceland = -12
     id_datahouse = -13
     query = db.insert(app.config["tables"]["companies"])
     values_list = [
-        {'id': id_icecars,
-         'name': 'Icecars Inc.',
+        {'id': id_machine_comp,
+         'name': 'Machine Inc.',
          'domain': 'at',
          'enterprise': 'srfg',
          'description': lorem_ipsum,
@@ -262,7 +262,7 @@ def insert_sample(app):
     query = db.insert(app.config["tables"]["is_admin_of_com"])
     values_list = [
         {'user_id': id_sue,
-         'company_id': id_icecars,
+         'company_id': id_machine_comp,
          'creator_id': id_sue,
          'datetime': get_datetime()},
         {'user_id': id_stefan,
@@ -279,13 +279,13 @@ def insert_sample(app):
     query = db.insert(app.config["tables"]["systems"])
     values_list = [
         {'name': 'at.srfg.MachineFleet.Machine1',
-         'company_id': id_icecars,
+         'company_id': id_machine_comp,
          'workcenter': "MachineFleet",
          'station': "Machine",
          'description': lorem_ipsum,
          'datetime': get_datetime()},
         {'name': 'at.srfg.MachineFleet.Machine2',
-         'company_id': id_icecars,
+         'company_id': id_machine_comp,
          'workcenter': "MachineFleet",
          'station': "Machine2",
          'description': lorem_ipsum,
@@ -393,7 +393,7 @@ def insert_sample(app):
          'status': "init",
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "weather2car1",
+        {'name': "weather2machine1",
          'source_system': "at.srfg.WeatherService.Stations",
          'target_system': "at.srfg.MachineFleet.Machine1",
          'logic': "SELECT * FROM at.srfg.WeatherService.Stations;",
@@ -414,13 +414,13 @@ def insert_sample(app):
     # Insert AAS connection
     query = db.insert(app.config["tables"]["aas"])
     values_list = [
-        {'name': "car",
+        {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine1",
          'registry_uri': "aas_registry.uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
-        {'name': "car",
+        {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine2",
          'registry_uri': "aas_registry.uri",
          'creator_id': id_sue,
@@ -462,15 +462,15 @@ def insert_samples_if_empty(app):
     conn = engine.connect()
     query = "SELECT count(*) FROM users;"
     result_proxy = conn.execute(query)
-    users = [dict(c._mapping.items()) for c in result_proxy.fetchall()]
+    users = [dict(c.items()) for c in result_proxy.fetchall()]
 
     query = "SELECT count(*) FROM companies;"
     result_proxy = conn.execute(query)
-    companies = [dict(c._mapping.items()) for c in result_proxy.fetchall()]
+    companies = [dict(c.items()) for c in result_proxy.fetchall()]
 
     query = "SELECT count(*) FROM systems;"
     result_proxy = conn.execute(query)
-    systems = [dict(c._mapping.items()) for c in result_proxy.fetchall()]
+    systems = [dict(c.items()) for c in result_proxy.fetchall()]
     engine.dispose()
 
     if users[0]["count"] + companies[0]["count"] + systems[0]["count"] == 0:
