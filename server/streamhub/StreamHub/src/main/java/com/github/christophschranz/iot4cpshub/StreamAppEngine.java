@@ -61,8 +61,8 @@ public class StreamAppEngine {
                 "SERVER_URI", "FILTER_LOGIC"};
         for (String key: keys) {
             if (!globalOptions.stringPropertyNames().contains(key)) {
-                logger.error("Error: You have to define the parameter " + key +
-                        " either as environment variable or pass it in the arguments.");
+                logger.error("Error: You have to define the parameter '" + key +
+                        "' either as environment variable or pass it in the arguments.");
                 logger.error("Usage: java -jar path/to/streamhub_apps.jar --key1 val1 .. --keyN valN");
                 System.exit(12);
             }
