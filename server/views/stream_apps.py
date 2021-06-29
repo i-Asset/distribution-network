@@ -11,11 +11,11 @@ from wtforms import Form, StringField, validators, TextAreaField, RadioField
 if __name__ == '__main__':
     from useful_functions import get_datetime, is_logged_in, valid_name, valid_system, nocache, strip_dict, \
         decode_sys_url
-    from StreamAppHandler import stream_checks, fab_streams, stream_app_handler
+    from StreamAppHandler import stream_checks, stream_app_handler
 else:
     from server.utils.useful_functions import get_datetime, is_logged_in, valid_name, valid_system, nocache, strip_dict, \
     decode_sys_url, encode_sys_url
-    from server.utils.StreamAppHandler import fab_streams, stream_checks, stream_app_handler
+    from server.utils.StreamAppHandler import stream_checks, stream_app_handler
 
 stream_app = Blueprint("stream_app", __name__)
 
@@ -488,7 +488,7 @@ def download_logs(system_url, stream_name):
 
     response = stream_app.get_logs(last_n=1_000)
     if response is None:
-        flash(f"No logfile available for {fab_streams.build_name(system_name, stream_name)}.", "info")
+        flash(f"No logfile available for {stream_app.get_name()}.", "info")
         return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=stream_name))
 
     # response = response.replace("\x00", "")
@@ -501,17 +501,6 @@ def download_logs(system_url, stream_name):
                     headers={"Content-disposition": f"attachment; filename={stream_app.get_name()}_{get_datetime()}.log"})
 
 
-def check_if_proc_runs(system_name, stream_name):
-    """
-    Checks whether the StreamApp runs or not
-    :param system_name: UUID of the current system
-    :param stream_name: name of the current stream
-    :return: Boolean value, True if the process still runs.
-    """
-    app.logger.debug(f"Checks whether the '{fab_streams.build_name(system_name, stream_name)}' runs.")
-    return fab_streams.local_is_deployed(system_name=system_name, stream_name=stream_name)
-
-
 def set_status_to(system_name, stream_name, status):
     """
     Updates the SOLL-value of the stream app in the database
@@ -520,7 +509,7 @@ def set_status_to(system_name, stream_name, status):
     :param status: boolean value representing the SOLL status
     :return:
     """
-    app.logger.debug(f"Set status to '{status}' for '{fab_streams.build_name(system_name, stream_name)}'.")
+    app.logger.debug(f"Set status to '{status}'.")
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = f"UPDATE stream_apps SET status='{status}' WHERE source_system='{system_name}' AND name='{stream_name}';"

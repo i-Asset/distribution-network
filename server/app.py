@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 from flask import Flask, send_from_directory
 from flask_swagger_ui import get_swaggerui_blueprint
 
-# Import modules
-from server.utils.StreamAppHandler import stream_app_handler
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
 from server.create_database import check_postgres_connection, create_tables, insert_samples_if_empty
 
@@ -32,6 +29,7 @@ from server.api.api_auth import check_iasset_connection
 
 # Import application-specific functions
 from server.utils.kafka_interface import KafkaHandler, KafkaInterface
+from server.utils.StreamAppHandler.stream_app_handler import create_client
 
 
 def create_app():
@@ -164,7 +162,7 @@ def create_app():
     ########################################################
 
     app.logger.info("docker-py: Re-build the streamhub_stream-app image.")
-    client = stream_app_handler.create_client()
+    client = create_client()
     client.images.build(path="streamhub/StreamHub", dockerfile="Dockerfile", tag="streamhub_stream-app", rm=True)
 
     ########################################################

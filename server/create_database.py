@@ -1,4 +1,5 @@
 import logging
+import os
 
 import sqlalchemy as db
 from dotenv import load_dotenv
@@ -31,9 +32,13 @@ if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
     DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
     DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
 else:
-    DNET_DB_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
-app.config["SQLALCHEMY_DATABASE_URI"] = DNET_DB_URI
-# print(app.config["SQLALCHEMY_DATABASE_URI"])
+    DNET_DB_URI = f'{os.environ.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+    DNET_DB_URI += f'{os.environ.get("POSTGRES_USER", "postgres")}:{os.environ.get("POSTGRES_PASSWORD", "postgres")}'
+    DNET_DB_URI += f'@{os.environ.get("POSTGRES_HOST", "staging-main-db")}:{os.environ.get("POSTGRES_PORT", 5432)}'
+    DNET_DB_URI += f'/{os.environ.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+app.config.update({"SQLALCHEMY_DATABASE_URI": DNET_DB_URI})
+app.logger.info("SQLALCHEMY_DATABASE_URI, update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+
 
 def check_postgres_connection(db_uri):
     succeeded = False

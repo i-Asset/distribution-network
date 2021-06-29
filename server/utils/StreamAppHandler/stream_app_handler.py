@@ -55,6 +55,7 @@ class SimpleStreamApp:
     def deploy(self):
         """Deploys the stream as sibling container"""
         try:
+            # if app.config["Docker"]:
             self.container = self.client.containers.run(
                 image="streamhub_stream-app", detach=True, name=self.container_name,
                 environment={"STREAM_NAME": self.stream_name,
@@ -64,7 +65,8 @@ class SimpleStreamApp:
                              "SERVER_URI": self.server_uri,
                              "FILTER_LOGIC": self.filter_logic,
                              "VERBOSE": self.verbose},
-                network_mode="host",  # may be deprecated in case of sibling container
+                # network_mode="host",  # may be deprecated in case of sibling container
+                network="iassetinfrastaging_default",
                 restart_policy={"name": "always"})
             time.sleep(WAIT_TIME)
             self.logger.info(f"Container '{self.container_name}' was deployed, status: {self.container.status}")
