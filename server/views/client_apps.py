@@ -97,7 +97,7 @@ def show_client(system_url, client_name):
 
 # Client Form Class
 class ClientForm(Form):
-    name = StringField("Name of the client application", [validators.Length(min=2, max=20), valid_name])
+    name = StringField("Name of the client application", [validators.Length(min=2, max=64), valid_name])
     submodel_element_collection = StringField("Submodel element collection")
     aas_uri = StringField("Submodel element collection URI", [valid_url])
     description = TextAreaField("Description", [validators.Length(max=16*1024)])

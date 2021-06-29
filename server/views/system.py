@@ -123,8 +123,8 @@ def show_system(system_url):
 
 # System Form Class
 class SystemForm(Form):
-    workcenter = StringField("Workcenter", [validators.Length(min=2, max=30), valid_level_name])
-    station = StringField("Station", [validators.Length(min=2, max=20), valid_level_name])
+    workcenter = StringField("Workcenter", [validators.Length(min=2, max=32), valid_level_name])
+    station = StringField("Station", [validators.Length(min=2, max=32), valid_level_name])
     description = TextAreaField("Description", [validators.Length(max=16*1024)])
 
 

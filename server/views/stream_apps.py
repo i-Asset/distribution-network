@@ -113,7 +113,7 @@ def show_stream(system_url, stream_name):
 
 # Streamhub Form Class
 class StreamhubForm(Form):
-    name = StringField("Name", [validators.Length(min=2, max=32), valid_name])
+    name = StringField("Name", [validators.Length(min=2, max=64), valid_name])
     target_system = StringField("Target System", [validators.Length(max=128), valid_system])
     is_multi_source = RadioField("Choose the Stream App type", [validators.InputRequired()],
                                   choices=["Single-Source Stream App", "Multi-Source Stream App"])

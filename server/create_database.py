@@ -121,7 +121,7 @@ def create_tables(app):
     )
     app.config["tables"]["stream_apps"] = db.Table(
         'stream_apps', app.config['metadata'],
-        db.Column('name', db.VARCHAR(32), primary_key=True),
+        db.Column('name', db.VARCHAR(64), primary_key=True),
         db.Column('source_system', db.ForeignKey('systems.name'), primary_key=True, nullable=False),
         db.Column('target_system', db.ForeignKey('systems.name'), nullable=False),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=True),
@@ -150,7 +150,7 @@ def create_tables(app):
     app.config["tables"]["client_apps"] = db.Table(
         'client_apps', app.config['metadata'],
         db.Column('system_name', db.ForeignKey('systems.name'), primary_key=True),
-        db.Column('name', db.VARCHAR(32), primary_key=True),
+        db.Column('name', db.VARCHAR(64), primary_key=True),
         db.Column('submodel_element_collection', db.TEXT, nullable=True),
         db.Column('aas_uri', db.VARCHAR(256), nullable=True),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
@@ -163,7 +163,7 @@ def create_tables(app):
         'datastreams', app.config['metadata'],
         db.Column('shortname', db.VARCHAR(32), primary_key=True),
         # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(32), nullable=False),
+        db.Column('client_name', db.VARCHAR(64), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
@@ -177,7 +177,7 @@ def create_tables(app):
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
         # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(32), nullable=False),
+        db.Column('client_name', db.VARCHAR(64), nullable=False),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
 

@@ -47,7 +47,7 @@ CREATE TABLE if not exists is_admin_of_sys (
 );
 
 CREATE TABLE if not exists stream_apps (
-    name varchar(32) NOT NULL,
+    name varchar(64) NOT NULL,
     source_system varchar(128) NOT NULL REFERENCES systems(name),
     target_system varchar(128) NOT NULL REFERENCES systems(name),
     creator_id integer REFERENCES users(id),
@@ -80,7 +80,7 @@ CREATE TABLE if not exists mqtt_broker
 
 CREATE TABLE if not exists client_apps (
     system_name varchar(128) NOT NULL REFERENCES systems(name),
-    name varchar(32) NOT NULL,
+    name varchar(64) NOT NULL,
     submodel_element_collection text,
     creator_id integer NOT NULL REFERENCES users(id),
     datetime timestamp with time zone,
@@ -93,12 +93,12 @@ CREATE TABLE if not exists client_apps (
 CREATE TABLE if not exists datastreams
 (
     system_name     varchar(128)   NOT NULL,
-    client_name     varchar(32) NOT NULL,
+    client_name     varchar(64) NOT NULL,
     shortname      varchar(32)    NOT NULL,
     name            varchar(128),
     datastream_uri  text,
     description     text,
-    aas_name        varchar(32),
+    aas_name        varchar(64),
     aas_system_name varchar(128),
     PRIMARY KEY (system_name, shortname),
     FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
@@ -107,7 +107,7 @@ CREATE TABLE if not exists datastreams
 
 CREATE TABLE if not exists subscriptions (
     system_name     varchar(128)   NOT NULL,
-    client_name     varchar(32) NOT NULL,
+    client_name     varchar(64) NOT NULL,
     datastream_shortname  varchar(32)    NOT NULL,
     datastream_system       varchar(128)   NOT NULL,
     PRIMARY KEY (system_name, client_name, datastream_shortname),

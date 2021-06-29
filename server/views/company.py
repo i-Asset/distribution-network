@@ -89,8 +89,8 @@ def show_company(company_id):
 # Company Form Class
 class CompanyForm(Form):
     name = StringField("Full Company Name", [validators.Length(max=64)])
-    domain = StringField("Domain", [validators.Length(min=1, max=5), valid_level_name])
-    enterprise = StringField("Enterprise", [validators.Length(min=2, max=15), valid_level_name])
+    domain = StringField("Domain", [validators.Length(min=1, max=8), valid_level_name])
+    enterprise = StringField("Enterprise", [validators.Length(min=2, max=52), valid_level_name])
     description = TextAreaField("Description", [validators.Length(max=16*1024)])
 
 
