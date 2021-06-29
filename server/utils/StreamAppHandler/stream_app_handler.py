@@ -96,7 +96,7 @@ class SimpleStreamApp:
         Within created|running|exited|not_found"""
         try:
             self.container.reload()
-            return self.container.attrs["State"].get("Restarting")  # request restarting as restart_policy is always
+            return not self.container.attrs["State"].get("Restarting")  # request restarting as restart_policy is always
         except docker.errors.NotFound:
             return False
 

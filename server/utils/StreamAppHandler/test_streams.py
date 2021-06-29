@@ -1,6 +1,4 @@
-import sys
 import time
-import pytest
 
 try:
     from stream_app_handler import SimpleStreamApp
@@ -22,7 +20,7 @@ def simple_stream_app():
     simple_stream_app = SimpleStreamApp(**stream)
     print(f"simple_stream_app.deploy(): Deploy stream-app and wait to settle.")
     simple_stream_app.deploy()
-    time.sleep(10)
+    time.sleep(15)
     print(f"simple_stream_app.is_running(): \n{simple_stream_app.is_running()}")
     assert simple_stream_app.is_running()
     print(f"simple_stream_app.get_status(): \n{simple_stream_app.get_status()}")
@@ -36,7 +34,6 @@ def simple_stream_app():
     assert not simple_stream_app.is_running()
 
 
-@pytest.mark.skip("not implemented yet")
 def multi_source_stream_app():
     print(f"\n############### Multi-Source Stream App ###############\n")
 
@@ -60,3 +57,6 @@ def multi_source_stream_app():
     print(fab_streams.local_down(system_uuid="1234", stream_name="another-stream"))
     print(fab_streams.local_is_deployed(system_uuid="1234", stream_name="another-stream"))
 
+
+if __name__ == "__main__":
+    simple_stream_app()
