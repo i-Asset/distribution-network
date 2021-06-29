@@ -18,6 +18,8 @@ def simple_stream_app():
         "verbose": True
     }
     simple_stream_app = SimpleStreamApp(**stream)
+    print(f"simple_stream_app.is_running(): \n{simple_stream_app.is_running()}")
+    assert not simple_stream_app.is_running()
     print(f"simple_stream_app.deploy(): Deploy stream-app and wait to settle.")
     simple_stream_app.deploy()
     time.sleep(15)

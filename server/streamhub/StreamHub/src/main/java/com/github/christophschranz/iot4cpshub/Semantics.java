@@ -93,7 +93,7 @@ public class Semantics {
      * @return the Augmented JsonInput
      */
     public JsonObject augmentJsonInput(JsonObject jsonInput) {
-        // augment with AAS semantic, fields, 'datastream', 'attributes'
+        // augment with AAS selected fields: all in 'datastream', 'attributes' and duplicate 'time'
         if (this.semantic.equalsIgnoreCase("aas")) {
             if (jsonInput.has("datastream")) {
                 for (String att : this.augmentedDSAttributes) {
@@ -105,6 +105,7 @@ public class Semantics {
                     jsonInput.addProperty(att, jsonInput.get("attributes").getAsJsonObject().get(att).getAsDouble());
                 }
             }
+            jsonInput.addProperty("time", jsonInput.get("phenomenonTime").getAsString());
             if (this.verbose)
                 logger.info("New message: " + jsonInput);
             return jsonInput;

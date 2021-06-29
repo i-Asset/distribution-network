@@ -35,14 +35,22 @@ class SimpleStreamApp:
         self.client = None
 
         # Create a docker-py client
-        self.client = self.create_client()
+        self.client = create_client()
 
-    @staticmethod
-    def create_client():
-        # Try this if it doesn't work within a container
-        # https://docker-py.readthedocs.io/en/stable/client.html#client-reference
-        # >>> client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-        return docker.from_env()
+    def get_name(self):
+        return self.container_name
+
+    def get_config(self):
+        return dict({
+            "system_name": self.system_name,
+            "stream_name": self.stream_name,
+            "source_system": self.source_system,
+            "target_system": self.target_system,
+            "kafka_bootstrap_servers": self.kafka_bootstrap_servers,
+            "server_uri": self.server_uri,
+            "filter_logic": self.filter_logic,
+            "verbose": self.verbose
+        })
 
     def deploy(self):
         """Deploys the stream as sibling container"""
@@ -72,7 +80,7 @@ class SimpleStreamApp:
         if not self.container:
             if not self.client:
                 # Create a docker-py client
-                self.client = self.create_client()
+                self.client = create_client()
             try:
                 self.container = self.client.containers.get(self.container_name)
             except docker.errors.NotFound:
@@ -95,6 +103,8 @@ class SimpleStreamApp:
         """Get the status of the container.
         Within created|running|exited|not_found"""
         try:
+            if not self.container:
+                self.container = self.client.containers.get(self.container_name)
             self.container.reload()
             return not self.container.attrs["State"].get("Restarting")  # request restarting as restart_policy is always
         except docker.errors.NotFound:
@@ -103,23 +113,44 @@ class SimpleStreamApp:
     def get_logs(self, last_n=None):
         """Return the current logs from the container."""
         try:
+            if not self.container:
+                self.container = self.client.containers.get(self.container_name)
             if last_n:
                 return self.container.logs(tail=last_n)
             else:
                 return self.container.logs()
         except docker.errors.NotFound:
-            return ""
+            return None
 
     def get_stats(self):
         """Get the statistics of the container"""
         try:
+            if not self.container:
+                self.container = self.client.containers.get(self.container_name)
             self.container.reload()
             return self.container.attrs
         except docker.errors.NotFound:
-            return {"running": False}
+            return None
 
-    def get_all_streams(self):
-        client = self.create_client()
+    def get_short_stats(self):
+        """Get short statistics of the container"""
+        try:
+            if not self.container:
+                self.container = self.client.containers.get(self.container_name)
+            self.container.reload()
+            return dict({
+                "Running": self.container.attrs.get("State", {}).get("Running"),
+                "Restarting": self.container.attrs.get("State", {}).get("Restarting"),
+                "StartedAt": self.container.attrs.get("State", {}).get("StartedAt"),
+                "FinishedAt": self.container.attrs.get("State", {}).get("FinishedAt"),
+                "ExitCode": self.container.attrs.get("State", {}).get("ExitCode"),
+            })
+        except docker.errors.NotFound:
+            return None
+
+    @staticmethod
+    def get_all_streams():
+        client = create_client()
         all_containers = list()
         for con in client.containers.list():
             try:
@@ -214,6 +245,12 @@ class SimpleStreamApp:
 #                              f'--name {container_name} '
 #                              'iot4cps/multi-source-stream '
 #                              '|| true', capture=True).stdout
+
+def create_client():
+    # Try this if it doesn't work within a container
+    # https://docker-py.readthedocs.io/en/stable/client.html#client-reference
+    # >>> client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+    return docker.from_env()
 
 
 if __name__ == "__main__":

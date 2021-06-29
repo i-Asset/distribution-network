@@ -9,6 +9,8 @@ from flask import Flask, send_from_directory
 from flask_swagger_ui import get_swaggerui_blueprint
 
 # Import modules
+from server.utils.StreamAppHandler import stream_app_handler
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
 from server.create_database import check_postgres_connection, create_tables, insert_samples_if_empty
 
@@ -156,6 +158,14 @@ def create_app():
         # Adding a KafkaHandler to the logger, ingests messages into kafka
         kh = KafkaHandler(app)
         app.logger.addHandler(kh)
+
+    ########################################################
+    # ########### rebuild the stream-app image #############
+    ########################################################
+
+    app.logger.info("docker-py: Re-build the streamhub_stream-app image.")
+    client = stream_app_handler.create_client()
+    client.images.build(path="streamhub/StreamHub", dockerfile="Dockerfile", tag="streamhub_stream-app", rm=True)
 
     ########################################################
     # ################ register swagger ui ################ #
