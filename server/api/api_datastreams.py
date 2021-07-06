@@ -53,15 +53,15 @@ def datastreams_per_system(user_id, system_url):
 
     # 3) Fetch all datastreams that belong to the user with id user_id and system_name
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, thing_name, thing.resource_uri, ca.submodel_element_collection,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN aas on sys.name = aas.system_name
-    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN thing on sys.name = thing.system_name
+    INNER JOIN users as creator ON creator.id=thing.creator_id
     INNER JOIN client_apps ca on sys.name = ca.system_name
     INNER JOIN datastreams ds on sys.name = ds.system_name
-    WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}';""")
+    WHERE agf.user_id='{user_id}' AND thing.system_name='{system_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -102,12 +102,12 @@ def datastreams_per_client(user_id, system_url, client_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, thing_name, thing.resource_uri, ca.submodel_element_collection,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN aas on sys.name = aas.system_name
-    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN thing on sys.name = thing.system_name
+    INNER JOIN users as creator ON creator.id=thing.creator_id
     INNER JOIN client_apps ca on sys.name = ca.system_name
     INNER JOIN datastreams ds on sys.name = ds.system_name
     WHERE agf.user_id='{user_id}' AND ca.system_name='{system_name}' AND ca.name='{client_name}';""")
@@ -118,19 +118,19 @@ def datastreams_per_client(user_id, system_url, client_name):
     return jsonify({"datastreams": datastreams})
 
 
-@api_datastreams.route(f"{prefix}/datastreams_per_aas/<string:user_id>/<string:system_url>/<string:aas_name>")
-def datastreams_per_aas(user_id, system_url, aas_name):
+@api_datastreams.route(f"{prefix}/datastreams_per_thing/<string:user_id>/<string:system_url>/<string:thing_name>")
+def datastreams_per_thing(user_id, system_url, thing_name):
     """
-    Returns the datastream that belong to an aas connection in the distribution network of which the user is admin of.
+    Returns the datastream that belong to an thing connection in the distribution network of which the user is admin of.
     The user_id must be authenticated on the identity-service.
     :param user_id: personId of the Identity-service, or (if negative) the user_id of the demo Digital Twin platform
     :param system_url: system identifier whose levels are separated by '_' or '.'
-    :param aas_name: name of the aas connection, unique within the system.
+    :param thing_name: name of the thing connection, unique within the system.
     :return: Json of all datastreams of the client app
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/datastreams_per_aas/<string:user_id>/<string:system_url>/<string:aas_name>"
+    fct = f"{prefix}/datastreams_per_thing/<string:user_id>/<string:system_url>/<string:thing_name>"
     authorized, msg, status_code = authorize_request(fct=fct, user_id=user_id)
     if not authorized:
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
@@ -151,19 +151,19 @@ def datastreams_per_aas(user_id, system_url, aas_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, aas_name, aas.registry_uri, ca.submodel_element_collection,
+    SELECT ds.system_name, client_name, shortname, ds.name, ds.datastream_uri, thing_name, thing.resource_uri, ca.submodel_element_collection,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN aas on sys.name = aas.system_name
-    INNER JOIN users as creator ON creator.id=aas.creator_id
+    INNER JOIN thing on sys.name = thing.system_name
+    INNER JOIN users as creator ON creator.id=thing.creator_id
     INNER JOIN client_apps ca on sys.name = ca.system_name
     INNER JOIN datastreams ds on sys.name = ds.system_name
-    WHERE agf.user_id='{user_id}' AND aas.system_name='{system_name}' AND aas.name='{aas_name}';""")
+    WHERE agf.user_id='{user_id}' AND thing.system_name='{system_name}' AND thing.name='{thing_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
-    # 3) Return the datastreams of the aas connection
+    # 3) Return the datastreams of the thing connection
     return jsonify({"datastreams": datastreams})
 
 
@@ -176,7 +176,7 @@ def create_datastreams(user_id, system_url):
             "name": "Air Temperature",
             "shortname": "temperature",
             "description": "Air temperature measured in the connected car 1",
-            "aas": "car",
+            "thing": "car",
             "client_app": "car_1"
         }
     ]
@@ -192,7 +192,7 @@ def create_datastreams(user_id, system_url):
         return jsonify({"value": msg, "url": fct, "status_code": status_code}), status_code
 
     # 2) check if the client to create has the correct structure
-    req_keys = {"name", "shortname", "aas", "client_app"}
+    req_keys = {"name", "shortname", "thing", "client_app"}
     new_datastreams = request.json
 
     if not isinstance(new_datastreams, list):
@@ -224,15 +224,15 @@ def create_datastreams(user_id, system_url):
 
     # 5) Load the existing datastreams of the system
     all_client_apps = "'" + "','".join(tuple({ds["client_app"] for ds in new_datastreams})) + "'"
-    all_aas_conns = "'" + "','".join(tuple({ds["aas"] for ds in new_datastreams})) + "'"
+    all_thing_conns = "'" + "','".join(tuple({ds["thing"] for ds in new_datastreams})) + "'"
 
     result_proxy = conn.execute(
-        f"SELECT DISTINCT ca.system_name, aas.name AS aas_name, ca.name AS client_name, ds.name, ds.shortname "
+        f"SELECT DISTINCT ca.system_name, thing.name AS thing_name, ca.name AS client_name, ds.name, ds.shortname "
         f"FROM datastreams AS ds "
-        f"INNER JOIN aas ON aas.name=ds.aas_name "
+        f"INNER JOIN thing ON thing.name=ds.thing_name "
         f"INNER JOIN client_apps AS ca ON ca.name=ds.client_name "
         f"WHERE ca.system_name='{system_name}' "
-        f"AND ca.name IN ({all_client_apps}) AND aas.name IN ({all_aas_conns});")
+        f"AND ca.name IN ({all_client_apps}) AND thing.name IN ({all_thing_conns});")
     existing_datastreams = [dict(c.items()) for c in result_proxy.fetchall()]
 
     new_ds = list()
@@ -240,20 +240,20 @@ def create_datastreams(user_id, system_url):
     for ds in new_datastreams:
         for ex_ds in existing_datastreams:
             if ds["shortname"] == ex_ds["shortname"] and ds["client_app"] == ex_ds["client_name"] and \
-                    ds["aas"] == ex_ds["aas_name"]:
+                    ds["thing"] == ex_ds["thing_name"]:
                 already_existing.append(ds["shortname"])
         new_ds.append({
             "system_name": system_name,
             "client_name": ds["client_app"],
             "shortname": ds["shortname"],
             "name": ds["name"],
-            "aas_system_name": system_name,
-            "aas_name": ds["aas"],
+            "thing_system_name": system_name,
+            "thing_name": ds["thing"],
             "description": ds.get("description", "")
             # "creator_id": user_id,
             # "datetime": get_datetime()
         })
-    # return jsonify({"aas_connections": existing_datastreams})
+    # return jsonify({"thing_connections": existing_datastreams})
 
     # 4) create the datastreams or warn if at least one of the datastreams already exist.
     if len(already_existing) > 0:
@@ -322,7 +322,7 @@ def delete_datastreams(user_id, system_url):
             app.logger.error(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
 
-    # 4) delete aas connection
+    # 4) delete thing connection
     for ds_to_del in datastreams_to_delete:
         delete_stmt = db.delete(app.config["tables"]["datastreams"]).where(
                         (app.config["tables"]["datastreams"].c.shortname == ds_to_del and

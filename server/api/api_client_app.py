@@ -55,7 +55,7 @@ def clients_per_system(user_id, system_url):
 
     result_proxy = conn.execute(f"""
     SELECT clients.system_name, clients.name, creator.email AS contact_mail, clients.description, on_kafka, 
-    clients.datetime AS datetime, submodel_element_collection
+    clients.datetime AS datetime, clients.resource_uri
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN client_apps as clients on sys.name = clients.system_name
@@ -103,7 +103,7 @@ def client_per_system(user_id, system_url, client_name):
 
     result_proxy = conn.execute(f"""
     SELECT sys.name AS system_name, company_id, sys.kafka_servers, ca.name, ca.system_name, ca.creator_id,  
-    ca.submodel_element_collection, ca.on_kafka, ca.key, ca.datetime AS created_at, ca.description
+    ca.resource_uri, ca.on_kafka, ca.key, ca.datetime AS created_at, ca.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN client_apps AS ca on sys.name = ca.system_name
@@ -121,7 +121,7 @@ def create_client_app(user_id, system_url):
     Create a client app by sending a json like:
     "client_app": {
     "name": "client_app_1",
-    "submodel_element_collection": "https://iasset.salzburgresearch.at/registry/sec_uuid",
+    "resource_uri": "https://iasset.salzburgresearch.at/registry/sec_uuid",
     "on_kafka": True,
     "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit."
     }
@@ -172,7 +172,7 @@ def create_client_app(user_id, system_url):
 
     new_client_apps = [{"name": client_name,
                         "system_name": system_name,
-                        "submodel_element_collection": new_client_app.get("submodel_element_collection", ""),
+                        "resource_uri": new_client_app.get("resource_uri", ""),
                         "on_kafka": new_client_app.get("on_kafka", True),
                         "creator_id": user_id,
                         "key": "",

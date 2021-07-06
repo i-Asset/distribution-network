@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: "API documentation for the Distribution Network's API."
-  version: "1.0.0"
+  version: "1.0.1"
   title: "Distribution Network Service API"
   contact:
     email: "christoph.schranz@salzburgresearcht.at"
@@ -26,8 +26,8 @@ tags:
   description: "API for Stream App requests on the Distribution Network"
 - name: "Client App Request"
   description: "API for Client App requests on the Distribution Network"
-- name: "AAS Connection Request"
-  description: "API for AAS connection requests on the Distribution Network"
+- name: "Thing Request"
+  description: "API for Thing connection requests on the Distribution Network"
 - name: "Datastream Request"
   description: "API for Datastream requests on the Distribution Network"
 
@@ -695,11 +695,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/aas_connections/{personId}/{system}:
+  /distributionnetwork/things/{personId}/{system}:
     get:
       tags:
-        - "AAS Connection Request"
-      summary: "Return all aas connections that belong to a system"
+        - "Thing Request"
+      summary: "Return all thing connections that belong to a system"
       produces:
         - "application/json"
       parameters:
@@ -724,7 +724,7 @@ paths:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error."
           schema:
@@ -740,8 +740,8 @@ paths:
 
     post:
       tags:
-        - "AAS Connection Request"
-      summary: "Create a new AAS connection for a system that belongs to a person."
+        - "Thing Request"
+      summary: "Create a new Thing connection for a system that belongs to a person."
       consumes:
         - "application/json"
       produces:
@@ -764,17 +764,17 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas connection"
+        - name: "thing name"
           in: "body"
-          description: "An AAS connection object to create."
+          description: "An Thing connection to create."
           required: true
           schema:
-            $ref: "#definitions/AasConnectionBody"
+            $ref: "#definitions/ThingBody"
       responses:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error, user not found."
           schema:
@@ -790,8 +790,8 @@ paths:
 
     put:
       tags:
-        - "AAS Connection Request"
-      summary: "Create or update an AAS connection for a system that belongs to a person."
+        - "Thing Request"
+      summary: "Create or update a Thing connection for a system that belongs to a person."
       consumes:
         - "application/json"
       produces:
@@ -814,17 +814,17 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas connection"
+        - name: "thing name"
           in: "body"
-          description: "An AAS connection object to create."
+          description: "A Thing connection to create."
           required: true
           schema:
-            $ref: "#definitions/AasConnectionBody"
+            $ref: "#definitions/ThingBody"
       responses:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error, user not found."
           schema:
@@ -838,11 +838,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/aas_connections/{personId}/{system}/{aas_name}:
+  /distributionnetwork/things/{personId}/{system}/{thing_name}:
     get:
       tags:
-        - "AAS Connection Request"
-      summary: "Return a specific AAS connection that belongs to a system"
+        - "Thing Request"
+      summary: "Return a specific Thing connection that belongs to a system"
       produces:
         - "application/json"
       parameters:
@@ -857,9 +857,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "Thing name"
           required: true
           type: "string"
           format: "string"
@@ -873,7 +873,7 @@ paths:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error."
           schema:
@@ -887,11 +887,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/delete_aas_connection/{personId}/{system}/{aas_name}:
+  /distributionnetwork/delete_thing/{personId}/{system}/{thing_name}:
     delete:
       tags:
-        - "AAS Connection Request"
-      summary: "Delete an AAS connection from a system"
+        - "Thing Request"
+      summary: "Delete a Thing connection from a system"
       produces:
         - "application/json"
       parameters:
@@ -906,9 +906,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "thing name"
           required: true
           type: "string"
           format: "string"
@@ -1129,11 +1129,11 @@ paths:
             $ref: "#/definitions/Status"
 
 
-  /distributionnetwork/datastreams_per_aas/{personId}/{system}/{aas_name}:
+  /distributionnetwork/datastreams_per_thing/{personId}/{system}/{thing_name}:
     get:
       tags:
         - "Datastream Request"
-      summary: "Return all datastreams that belong to an aas connection of a system"
+      summary: "Return all datastreams that belong to a thing of a system"
       produces:
         - "application/json"
       parameters:
@@ -1148,9 +1148,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "thing name"
           required: true
           type: "string"
           format: "string"
@@ -1385,7 +1385,7 @@ definitions:
         type: "string"
       system_name:
         type: "string"
-      submodel_element_collection:
+      resource_uri:
         type: "string"
       on_kafka:
         type: "boolean"
@@ -1398,7 +1398,7 @@ definitions:
     properties:
       name:
         type: "string"
-      submodel_element_collection:
+      resource_uri:
         type: "string"
         required: false
       on_kafka:
@@ -1407,30 +1407,30 @@ definitions:
       description:
         type: "string"
         required: false
-  AasConnections:
+  Things:
     type: "object"
     properties:
-      aas_connections:
+      Thing:
         type: "array"
         items:
-          $ref: "#definitions/AasConnection"
-  AasConnection:
+          $ref: "#definitions/Thing"
+  Thing:
     type: "object"
     properties:
       name:
         type: "string"
       system_name:
         type: "string"
-      registry_uri:
+      resource_uri:
         type: "string"
       description:
         type: "string"
-  AasConnectionBody:
+  ThingBody:
     type: "object"
     properties:
       name:
         type: "string"
-      registry_uri:
+      resource_uri:
         type: "string"
         required: false
       description:
@@ -1454,13 +1454,9 @@ definitions:
         type: "string"
       client_name:
         type: "string"
-      submodel_element_collection:
+      resource_uri:
         type: "string"
-      aas_name:
-        type: "string"
-      registry_uri:
-        type: "string"
-      datastream_uri:
+      thing_name:
         type: "string"
       contact_mail:
         type: "string"
@@ -1479,9 +1475,7 @@ definitions:
         type: "string"
       client_app:
         type: "string"
-      aas:
-        type: "string"
-      datastream_uri:
+      resource_uri:
         type: "string"
       description:
         type: "string"
