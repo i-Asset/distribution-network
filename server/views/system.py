@@ -78,7 +78,7 @@ def show_system(system_url):
     # Fetch client_apps of the system, for with the user is agent
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
-    query = """SELECT client_apps.system_name, client_apps.name, creator.email AS contact_mail
+    query = """SELECT client_apps.system_name, client_apps.name, client_apps.resource_uri, creator.email AS contact_mail
     FROM client_apps
     INNER JOIN users as creator ON creator.id=client_apps.creator_id
     INNER JOIN is_admin_of_sys AS agf ON client_apps.system_name=agf.system_name 
@@ -88,16 +88,16 @@ def show_system(system_url):
     client_apps = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch clients, for which systems the current user is agent of
-    query = """SELECT aas.system_name, aas.name, aas.registry_uri, creator.email AS contact_mail
-    FROM aas
-    INNER JOIN is_admin_of_sys AS agf ON aas.system_name=agf.system_name 
+    query = """SELECT things.system_name, things.name, things.resource_uri, creator.email AS contact_mail
+    FROM things
+    INNER JOIN is_admin_of_sys AS agf ON things.system_name=agf.system_name 
     INNER JOIN users as creator ON creator.id=agf.creator_id
     INNER JOIN users as agent ON agent.id=agf.user_id
-    WHERE agent.id='{}'
-    ORDER BY system_name, aas.name;""".format(user_id)
+    WHERE agf.user_id='{}' AND agf.system_name='{}' 
+    ORDER BY things.name;""".format(user_id, system_name)
     result_proxy = conn.execute(query)
     # engine.dispose()
-    aas_list = [strip_dict(c.items()) for c in result_proxy.fetchall()]
+    thing_list = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
     # Fetch streams, for which systems the current user is agent of
     # engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
@@ -118,7 +118,7 @@ def show_system(system_url):
     # if not, agents has at least one item
     payload = agents[0]
     return render_template("/systems/show_system.html", agents=agents, payload=payload,
-                           client_apps=client_apps, streams=streams, aas_list=aas_list)
+                           client_apps=client_apps, streams=streams, thing_list=thing_list)
 
 
 # System Form Class
@@ -272,13 +272,13 @@ def delete_system(system_url):
         flash("You are not permitted to delete a system which has multiple agents.", "danger")
         return redirect(url_for("system.show_system", system_url=encode_sys_url(system_name)))
 
-    # Check if there are client_apps, stream_apps or aas for that system
+    # Check if there are client_apps, stream_apps or things for that system
     query = f"""(SELECT system_name, name, 'client apps'::varchar(16) AS type 
                 FROM client_apps WHERE system_name='{system_name}')
         UNION
             (SELECT source_system AS system_name, name, 'stream apps' FROM stream_apps WHERE source_system='{system_name}')
         UNION
-            (SELECT system_name, name, 'aas' FROM aas WHERE system_name='{system_name}');"""
+            (SELECT system_name, name, 'things' FROM things WHERE system_name='{system_name}');"""
     result_proxy = conn.execute(query)
     dep_instances = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     if len(dep_instances) >= 1:

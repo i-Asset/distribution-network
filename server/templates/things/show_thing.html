@@ -15,8 +15,8 @@
   </td>
     <td>
 <!--     <a class="btn btn-info float-right mb-2" href="/edit_client/{{payload.system_url}}/{{payload.name}}"> edit description </a>-->
-     <a class="btn btn-danger float-right" href="/delete_aas/{{payload.system_url}}/{{payload.name}}"
-        data-toggle="tooltip" title="Delete this client application."> delete client </a>
+     <a class="btn btn-danger float-right" href="/delete_thing/{{payload.system_url}}/{{payload.name}}"
+        data-toggle="tooltip" title="Delete this thing connection."> delete thing </a>
       <br>
       <br>
 <!--      <h3> <small> Config to connect a CPS or service: </small></h3>-->
@@ -28,9 +28,9 @@
 
 <!--  <script>-->
 <!--    var data = {-->
-<!--        "aas_name": '{{config.client_name}}',-->
+<!--        "thing_name": '{{config.thing_name}}',-->
 <!--        "system_name": '{{config.system_name}}',-->
-<!--        "registry_uri": '{{payload.submodel_element_collection}}'};-->
+<!--        "resource_uri": '{{payload.resource_uri}}'};-->
 <!--    document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);-->
 <!--  </script>-->
 
@@ -39,16 +39,18 @@
   <table class="table table-striped">
     <tr>
       <th>Name</th>
+      <th>System</th>
       <th>Registry URI</th>
       <th>Creator's mail</th>
       <th>Created at</th>
 <!--      <th>Creator</th>-->
     </tr>
       <tr>
-        <td><a href="/show_aas/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.name}}</a></td>
-        <td><a href="/show_aas/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.registry_uri}}</a></td>
-        <td><a href="/show_aas/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.contact_mail}}</a></td>
-        <td><a href="/show_aas/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.datetime}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.name}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.system_name}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.resource_uri}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.contact_mail}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.datetime}}</a></td>
 
       </tr>
   </table>

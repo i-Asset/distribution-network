@@ -49,7 +49,7 @@ def show_client(system_url, client_name):
     conn = engine.connect()
     query = """SELECT clients.system_name, com.name AS company_name, com.id AS company_id, clients.name, 
     creator.email AS contact_mail, clients.description, agent.id AS agent_id, on_kafka, 
-    clients.datetime AS datetime, submodel_element_collection, aas_uri
+    clients.datetime AS datetime, clients.resource_uri
     FROM client_apps AS clients
     INNER JOIN users as creator ON creator.id=clients.creator_id
     INNER JOIN systems AS sys ON clients.system_name=sys.name
@@ -89,7 +89,7 @@ def show_client(system_url, client_name):
     bootstrp_srv = app.config.get("KAFKA_BOOTSTRAP_SERVER")
     config = {"client_name": client_name,
               "system_name": system_name,
-              "aas_uri": payload.get("aas_uri", ""),
+              "resource_uri": payload.get("resource_uri", ""),
               "kafka_bootstrap_servers": [bootstrp_srv if bootstrp_srv is not None else "localhost:9092"][0]}
 
     return render_template("/client_apps/show_client.html", payload=payload, config=config)
@@ -98,8 +98,8 @@ def show_client(system_url, client_name):
 # Client Form Class
 class ClientForm(Form):
     name = StringField("Name of the client application", [validators.Length(min=2, max=64), valid_name])
-    submodel_element_collection = StringField("Submodel element collection")
-    aas_uri = StringField("Submodel element collection URI", [valid_url])
+    # submodel_element_collection = StringField("Submodel element collection")
+    resource_uri = StringField("Resource URI", [valid_url])
     description = TextAreaField("Description", [validators.Length(max=16*1024)])
 
 
@@ -182,8 +182,8 @@ def add_client_for_system(system_url):
             query = db.insert(app.config["tables"]["client_apps"])
             values_list = [{'name': form_name,
                             'system_name': system_name,
-                            'submodel_element_collection': form.submodel_element_collection.data,
-                            'aas_uri': form.aas_uri.data.strip(),
+                            # 'submodel_element_collection': form.submodel_element_collection.data,
+                            'resource_uri': form.resource_uri.data.strip(),
                             'creator_id': user_id,
                             "description": form.description.data,
                             'datetime': get_datetime(),

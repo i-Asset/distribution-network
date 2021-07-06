@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<!--  <h1>Dashboard <small> Welcome {{session.first_name}} {{session.sur_name}}</small></h1>-->
+  <h1> <small> Your connections to asset administration shell </small></h1>
+
+A list of thing connections of whose dedicated system you are admin of:
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>System</th>
+      <th>Resource URI</th>
+      <th>Creator</th>
+      <th></th>
+    </tr>
+      {% for thing in thing_list %}
+      <tr>
+        <td><center>{{thing.name}}</center></td>
+        <td><center>{{thing.system_name}}</center></td>
+        <td><center>{{thing.resource_uri}}</center></td>
+        <td><center>{{thing.contact_mail}}</center></td>
+        <td><a href="/show_thing/{{thing.system_url}}/{{thing.name}}" class="btn btn-info float-right"
+                data-toggle="tooltip" title="Manage this client application.">manage</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  <a class="btn btn-success" href="/add_thing"
+      data-toggle="tooltip" title="Add a new thing connection to this system."> Add thing connection</a>
+
+  <br>
+  <br>
+
+{% endblock %}
