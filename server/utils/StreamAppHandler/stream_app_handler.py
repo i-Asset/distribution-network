@@ -44,6 +44,7 @@ class SimpleStreamApp:
         return dict({
             "system_name": self.system_name,
             "stream_name": self.stream_name,
+            "container_name": self.container_name,
             "source_system": self.source_system,
             "target_system": self.target_system,
             "kafka_bootstrap_servers": self.kafka_bootstrap_servers,
@@ -251,8 +252,8 @@ class SimpleStreamApp:
 def create_client():
     # Try this if it doesn't work within a container
     # https://docker-py.readthedocs.io/en/stable/client.html#client-reference
-    # >>> client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-    return docker.from_env()
+    return docker.DockerClient(base_url='unix://var/run/docker.sock')
+    # return docker.from_env()
 
 
 if __name__ == "__main__":
