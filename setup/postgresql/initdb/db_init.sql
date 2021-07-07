@@ -110,6 +110,7 @@ CREATE TABLE if not exists datastreams
     system_name     varchar(128)   NOT NULL,
     thing_name        varchar(64) NOT NULL,
     resource_uri varchar(256),
+    creator_id integer NOT NULL REFERENCES users(id),
     description     text,
     client_name     varchar(64) NOT NULL,
     client_system_name varchar(128),
@@ -118,16 +119,20 @@ CREATE TABLE if not exists datastreams
     FOREIGN KEY (client_system_name, client_name) REFERENCES client_apps(system_name, name)
 );
 
--- CREATE TABLE if not exists subscriptions
--- (
---     system_name     varchar(128)   NOT NULL,
---     client_name     varchar(64) NOT NULL,
---     datastream_shortname  varchar(32)    NOT NULL,
---     datastream_system       varchar(128)   NOT NULL,
---     PRIMARY KEY (system_name, client_name, datastream_shortname),
---     FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
---     FOREIGN KEY (datastream_system, datastream_shortname) REFERENCES datastreams(system_name, shortname)
--- );
+CREATE TABLE if not exists subscriptions
+(
+    shortname       varchar(32)    NOT NULL,
+    thing_name      varchar(64) NOT NULL,
+    thing_system_name    varchar(128)   NOT NULL,
+    FOREIGN KEY (shortname, thing_name, thing_system_name) REFERENCES datastreams(shortname, thing_name, system_name),
+    client_name      varchar(64) NOT NULL,
+    system_name   varchar(128) NOT NULL,
+    FOREIGN KEY (client_name, system_name) REFERENCES client_apps(name, system_name),
+    PRIMARY KEY (shortname, thing_name, thing_system_name, client_name, system_name),
+    creator_id integer NOT NULL REFERENCES users(id),
+    description     text,
+    datetime timestamp with time zone
+);
 
 -- ########################################################
 -- ##################### Fill tables ######################

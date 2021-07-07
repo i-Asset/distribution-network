@@ -166,17 +166,18 @@ def create_tables(app):
     app.config["tables"]["datastreams"] = db.Table(
         'datastreams', app.config['metadata'],
         db.Column('shortname', db.VARCHAR(32), primary_key=True),
-        # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(64), nullable=False),  # This is the producer client
-        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
-        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
-        db.Column('description', db.TEXT, nullable=True),
         # construct a composite foreign key for thing
         db.Column('thing_name', db.VARCHAR(64), primary_key=True),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(('thing_name', 'system_name'), ('things.name', 'things.system_name')),
+        # construct a composite foreign key for client
+        db.Column('client_name', db.VARCHAR(64), nullable=False),  # This is the producer client
+        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
+        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
+        # datastream-related fields
+        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
+        db.Column('description', db.TEXT, nullable=True),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
         db.Column('datetime', db.DateTime, nullable=True),
         db.CheckConstraint('client_system_name = system_name', name='System equality check')
@@ -185,16 +186,16 @@ def create_tables(app):
         'subscriptions', app.config['metadata'],
         db.Column('shortname', db.VARCHAR(32), primary_key=True),
         db.Column('thing_name', db.VARCHAR(64), primary_key=True),
-        db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(('shortname', 'thing_name', 'system_name'),
+        db.Column('thing_system_name', db.VARCHAR(128), primary_key=True),
+        db.ForeignKeyConstraint(('shortname', 'thing_name', 'thing_system_name'),
                                 ('datastreams.shortname', 'datastreams.thing_name', 'datastreams.system_name')),
         # construct a composite foreign key for client
         db.Column('client_name', db.VARCHAR(64), primary_key=True),
-        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
-        db.CheckConstraint('client_system_name = system_name', name='System equality check'),
+        db.Column('system_name', db.VARCHAR(128), primary_key=True),
+        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
+        # datastream-related fields
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
-        db.Column('datetime', db.DateTime, nullable=True)
+        db.Column('datetime', db.DateTime, nullable=True),
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)
@@ -384,7 +385,7 @@ def insert_sample(app):
          'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
 
-    # Insert streams
+    # Insert stream apps
     query = db.insert(app.config["tables"]["stream_apps"])
     values_list = [
         {'name': "machine1analytics",

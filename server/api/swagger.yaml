@@ -30,6 +30,8 @@ tags:
   description: "API for Thing connection requests on the Distribution Network"
 - name: "Datastream Request"
   description: "API for Datastream requests on the Distribution Network"
+- name: "Datastream Subscription Request"
+  description: "API for Datastream Subscription requests on the Distribution Network"
 
 paths:
   /distributionnetwork/:
@@ -1128,7 +1130,6 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-
   /distributionnetwork/datastreams_per_thing/{personId}/{system}/{thing_name}:
     get:
       tags:
@@ -1177,8 +1178,6 @@ paths:
           description: "No or invalid personId provided"
           schema:
             $ref: "#/definitions/Status"
-
-
 
   /distributionnetwork/delete_datastreams/{personId}/{system}/{thing_name}:
     delete:
@@ -1234,6 +1233,267 @@ paths:
           description: "Invalid data provided"
           schema:
             $ref: "#/definitions/Status"
+
+
+  /distributionnetwork/subscriptions/{personId}/{system}:
+    get:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Return all datastream subscriptions that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/subscriptions_per_client/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Return all datastream subscriptions that belong to a client application of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Create new datastream subscription for a client application that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscription objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Create or update datastream subscriptions for a client application that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscription objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_subscriptions/{personId}/{system}/{client_name}:
+    delete:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Delete datastream subscription from from a client application"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "name of the client application the datastream belongs to"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscriptions to delete."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionShortnamesBody"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
 
 #securityDefinitions:
 #  Authorization:
@@ -1491,6 +1751,59 @@ definitions:
     type: "array"
     items:
       type: "string"
+
+  Subscriptions:
+    type: "object"
+    properties:
+      datastreams:
+        type: "array"
+        items:
+          $ref: "#definitions/Subscription"
+  Subscription:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      client_name:
+        type: "string"
+      thing_name:
+        type: "string"
+      resource_uri:
+        type: "string"
+      contact_mail:
+        type: "string"
+      description:
+        type: "string"
+  SubscriptionsBody:
+    type: "array"
+    items:
+      $ref: "#definitions/SubscriptionBody"
+  SubscriptionBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      thing_name:
+        type: "string"
+      system_name:
+        type: "string"
+  SubscriptionShortnamesBody:
+    type: "array"
+    items:
+      $ref: "#definitions/SubscriptionShortnameBody"
+  SubscriptionShortnameBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      thing_name:
+        type: "string"
+      system_name:
+        type: "string"
 
 externalDocs:
   description: "Find out more about Swagger"

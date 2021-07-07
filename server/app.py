@@ -25,6 +25,7 @@ from server.api.api_stream_app import api_stream_app
 from server.api.api_client_app import api_client_app
 from server.api.api_thing import api_thing
 from server.api.api_datastreams import api_datastreams
+from server.api.api_subscriptions import api_subscriptions
 from server.api.api_auth import check_iasset_connection
 
 # Import application-specific functions
@@ -58,6 +59,7 @@ def create_app():
     app.register_blueprint(api_client_app)
     app.register_blueprint(api_thing)
     app.register_blueprint(api_datastreams)
+    app.register_blueprint(api_subscriptions)
 
     ########################################################
     # ########### load and update env variables ########## #
