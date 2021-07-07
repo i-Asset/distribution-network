@@ -53,12 +53,12 @@ def datastreams_per_system(user_id, system_url):
 
     # 3) Fetch all datastreams that belong to the user with id user_id and system_name
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri AS datastream_uri,
+    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN datastreams ds on sys.name = ds.system_name
-    INNER JOIN users as creator ON creator.id=datastreams.creator_id
+    INNER JOIN users as creator ON creator.id=ds.creator_id
     WHERE agf.user_id='{user_id}' AND ds.system_name='{system_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
@@ -100,12 +100,12 @@ def datastreams_per_client(user_id, system_url, client_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri AS datastream_uri,
+    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN datastreams ds on sys.name = ds.system_name
-    INNER JOIN users as creator ON creator.id=datastreams.creator_id
+    INNER JOIN users as creator ON creator.id=ds.creator_id
     WHERE agf.user_id='{user_id}' AND ds.system_name='{system_name}' AND ds.client_name='{client_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
@@ -147,13 +147,13 @@ def datastreams_per_thing(user_id, system_url, thing_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri AS datastream_uri,
+    SELECT ds.system_name, shortname, ds.name, thing_name, client_name, ds.resource_uri,
         creator.email AS contact_mail, ds.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
     INNER JOIN datastreams ds on sys.name = ds.system_name
-    INNER JOIN users as creator ON creator.id=datastreams.creator_id
-    WHERE agf.user_id='{user_id}' AND ds.system_name='{system_name}' AND things.name='{thing_name}';""")
+    INNER JOIN users as creator ON creator.id=ds.creator_id
+    WHERE agf.user_id='{user_id}' AND ds.system_name='{system_name}' AND thing_name='{thing_name}';""")
     engine.dispose()
     datastreams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -273,15 +273,16 @@ def create_datastreams(user_id, system_url):
     return jsonify({"datastreams": new_ds})
 
 
-@api_datastreams.route(f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>", methods=['DELETE'])
-def delete_datastreams(user_id, system_url):
+@api_datastreams.route(f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>/<string:thing_name>",
+                       methods=['DELETE'])
+def delete_datastreams(user_id, system_url, thing_name):
     """
     Delete datastreams that are posted in the requests
     :return: return status json
     """
     # 1) extract the header content with the keys: Host, User-Agent, Accept, Authorization
     #    check if the user is allowed to get the systems (user_id < 0 -> Panta Rhei, user_id > 0 -> identity-service
-    fct = f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>"
+    fct = f"{prefix}/delete_datastreams/<string:user_id>/<string:system_url>/<string:thing_name>"
     user_id = get_user_id(fct, user_id)
     system_name = decode_sys_url(system_url)
     authorized, msg, status_code = authorize_request(user_id=user_id, fct=fct)
@@ -318,11 +319,13 @@ def delete_datastreams(user_id, system_url):
     for ds_to_del in datastreams_to_delete:
         delete_stmt = db.delete(app.config["tables"]["datastreams"]).where(
                         (app.config["tables"]["datastreams"].c.shortname == ds_to_del and
+                        app.config["tables"]["datastreams"].c.thing_name == thing_name and
                          app.config["tables"]["datastreams"].c.system_name == system_name)
                     )
         conn.execute(delete_stmt)
     engine.dispose()
 
     # 5) return
-    app.logger.info(f"{fct}: User '{user_id}' deleted datastreams '{datastreams_to_delete}' from system '{system_name}'.")
+    app.logger.info(f"{fct}: User '{user_id}' deleted datastreams '{datastreams_to_delete}' from '{thing_name}'" +
+                    " in system '{system_name}'.")
     return jsonify({"url": fct, "status_code": 204}), 204

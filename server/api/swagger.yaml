@@ -1180,7 +1180,7 @@ paths:
 
 
 
-  /distributionnetwork/delete_datastreams/{personId}/{system}:
+  /distributionnetwork/delete_datastreams/{personId}/{system}/{thing_name}:
     delete:
       tags:
         - "Datastream Request"
@@ -1196,6 +1196,12 @@ paths:
         - name: "system"
           in: "path"
           description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "thing_name"
+          in: "path"
+          description: "name of the thing the datastream belongs to"
           required: true
           type: "string"
           format: "string"
