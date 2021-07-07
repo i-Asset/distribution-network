@@ -1454,9 +1454,9 @@ definitions:
         type: "string"
       client_name:
         type: "string"
-      resource_uri:
-        type: "string"
       thing_name:
+        type: "string"
+      resource_uri:
         type: "string"
       contact_mail:
         type: "string"
@@ -1473,7 +1473,9 @@ definitions:
         type: "string"
       name:
         type: "string"
-      client_app:
+      client_name:
+        type: "string"
+      thing_name:
         type: "string"
       resource_uri:
         type: "string"

@@ -105,17 +105,17 @@ CREATE TABLE if not exists client_apps (
 
 CREATE TABLE if not exists datastreams
 (
-    system_name     varchar(128)   NOT NULL,
-    client_name     varchar(64) NOT NULL,
     shortname      varchar(32)    NOT NULL,
     name            varchar(128),
+    system_name     varchar(128)   NOT NULL,
+    thing_name        varchar(64) NOT NULL,
     resource_uri varchar(256),
     description     text,
-    thing_name        varchar(64),
-    thing_system_name varchar(128),
-    PRIMARY KEY (system_name, shortname),
-    FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
-    FOREIGN KEY (thing_system_name, thing_name) REFERENCES things(system_name, name)
+    client_name     varchar(64) NOT NULL,
+    client_system_name varchar(128),
+    PRIMARY KEY (system_name, thing_name, shortname),
+    FOREIGN KEY (system_name, thing_name) REFERENCES things(system_name, name),
+    FOREIGN KEY (client_system_name, client_name) REFERENCES client_apps(system_name, name)
 );
 
 -- CREATE TABLE if not exists subscriptions

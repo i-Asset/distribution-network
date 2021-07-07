@@ -167,28 +167,34 @@ def create_tables(app):
         'datastreams', app.config['metadata'],
         db.Column('shortname', db.VARCHAR(32), primary_key=True),
         # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(64), nullable=False),
-        db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
+        db.Column('client_name', db.VARCHAR(64), nullable=False),  # This is the producer client
+        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
+        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
-        db.Column('datastream_uri', db.VARCHAR(256), nullable=True),
+        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         # construct a composite foreign key for thing
-        db.Column('thing_name', db.VARCHAR(64), nullable=True),
-        db.Column('thing_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(('thing_name', 'thing_system_name'), ('things.name', 'things.system_name'))
+        db.Column('thing_name', db.VARCHAR(64), primary_key=True),
+        db.Column('system_name', db.VARCHAR(128), primary_key=True),
+        db.ForeignKeyConstraint(('thing_name', 'system_name'), ('things.name', 'things.system_name')),
+        db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
+        db.Column('datetime', db.DateTime, nullable=True),
+        db.CheckConstraint('client_system_name = system_name', name='System equality check')
     )
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
-        # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(64), nullable=False),
+        db.Column('shortname', db.VARCHAR(32), primary_key=True),
+        db.Column('thing_name', db.VARCHAR(64), primary_key=True),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
-
-        db.Column('datastream_shortname', db.VARCHAR(32), primary_key=True),
-        db.Column('datastream_system_name', db.VARCHAR(128)),
-        db.ForeignKeyConstraint(('datastream_shortname', 'datastream_system_name'),
-                                ('datastreams.shortname', 'datastreams.system_name'))
+        db.ForeignKeyConstraint(('shortname', 'thing_name', 'system_name'),
+                                ('datastreams.shortname', 'datastreams.thing_name', 'datastreams.system_name')),
+        # construct a composite foreign key for client
+        db.Column('client_name', db.VARCHAR(64), primary_key=True),
+        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
+        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
+        db.CheckConstraint('client_system_name = system_name', name='System equality check'),
+        db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
+        db.Column('datetime', db.DateTime, nullable=True)
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)
