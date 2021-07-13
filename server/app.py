@@ -22,6 +22,7 @@ from server.views.thing import thing
 # import api
 from server.api.api_system import api_system
 from server.api.api_stream_app import api_stream_app
+from server.api.api_stream_app_controller import api_stream_app_controller
 from server.api.api_client_app import api_client_app
 from server.api.api_thing import api_thing
 from server.api.api_datastreams import api_datastreams
@@ -56,6 +57,7 @@ def create_app():
     # Register api as blueprint
     app.register_blueprint(api_system)
     app.register_blueprint(api_stream_app)
+    app.register_blueprint(api_stream_app_controller)
     app.register_blueprint(api_client_app)
     app.register_blueprint(api_thing)
     app.register_blueprint(api_datastreams)

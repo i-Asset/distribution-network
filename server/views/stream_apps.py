@@ -313,7 +313,7 @@ def update_filter_logic(system_name, stream_name, form):
     flash(msg, "success")
 
 
-def get_stream_payload(user_id, system_name, stream_name):
+def get_stream_payload(user_id, system_name, stream_name, api_call=False):
     # Fetch all streams for the requested system and user agent
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
@@ -332,12 +332,15 @@ def get_stream_payload(user_id, system_name, stream_name):
     streams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched streams: {}".format(streams))
 
+    if api_call:
+        return streams
+
     # Check if the system exists and has agents
     if len(streams) == 0:
         flash("It seems that this stream doesn't exist.", "danger")
         return redirect(url_for("stream_app.show_all_streams"))
 
-    # Check if the current user is agent of the client's system
+    # Check if the current user is not agent of the client's system
     if user_id not in [c["agent_id"] for c in streams]:
         flash("You are not permitted see details this stream.", "danger")
         return redirect(url_for("stream_app.show_all_streams"))

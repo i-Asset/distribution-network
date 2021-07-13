@@ -97,6 +97,8 @@ class SimpleStreamApp:
         """Get the status of the container.
         Within created|running|exited|not_found"""
         try:
+            if not self.container:
+                self.container = self.client.containers.get(self.container_name)
             self.container.reload()
             return self.container.attrs["State"].get("Status")
         except docker.errors.NotFound:
