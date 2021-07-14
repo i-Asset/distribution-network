@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: "API documentation for the Distribution Network's API."
-  version: "1.0.0"
+  version: "1.0.1"
   title: "Distribution Network Service API"
   contact:
     email: "christoph.schranz@salzburgresearcht.at"
@@ -22,16 +22,21 @@ tags:
   description: "Connection tester for the Distribution Network"
 - name: "System Request"
   description: "API for System requests on the Distribution Network"
-- name: "Stream App Request"
-  description: "API for Stream App requests on the Distribution Network"
 - name: "Client App Request"
   description: "API for Client App requests on the Distribution Network"
-- name: "AAS Connection Request"
-  description: "API for AAS connection requests on the Distribution Network"
+- name: "Thing Request"
+  description: "API for Thing connection requests on the Distribution Network"
 - name: "Datastream Request"
   description: "API for Datastream requests on the Distribution Network"
+- name: "Datastream Subscription Request"
+  description: "API for Datastream Subscription requests on the Distribution Network"
+- name: "Stream App Request"
+  description: "API for Stream App requests on the Distribution Network"
+- name: "Stream App Control Request"
+  description: "API for controlling Stream Apps on the Distribution Network"
 
 paths:
+  # Connection Tester
   /distributionnetwork/:
     get:
       tags:
@@ -45,6 +50,7 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+  # Systems
   /distributionnetwork/systems_by_person/{personId}:
     get:
       tags:
@@ -213,247 +219,7 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/stream_apps/{personId}/{system}:
-    get:
-      tags:
-        - "Stream App Request"
-      summary: "Return all stream apps that belong to a system"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "personId"
-          in: "path"
-          description: "User ID from the identity service"
-          required: true
-          type: "integer"
-        - name: "system"
-          in: "path"
-          description: "identifier with '_' as level separator"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "Authorization"
-          in: "header"
-          description: "Bearer token"
-          required: true
-          type: "string"
-          format: "string"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/StreamApps"
-        "400":
-          description: "Authentication error."
-          schema:
-            $ref: "#/definitions/Status"
-        "403":
-          description: "Method not allowed for user."
-          schema:
-            $ref: "#/definitions/Status"
-        "406":
-          description: "No or invalid personId provided"
-          schema:
-            $ref: "#/definitions/Status"
-
-    post:
-      tags:
-        - "Stream App Request"
-      summary: "Create a new stream app for a system that belongs to a person."
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "personId"
-          in: "path"
-          description: "User ID from the identity service"
-          required: true
-          type: "integer"
-        - name: "system"
-          in: "path"
-          description: "identifier with '_' as level separator"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "Authorization"
-          in: "header"
-          description: "Bearer token"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "stream app"
-          in: "body"
-          description: "A stream app object to create."
-          required: true
-          schema:
-            $ref: "#definitions/StreamAppBody"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/StreamApps"
-        "400":
-          description: "Authentication error, user not found."
-          schema:
-            $ref: "#/definitions/Status"
-        "401":
-          description: "Authentication error, password is incorrect."
-          schema:
-            $ref: "#/definitions/Status"
-        "406":
-          description: "Invalid data provided"
-          schema:
-            $ref: "#/definitions/Status"
-
-    put:
-      tags:
-        - "Stream App Request"
-      summary: "Create or update a stream app for a system that belongs to a person."
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "personId"
-          in: "path"
-          description: "User ID from the identity service"
-          required: true
-          type: "integer"
-        - name: "system"
-          in: "path"
-          description: "identifier with '_' as level separator"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "Authorization"
-          in: "header"
-          description: "Bearer token"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "stream app"
-          in: "body"
-          description: "A stream app object to create."
-          required: true
-          schema:
-            $ref: "#definitions/StreamAppBody"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/StreamApps"
-        "400":
-          description: "Authentication error, user not found."
-          schema:
-            $ref: "#/definitions/Status"
-        "401":
-          description: "Authentication error, password is incorrect."
-          schema:
-            $ref: "#/definitions/Status"
-        "406":
-          description: "Invalid data provided"
-          schema:
-            $ref: "#/definitions/Status"
-
-  /distributionnetwork/stream_apps/{personId}/{system}/{stream_name}:
-    get:
-      tags:
-        - "Stream App Request"
-      summary: "Return a specific stream app that belongs to a system"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "personId"
-          in: "path"
-          description: "User ID from the identity service"
-          required: true
-          type: "integer"
-        - name: "system"
-          in: "path"
-          description: "identifier with '_' as level separator"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "stream_name"
-          in: "path"
-          description: "stream app name"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "Authorization"
-          in: "header"
-          description: "Bearer token"
-          required: true
-          type: "string"
-          format: "string"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/StreamApps"
-        "400":
-          description: "Authentication error."
-          schema:
-            $ref: "#/definitions/Status"
-        "401":
-          description: "Authentication error, password is incorrect."
-          schema:
-            $ref: "#/definitions/Status"
-        "406":
-          description: "No or invalid personId provided"
-          schema:
-            $ref: "#/definitions/Status"
-
-  /distributionnetwork/delete_stream_app/{personId}/{system}/{stream_name}:
-    delete:
-      tags:
-        - "Stream App Request"
-      summary: "Delete a stream app from a system"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "personId"
-          in: "path"
-          description: "User ID from the identity service"
-          required: true
-          type: "integer"
-        - name: "system"
-          in: "path"
-          description: "identifier with '_' as level separator"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "stream_name"
-          in: "path"
-          description: "stream app name"
-          required: true
-          type: "string"
-          format: "string"
-        - name: "Authorization"
-          in: "header"
-          description: "Bearer token"
-          required: true
-          type: "string"
-          format: "string"
-      responses:
-        "204":
-          description: "Deleted"
-          schema:
-            $ref: "#/definitions/Status"
-        "400":
-          description: "User or system not found."
-          schema:
-            $ref: "#/definitions/Status"
-        "401":
-          description: "Authentication error, password is incorrect."
-          schema:
-            $ref: "#/definitions/Status"
-        "406":
-          description: "Invalid data provided"
-          schema:
-            $ref: "#/definitions/Status"
-
+  # Client applications
   /distributionnetwork/client_apps/{personId}/{system}:
     get:
       tags:
@@ -695,11 +461,12 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/aas_connections/{personId}/{system}:
+  # Things
+  /distributionnetwork/things/{personId}/{system}:
     get:
       tags:
-        - "AAS Connection Request"
-      summary: "Return all aas connections that belong to a system"
+        - "Thing Request"
+      summary: "Return all thing connections that belong to a system"
       produces:
         - "application/json"
       parameters:
@@ -724,7 +491,7 @@ paths:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error."
           schema:
@@ -740,8 +507,8 @@ paths:
 
     post:
       tags:
-        - "AAS Connection Request"
-      summary: "Create a new AAS connection for a system that belongs to a person."
+        - "Thing Request"
+      summary: "Create a new Thing connection for a system that belongs to a person."
       consumes:
         - "application/json"
       produces:
@@ -764,17 +531,17 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas connection"
+        - name: "thing name"
           in: "body"
-          description: "An AAS connection object to create."
+          description: "An Thing connection to create."
           required: true
           schema:
-            $ref: "#definitions/AasConnectionBody"
+            $ref: "#definitions/ThingBody"
       responses:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error, user not found."
           schema:
@@ -790,8 +557,8 @@ paths:
 
     put:
       tags:
-        - "AAS Connection Request"
-      summary: "Create or update an AAS connection for a system that belongs to a person."
+        - "Thing Request"
+      summary: "Create or update a Thing connection for a system that belongs to a person."
       consumes:
         - "application/json"
       produces:
@@ -814,17 +581,17 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas connection"
+        - name: "thing name"
           in: "body"
-          description: "An AAS connection object to create."
+          description: "A Thing connection to create."
           required: true
           schema:
-            $ref: "#definitions/AasConnectionBody"
+            $ref: "#definitions/ThingBody"
       responses:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error, user not found."
           schema:
@@ -838,11 +605,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/aas_connections/{personId}/{system}/{aas_name}:
+  /distributionnetwork/things/{personId}/{system}/{thing_name}:
     get:
       tags:
-        - "AAS Connection Request"
-      summary: "Return a specific AAS connection that belongs to a system"
+        - "Thing Request"
+      summary: "Return a specific Thing connection that belongs to a system"
       produces:
         - "application/json"
       parameters:
@@ -857,9 +624,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "Thing name"
           required: true
           type: "string"
           format: "string"
@@ -873,7 +640,7 @@ paths:
         "200":
           description: "OK"
           schema:
-            $ref: "#/definitions/AasConnections"
+            $ref: "#/definitions/Things"
         "400":
           description: "Authentication error."
           schema:
@@ -887,11 +654,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-  /distributionnetwork/delete_aas_connection/{personId}/{system}/{aas_name}:
+  /distributionnetwork/delete_thing/{personId}/{system}/{thing_name}:
     delete:
       tags:
-        - "AAS Connection Request"
-      summary: "Delete an AAS connection from a system"
+        - "Thing Request"
+      summary: "Delete a Thing connection from a system"
       produces:
         - "application/json"
       parameters:
@@ -906,9 +673,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "thing name"
           required: true
           type: "string"
           format: "string"
@@ -936,6 +703,7 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
+  # Datastreams
   /distributionnetwork/datastreams/{personId}/{system}:
     get:
       tags:
@@ -1128,12 +896,11 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-
-  /distributionnetwork/datastreams_per_aas/{personId}/{system}/{aas_name}:
+  /distributionnetwork/datastreams_per_thing/{personId}/{system}/{thing_name}:
     get:
       tags:
         - "Datastream Request"
-      summary: "Return all datastreams that belong to an aas connection of a system"
+      summary: "Return all datastreams that belong to a thing of a system"
       produces:
         - "application/json"
       parameters:
@@ -1148,9 +915,9 @@ paths:
           required: true
           type: "string"
           format: "string"
-        - name: "aas_name"
+        - name: "thing_name"
           in: "path"
-          description: "AAS connection name"
+          description: "thing name"
           required: true
           type: "string"
           format: "string"
@@ -1178,9 +945,7 @@ paths:
           schema:
             $ref: "#/definitions/Status"
 
-
-
-  /distributionnetwork/delete_datastreams/{personId}/{system}:
+  /distributionnetwork/delete_datastreams/{personId}/{system}/{thing_name}:
     delete:
       tags:
         - "Datastream Request"
@@ -1196,6 +961,12 @@ paths:
         - name: "system"
           in: "path"
           description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "thing_name"
+          in: "path"
+          description: "name of the thing the datastream belongs to"
           required: true
           type: "string"
           format: "string"
@@ -1228,6 +999,734 @@ paths:
           description: "Invalid data provided"
           schema:
             $ref: "#/definitions/Status"
+
+  # Datastream Subscriptions
+  /distributionnetwork/subscriptions/{personId}/{system}:
+    get:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Return all datastream subscriptions that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/subscriptions_per_client/{personId}/{system}/{client_name}:
+    get:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Return all datastream subscriptions that belong to a client application of a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Create new datastream subscription for a client application that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscription objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Create or update datastream subscriptions for a client application that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "client app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscription objects to create."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionsBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Subscriptions"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_subscriptions/{personId}/{system}/{client_name}:
+    delete:
+      tags:
+        - "Datastream Subscription Request"
+      summary: "Delete datastream subscription from from a client application"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "client_name"
+          in: "path"
+          description: "name of the client application the datastream belongs to"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "subscriptions"
+          in: "body"
+          description: "An array of datastream subscriptions to delete."
+          required: true
+          schema:
+            $ref: "#definitions/SubscriptionShortnamesBody"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  # Stream Applications
+  /distributionnetwork/stream_apps/{personId}/{system}:
+    get:
+      tags:
+        - "Stream App Request"
+      summary: "Return all stream apps that belong to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "403":
+          description: "Method not allowed for user."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    post:
+      tags:
+        - "Stream App Request"
+      summary: "Create a new stream app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "A stream app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/StreamAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Stream App Request"
+      summary: "Create or update a stream app for a system that belongs to a person."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "A stream app object to create."
+          required: true
+          schema:
+            $ref: "#definitions/StreamAppBody"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/stream_apps/{personId}/{system}/{stream_name}:
+    get:
+      tags:
+        - "Stream App Request"
+      summary: "Return a specific stream app that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamApps"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid personId provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/delete_stream_app/{personId}/{system}/{stream_name}:
+    delete:
+      tags:
+        - "Stream App Request"
+      summary: "Delete a stream app from a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+      responses:
+        "204":
+          description: "Deleted"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "User or system not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  # Stream App Controller
+  /distributionnetwork/stream_app_statistic/{personId}/{system}/{stream_name}:
+    get:
+      tags:
+        - "Stream App Control Request"
+      summary: "Return the statistic of a specific stream app that belongs to a system"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "statistic"
+          in: "query"
+          description: "Return 'status' (default), 'is_running', 'stats', 'short_stats', 'logs_{number_of_logs}' or 'config'."
+          required: false
+          format: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/StreamAppStatistic"
+        "400":
+          description: "Authentication error."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "No or invalid fields"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/stream_app_deploy/{personId}/{system}/{stream_name}:
+    post:
+      tags:
+        - "Stream App Control Request"
+      summary: "Deploy an existing stream app of a system."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "An empty object."
+          required: true
+          schema:
+            $ref: "#definitions/Empty"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+    put:
+      tags:
+        - "Stream App Control Request"
+      summary: "Deploy an existing stream app of a system, stop and redeploy if it already runs."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "An empty object."
+          required: true
+          schema:
+            $ref: "#definitions/Empty"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
+  /distributionnetwork/stream_app_stop/{personId}/{system}/{stream_name}:
+    post:
+      tags:
+        - "Stream App Control Request"
+      summary: "Stop an existing stream app of a system."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "personId"
+          in: "path"
+          description: "User ID from the identity service"
+          required: true
+          type: "integer"
+        - name: "system"
+          in: "path"
+          description: "identifier with '_' as level separator"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream_name"
+          in: "path"
+          description: "stream app name"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "Authorization"
+          in: "header"
+          description: "Bearer token"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "stream app"
+          in: "body"
+          description: "An empty object."
+          required: true
+          schema:
+            $ref: "#definitions/Empty"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Status"
+        "400":
+          description: "Authentication error, user not found."
+          schema:
+            $ref: "#/definitions/Status"
+        "401":
+          description: "Authentication error, password is incorrect."
+          schema:
+            $ref: "#/definitions/Status"
+        "406":
+          description: "Invalid data provided"
+          schema:
+            $ref: "#/definitions/Status"
+
 
 #securityDefinitions:
 #  Authorization:
@@ -1371,6 +1870,21 @@ definitions:
       description:
         type: "string"
         required: false
+  StreamAppStatistic:
+    type: "object"
+    properties:
+      stream_name:
+        type: "string"
+        format: "string"
+      statistic:
+        type: "string"
+        format: "string"
+      value:
+        type: "object"
+        format: "object"
+  Empty:
+    type: "object"
+    properties:
   ClientApps:
     type: "object"
     properties:
@@ -1385,7 +1899,7 @@ definitions:
         type: "string"
       system_name:
         type: "string"
-      submodel_element_collection:
+      resource_uri:
         type: "string"
       on_kafka:
         type: "boolean"
@@ -1398,7 +1912,7 @@ definitions:
     properties:
       name:
         type: "string"
-      submodel_element_collection:
+      resource_uri:
         type: "string"
         required: false
       on_kafka:
@@ -1407,30 +1921,30 @@ definitions:
       description:
         type: "string"
         required: false
-  AasConnections:
+  Things:
     type: "object"
     properties:
-      aas_connections:
+      Thing:
         type: "array"
         items:
-          $ref: "#definitions/AasConnection"
-  AasConnection:
+          $ref: "#definitions/Thing"
+  Thing:
     type: "object"
     properties:
       name:
         type: "string"
       system_name:
         type: "string"
-      registry_uri:
+      resource_uri:
         type: "string"
       description:
         type: "string"
-  AasConnectionBody:
+  ThingBody:
     type: "object"
     properties:
       name:
         type: "string"
-      registry_uri:
+      resource_uri:
         type: "string"
         required: false
       description:
@@ -1454,13 +1968,9 @@ definitions:
         type: "string"
       client_name:
         type: "string"
-      submodel_element_collection:
+      thing_name:
         type: "string"
-      aas_name:
-        type: "string"
-      registry_uri:
-        type: "string"
-      datastream_uri:
+      resource_uri:
         type: "string"
       contact_mail:
         type: "string"
@@ -1477,11 +1987,11 @@ definitions:
         type: "string"
       name:
         type: "string"
-      client_app:
+      client_name:
         type: "string"
-      aas:
+      thing_name:
         type: "string"
-      datastream_uri:
+      resource_uri:
         type: "string"
       description:
         type: "string"
@@ -1489,6 +1999,59 @@ definitions:
     type: "array"
     items:
       type: "string"
+
+  Subscriptions:
+    type: "object"
+    properties:
+      datastreams:
+        type: "array"
+        items:
+          $ref: "#definitions/Subscription"
+  Subscription:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      name:
+        type: "string"
+      system_name:
+        type: "string"
+      client_name:
+        type: "string"
+      thing_name:
+        type: "string"
+      resource_uri:
+        type: "string"
+      contact_mail:
+        type: "string"
+      description:
+        type: "string"
+  SubscriptionsBody:
+    type: "array"
+    items:
+      $ref: "#definitions/SubscriptionBody"
+  SubscriptionBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      thing_name:
+        type: "string"
+      system_name:
+        type: "string"
+  SubscriptionShortnamesBody:
+    type: "array"
+    items:
+      $ref: "#definitions/SubscriptionShortnameBody"
+  SubscriptionShortnameBody:
+    type: "object"
+    properties:
+      shortname:
+        type: "string"
+      thing_name:
+        type: "string"
+      system_name:
+        type: "string"
 
 externalDocs:
   description: "Find out more about Swagger"

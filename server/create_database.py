@@ -1,4 +1,5 @@
 import logging
+import os
 
 import sqlalchemy as db
 from dotenv import load_dotenv
@@ -31,9 +32,13 @@ if app.config.get("DNET_SQLALCHEMY_DATABASE_DRIVER"):
     DNET_DB_URI += f'@{app.config.get("POSTGRES_HOST", "staging-main-db")}:{app.config.get("POSTGRES_PORT", 5432)}'
     DNET_DB_URI += f'/{app.config.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
 else:
-    DNET_DB_URI = 'postgresql+psycopg2://postgres:postgres@localhost/distributionnetworkdb'
-app.config["SQLALCHEMY_DATABASE_URI"] = DNET_DB_URI
-# print(app.config["SQLALCHEMY_DATABASE_URI"])
+    DNET_DB_URI = f'{os.environ.get("DNET_SQLALCHEMY_DATABASE_DRIVER", "postgresql+psycopg2")}://'
+    DNET_DB_URI += f'{os.environ.get("POSTGRES_USER", "postgres")}:{os.environ.get("POSTGRES_PASSWORD", "postgres")}'
+    DNET_DB_URI += f'@{os.environ.get("POSTGRES_HOST", "staging-main-db")}:{os.environ.get("POSTGRES_PORT", 5432)}'
+    DNET_DB_URI += f'/{os.environ.get("DNET_SQLALCHEMY_DATABASE_NAME", "distributionnetworkdb")}'
+app.config.update({"SQLALCHEMY_DATABASE_URI": DNET_DB_URI})
+app.logger.info("SQLALCHEMY_DATABASE_URI, update Postgres connection to " + app.config["SQLALCHEMY_DATABASE_URI"])
+
 
 def check_postgres_connection(db_uri):
     succeeded = False
@@ -49,7 +54,7 @@ def check_postgres_connection(db_uri):
     return succeeded
 
 
-def drop_tables():
+def drop_tables(app):
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = """
@@ -61,7 +66,7 @@ def drop_tables():
     DROP TABLE IF EXISTS client_apps CASCADE;
     DROP TABLE IF EXISTS stream_apps CASCADE;
     DROP TABLE IF EXISTS mqtt_broker CASCADE;
-    DROP TABLE IF EXISTS aas CASCADE;
+    DROP TABLE IF EXISTS things CASCADE;
     DROP TABLE IF EXISTS datastreams CASCADE;
     DROP TABLE IF EXISTS subscriptions CASCADE;
     """
@@ -121,7 +126,7 @@ def create_tables(app):
     )
     app.config["tables"]["stream_apps"] = db.Table(
         'stream_apps', app.config['metadata'],
-        db.Column('name', db.VARCHAR(32), primary_key=True),
+        db.Column('name', db.VARCHAR(64), primary_key=True),
         db.Column('source_system', db.ForeignKey('systems.name'), primary_key=True, nullable=False),
         db.Column('target_system', db.ForeignKey('systems.name'), nullable=False),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=True),
@@ -131,11 +136,11 @@ def create_tables(app):
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True)
     )
-    app.config["tables"]["aas"] = db.Table(
-        'aas', app.config['metadata'],
+    app.config["tables"]["things"] = db.Table(
+        'things', app.config['metadata'],
         db.Column('name', db.VARCHAR(64), primary_key=True),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=True),
-        db.Column('registry_uri', db.VARCHAR(256), nullable=True),
+        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True),
         db.Column('system_name', db.ForeignKey('systems.name'), primary_key=True)
@@ -150,9 +155,8 @@ def create_tables(app):
     app.config["tables"]["client_apps"] = db.Table(
         'client_apps', app.config['metadata'],
         db.Column('system_name', db.ForeignKey('systems.name'), primary_key=True),
-        db.Column('name', db.VARCHAR(32), primary_key=True),
-        db.Column('submodel_element_collection', db.TEXT, nullable=True),
-        db.Column('aas_uri', db.VARCHAR(256), nullable=True),
+        db.Column('name', db.VARCHAR(64), primary_key=True),
+        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
         db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
         db.Column('datetime', db.DateTime, nullable=True),
         db.Column('description', db.TEXT, nullable=True),
@@ -162,29 +166,36 @@ def create_tables(app):
     app.config["tables"]["datastreams"] = db.Table(
         'datastreams', app.config['metadata'],
         db.Column('shortname', db.VARCHAR(32), primary_key=True),
-        # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(32), nullable=False),
-        db.Column('system_name', db.VARCHAR(128), primary_key=True),
-        db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
         db.Column('name', db.VARCHAR(128)),
-        db.Column('datastream_uri', db.VARCHAR(256), nullable=True),
+        # construct a composite foreign key for thing
+        db.Column('thing_name', db.VARCHAR(64), primary_key=True),
+        db.Column('system_name', db.VARCHAR(128), primary_key=True),
+        db.ForeignKeyConstraint(('thing_name', 'system_name'), ('things.name', 'things.system_name')),
+        # construct a composite foreign key for client
+        db.Column('client_name', db.VARCHAR(64), nullable=False),  # This is the producer client
+        db.Column('client_system_name', db.VARCHAR(128), nullable=True),
+        db.ForeignKeyConstraint(('client_name', 'client_system_name'), ('client_apps.name', 'client_apps.system_name')),
+        # datastream-related fields
+        db.Column('resource_uri', db.VARCHAR(256), nullable=True),
         db.Column('description', db.TEXT, nullable=True),
-        # construct a composite foreign key for aas
-        db.Column('aas_name', db.VARCHAR(64), nullable=True),
-        db.Column('aas_system_name', db.VARCHAR(128), nullable=True),
-        db.ForeignKeyConstraint(('aas_name', 'aas_system_name'), ('aas.name', 'aas.system_name'))
+        db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
+        db.Column('datetime', db.DateTime, nullable=True),
+        db.CheckConstraint('client_system_name = system_name', name='System equality check')
     )
     app.config["tables"]["subscriptions"] = db.Table(
         'subscriptions', app.config['metadata'],
+        db.Column('shortname', db.VARCHAR(32), primary_key=True),
+        db.Column('thing_name', db.VARCHAR(64), primary_key=True),
+        db.Column('thing_system_name', db.VARCHAR(128), primary_key=True),
+        db.ForeignKeyConstraint(('shortname', 'thing_name', 'thing_system_name'),
+                                ('datastreams.shortname', 'datastreams.thing_name', 'datastreams.system_name')),
         # construct a composite foreign key for client
-        db.Column('client_name', db.VARCHAR(32), nullable=False),
+        db.Column('client_name', db.VARCHAR(64), primary_key=True),
         db.Column('system_name', db.VARCHAR(128), primary_key=True),
         db.ForeignKeyConstraint(('client_name', 'system_name'), ('client_apps.name', 'client_apps.system_name')),
-
-        db.Column('datastream_shortname', db.VARCHAR(32), primary_key=True),
-        db.Column('datastream_system_name', db.VARCHAR(128)),
-        db.ForeignKeyConstraint(('datastream_shortname', 'datastream_system_name'),
-                                ('datastreams.shortname', 'datastreams.system_name'))
+        # datastream-related fields
+        db.Column('creator_id', db.ForeignKey("users.id"), nullable=False),
+        db.Column('datetime', db.DateTime, nullable=True),
     )
     # Creates the tables
     app.config['metadata'].create_all(engine)
@@ -338,43 +349,43 @@ def insert_sample(app):
     values_list = [
         {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine1",
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine2",
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weatherstation_1",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weatherstation_2",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "weather_analytics",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "analytics",
          'system_name': 'at.srfg.Analytics.MachineAnalytics',
-         'submodel_element_collection': "submodel_uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_anna,
          'datetime': get_datetime(),
          'description': lorem_ipsum}]
     ResultProxy = conn.execute(query, values_list)
 
-    # Insert streams
+    # Insert stream apps
     query = db.insert(app.config["tables"]["stream_apps"])
     values_list = [
         {'name': "machine1analytics",
@@ -411,42 +422,42 @@ def insert_sample(app):
          'description': lorem_ipsum},]
     ResultProxy = conn.execute(query, values_list)
 
-    # Insert AAS connection
-    query = db.insert(app.config["tables"]["aas"])
+    # Insert Thing connection
+    query = db.insert(app.config["tables"]["things"])
     values_list = [
         {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine1",
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "machine",
          'system_name': "at.srfg.MachineFleet.Machine2",
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_sue,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "Weatherstation_1",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "Weatherstation_2",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "Analytics-Software",
          'system_name': 'at.srfg.WeatherService.Stations',
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_stefan,
          'datetime': get_datetime(),
          'description': lorem_ipsum},
         {'name': "Datastack",
          'system_name': 'at.srfg.Analytics.MachineAnalytics',
-         'registry_uri': "aas_registry.uri",
+         'resource_uri': "https://iasset.srfg.at/resources/resource_uri",
          'creator_id': id_anna,
          'datetime': get_datetime(),
          'description': lorem_ipsum}]
@@ -483,7 +494,7 @@ if __name__ == '__main__':
 
     # Creating the tables
     app.logger.info("Drop database distributionnetworkdb.")
-    drop_tables()
+    drop_tables(app)
 
     # Creating the tables
     app.logger.info("Creating database distributionnetworkdb.")

@@ -215,3 +215,657 @@ The RestAPI is the preferred user interface and is documented in swagger on
 
 ![swagger_ui](https://github.com/i-Asset/distribution-network/blob/master/server/extra/swagger_ui.png)
 
+
+### Distribution Network - Connection Tester
+
+Execute without parameters and authorization.
+
+
+
+### System Requests
+
+#### Create a System (POST or PUT)
+
+Creates the specified system with dependencies and Kafka Topics. Requires that the user and company
+exist. In contrast to POST, the PUT method allows an edit of the system.
+
+**i-Asset Server:**
+
+```
+453
+[bearer-token]
+
+{
+    "company_id": 455,
+    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. \n    Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec \n    quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.",
+    "kafka_servers": "localhost:9092",
+    "mqtt_broker": {
+        "mqtt_server": "mqtt.eclipse.org:1883",
+        "mqtt_version": ""
+    },
+    "workcenter": "labor",
+    "station": "testStation"
+}
+```
+
+```
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/systems_by_person/453" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{    \"company_id\": 455,    \"description\": \"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. \    Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec \    quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.\",    \"kafka_servers\": \"localhost:9092\",    \"mqtt_broker\": {        \"mqtt_server\": \"mqtt.eclipse.org:1883\",        \"mqtt_version\": \"\"    },    \"workcenter\": \"labor\",    \"station\": \"testStation\"}"
+```
+
+#### Get all Systems (GET)
+
+Get systems by `user_id` and `password` (= `personId` and `bearer_token`)
+
+**Local:**
+```
+curl -X GET --header 'Accept: application/json'  --header 'Authorization: asdf' 'localhost:1908/distributionnetwork/systems_by_person/-1'
+```
+or as Python request:
+```python
+import requests
+
+res = requests.get(url="http://localhost:1908/distributionnetwork/systems_by_person/-2",
+            headers={'content-type': 'application/json',
+                     'Authorization': "asdf"})
+status_code = res.status_code
+result = res.json()
+```
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/systems_by_person/453" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Delete a System (DELETE)
+
+Get systems by `user_id` and `password` (= `personId` and `bearer_token`)
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+```
+```
+curl -X DELETE "https://iasset.salzburgresearch.at/distributionnetwork/delete_system/453/ee.455.puch.testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+
+
+### Client Applications
+
+#### Get all Client Apps of a system 
+
+Requires `user_id`, `system_name` and `password` (= `personId` and `bearer_token`) in the header as Python request:
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/client_apps/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Create a Client App for a System
+
+Creates a Client App for a specified system. Requires that the user and system exist.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+
+{
+    "name": "client_app_1",
+    "resource_uri": "https://iasset.salzburgresearch.at/registry/sec_uuid",
+    "on_kafka": true,
+    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit."
+}
+```
+```bash
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/client_apps/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{    \"name\": \"client_app_1\",    \"resource_uri\": \"https://iasset.salzburgresearch.at/registry/sec_uuid\",    \"on_kafka\": true,    \"description\": \"Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\"}"
+```
+
+#### Get a specific Client App by system name and client name
+
+Requires `user_id`, `system_name`, `client_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+client_name = client_app_1
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/client_apps/453/ee_455_labor_testStation/client_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Delete a Client App 
+
+Deletes the specified Client App within a system.
+Requires `user_id`, `system_name`, `client_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+client_name = client_app_1
+[bearer-token]
+```
+```
+curl -X DELETE "https://iasset.salzburgresearch.at/distributionnetwork/delete_client_app/453/ee_455_labor_testStation/client_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+
+
+### Thing Connections
+
+A Thing connection is a digital instance that connects the distribution network with a metadata resource of that thing.
+
+#### Get all Things Connections of a system 
+
+Requires `user_id`, `system_name` and `password` (= `personId` and `bearer_token`) in the header as Python request:
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/things/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Create a Thing Connections for a System
+
+Creates a Thing Connection for a specified system. Requires that the user and system exist.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+
+{
+    "name": "thing_1",
+    "resource_uri": "https://iasset.salzburgresearch.at/registry/sec_uuid",
+    "on_kafka": true,
+    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit."
+}
+```
+```bash
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/things/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{    \"name\": \"thing_1\",    \"resource_uri\": \"https://iasset.salzburgresearch.at/registry/sec_uuid\",    \"on_kafka\": true,    \"description\": \"Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\"}"
+```
+
+#### Get a specific Thing Connection by system name and thing name
+
+Requires `user_id`, `system_name`, `thing_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+thing_name = thing_1
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/things/453/ee_455_labor_testStation/thing_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Delete a Thing Connection 
+
+Deletes a specific Thing Connection within the system.
+
+Requires `user_id`, `system_name`, `thing_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+thing_name = thing_1
+[bearer-token]
+```
+```
+curl -X DELETE "https://iasset.salzburgresearch.at/distributionnetwork/delete_thing/453/ee_455_labor_testStation/thing_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+
+
+### API for Datastreams
+
+#### Get datastreams by system_name, aas connection or client app
+
+Requires `user_id`, `system_name` and `password` (= `personId` and `bearer_token`) in the header.
+Optionally one can narrow down the number of hits by specifying `thing_name` or `client_name`.
+The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+client_name = client_app_1
+thing_name = thing_1
+```
+
+```bash
+# For System:
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/datastreams/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+
+# For System and Client App:
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/datastreams_per_client/453/ee_455_labor_testStation/client_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+
+# For System and Thing Connection:
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/datastreams_per_thing/453/ee_455_labor_testStation/thing_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Create new datastreams
+
+Creates datastreams for a specified system, client app and aas connection. Requires that all instances exist.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system_name = ee_455_labor_testStation  # note that '.' must be replaced by '_'
+[bearer-token]
+
+[
+    {
+      "name": "Air Temperature",
+      "shortname": "temperature",
+      "description": "Lorem ipsum",
+      "thing_name": "thing_1",
+      "client_name": "client_app_1"
+    },
+    {
+      "name": "Air Humidity",
+      "shortname": "humidity",
+      "description": "Lorem ipsum",
+      "thing_name": "thing_1",
+      "client_name": "client_app_1"
+    }
+]
+```
+```bash
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/datastreams/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "[    {      \"name\": \"Air Temperature\",      \"shortname\": \"temperature\",      \"description\": \"Lorem ipsum\",      \"thing_name\": \"thing_1\",      \"client_name\": \"client_app_1\"    },    {      \"name\": \"Air Humidity\",      \"shortname\": \"humidity\",      \"description\": \"Lorem ipsum\",      \"thing_name\": \"thing_1\",      \"client_name\": \"client_app_1\"    }]"
+```
+
+**Local:**
+
+```yaml
+-2
+at.srfg.WeatherService.Stations
+asdf
+[
+    {
+      "name": "Air Temperature",
+      "shortname": "temperature",
+      "description": "Lorem ipsum",
+      "thing_name": "Weatherstation_1",
+      "client_name": "weatherstation_1"
+    },
+    {
+      "name": "Air Humidity",
+      "shortname": "humidity",
+      "description": "Lorem ipsum",
+      "thing_name": "Weatherstation_1",
+      "client_name": "weatherstation_1"
+    },
+    {
+      "name": "Air Temperature",
+      "shortname": "temperature",
+      "description": "Lorem ipsum",
+      "thing_name": "Weatherstation_2",
+      "client_name": "weatherstation_2"
+    },
+    {
+      "name": "Air Humidity",
+      "shortname": "humidity",
+      "description": "Lorem ipsum",
+      "thing_name": "Weatherstation_2",
+      "client_name": "weatherstation_2"
+    }
+]
+```
+
+#### Delete datastreams
+
+Delete datastreams from a specified system.
+
+```yaml
+persionId = 453
+system_name = ee_455_labor_testStation  # note that '.' must be replaced by '_'
+thing_name = thing_1
+[bearer-token]
+
+["temperature"]
+```
+```bash
+curl -X DELETE "http://localhost:1908/distributionnetwork/delete_datastreams/-1/at.srfg.MachineFleet.Machine1" -H  "accept: application/json" -H  "Authorization: asdf" -H "Content-Type: application/json" -d "[\"temperature2\"]"
+```
+
+
+
+### API for Datastream Subscriptions
+
+#### Get datastream subscriptions by System and Client App
+
+Requires `user_id`, `system_name` and `password` (= `personId` and `bearer_token`) in the header. 
+Optionally one can narrow down the number of hits by specifying the `client_name`.
+The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+client_name = client_app_1
+```
+
+```bash
+# For System:
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/subscriptions/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+
+# For System and Client App:
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/subscriptions_per_client/453/ee_455_labor_testStation/client_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Create new datastream subscriptions
+
+Creates datastream subscriptions in specified system for a Client App. Requires that all referred instances exist.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system_name = ee_455_labor_testStation  # note that '.' must be replaced by '_'
+client_app = client_app_1
+[bearer-token]
+
+[
+    {
+      "shortname": "temperature",
+      "thing_name": "thing_1",
+      "system_name": "ee.455.labor.testStation"
+    },
+    {
+      "shortname": "humidity",
+      "thing_name": "thing_1",
+      "system_name": "ee.455.labor.testStation"
+    }
+]
+```
+
+**Local:**
+
+```yaml
+-2
+at_srfg_WeatherService_Stations
+weather_analytics
+asdf
+
+[
+    {
+      "shortname": "temperature",
+      "thing_name": "Weatherstation_1",
+      "system_name": "at.srfg.WeatherService.Stations"
+    },
+    {
+      "shortname": "humidity",
+      "thing_name": "Weatherstation_1",
+      "system_name": "at.srfg.WeatherService.Stations"
+    },
+    {
+      "shortname": "temperature",
+      "thing_name": "Weatherstation_2",
+      "system_name": "at.srfg.WeatherService.Stations"
+    },
+    {
+      "shortname": "humidity",
+      "thing_name": "Weatherstation_2",
+      "system_name": "at.srfg.WeatherService.Stations"
+    }
+]
+```
+```bash
+curl -X PUT "http://localhost:1908/distributionnetwork/subscriptions_per_client/-2/at_srfg_WeatherService_Stations/weather_analytics" -H  "accept: application/json" -H  "Authorization: asdf" -H  "Content-Type: application/json" -d "[    {      \"shortname\": \"temperature\",      \"thing_name\": \"Weatherstation_1\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    },    {      \"shortname\": \"humidity\",      \"thing_name\": \"Weatherstation_1\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    },    {      \"shortname\": \"temperature\",      \"thing_name\": \"Weatherstation_2\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    },    {      \"shortname\": \"humidity\",      \"thing_name\": \"Weatherstation_2\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    }]"
+```
+
+#### Delete datastream subscriptions
+
+Delete datastream subscriptions from a specified system and client.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system_name = ee_455_labor_testStation
+client_app = client_app_1
+[bearer-token]
+
+[
+    {
+      "shortname": "humidity",
+      "thing_name": "thing_1",
+      "system_name": "ee_455_labor_testStation"
+    }
+]
+```
+```bash
+curl -X DELETE "http://localhost:1908/distributionnetwork/delete_subscriptions/-2/at.srfg.WeatherService.Stations/weather_analytics" -H  "accept: application/json" -H  "Authorization: asdf" -H  "Content-Type: application/json" -d "[    {      \"shortname\": \"humidity\",      \"thing_name\": \"Weatherstation_1\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    }]"
+```
+
+**Local:**
+
+```yaml
+-2
+at_srfg_WeatherService_Stations
+weather_analytics
+asdf
+
+[
+    {
+      "shortname": "humidity",
+      "thing_name": "Weatherstation_1",
+      "system_name": "at.srfg.WeatherService.Stations"
+    }
+]
+```
+```bash
+curl -X DELETE "http://localhost:1908/distributionnetwork/delete_subscriptions/-2/at.srfg.WeatherService.Stations/weather_analytics" -H  "accept: application/json" -H  "Authorization: asdf" -H  "Content-Type: application/json" -d "[    {      \"shortname\": \"humidity\",      \"thing_name\": \"Weatherstation_1\",      \"system_name\": \"at.srfg.WeatherService.Stations\"    }]"
+```
+
+
+
+### Stream Application
+
+A Stream Application is rule-based forwarder for datastreams from one system to another.
+
+#### Get all Stream Apps of a system 
+
+Requires `user_id`, `system_name` and `password` (= `personId` and `bearer_token`) in the header as Python request:
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/stream_apps/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Create a Stream App for a System (POST and PUT)
+
+Creates a Stream App for a specified system. Requires that the user and both systems exist.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+[bearer-token]
+
+{
+    "name": "stream_app_1",
+    "target_system": "at.srfg.Analytics.MachineAnalytics",
+    "logic": "SELECT * FROM * WHERE quantity='temperature' AND result<2.7;",
+    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit."
+}
+```
+```bash
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/stream_apps/453/ee_455_labor_testStation" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{    \"name\": \"stream_app_1\",    \"target_system\": \"at.srfg.Analytics.MachineAnalytics\",    \"logic\": \"SELECT * FROM * WHERE quantity='temperature' AND result<2.7;\",    \"description\": \"Lorem ipsum dolor sit amet, consectetuer adipiscing elit.\"}"
+```
+
+#### Get a specific Stream App by system name and stream name
+
+Requires `user_id`, `system_name`, `stream_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+stream_name = stream_app_1
+[bearer-token]
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/stream_apps/453/ee_455_labor_testStation/stream_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+#### Delete a Stream App 
+
+Deletes a specific Stream App within the system.
+
+Requires `user_id`, `system_name`, `stream_name` and `password` (= `personId` and `bearer_token`) 
+in the header. The `system_name` should use `_` as level separator.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+stream_name = stream_app_1
+[bearer-token]
+```
+```
+curl -X DELETE "https://iasset.salzburgresearch.at/distributionnetwork/delete_thing/453/ee_455_labor_testStation/thing_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+
+
+### Stream App Controller
+
+#### Get statistics of a Stream App
+
+Requires `user_id`, `system_name`, `stream_name` and `password` (= `personId` and `bearer_token`) 
+in the header as Python request.
+Some of the statistics are only available for a running Stream App.
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+stream_name = stream_app_1
+[bearer-token]
+statistic is a string and one of 'status' (default), 'is_running', 'stats', 'short_stats', 'logs_{number_of_logs}' or 'config'.
+```
+```
+curl -X GET "https://iasset.salzburgresearch.at/distributionnetwork/stream_app_statistic/453/ee_455_labor_testStation/stream_app_1?statistic=config" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
+```
+
+**Local:**
+
+```
+-2
+at_srfg_WeatherService_Stations
+weather2analytics
+asdf
+
+statistic is a string and one of 'status' (default), 'is_running', 'stats', 'short_stats', 'logs_{number_of_logs}' or 'config'.
+```
+
+#### Deploy a Stream App (POST and PUT)
+
+Requires `user_id`, `system_name`, `stream_name` and `password` (= `personId` and `bearer_token`) 
+in the header as Python request:
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+stream_name = stream_app_1
+[bearer-token]
+```
+```
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/stream_app_deploy/453/ee_455_labor_testStation/stream_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{}"
+```
+
+**Local:**
+
+```
+-2
+at_srfg_WeatherService_Stations
+weather2analytics
+asdf
+
+{}
+```
+
+#### Stop a Stream App (POST)
+
+Requires `user_id`, `system_name`, `stream_name` and `password` (= `personId` and `bearer_token`) 
+in the header as Python request:
+
+**i-Asset Server:**
+
+```yaml
+persionId = 453
+system = ee_455_labor_testStation
+stream_name = stream_app_1
+[bearer-token]
+```
+```
+curl -X POST "https://iasset.salzburgresearch.at/distributionnetwork/stream_app_deploy/453/ee_455_labor_testStation/stream_app_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]" -H  "Content-Type: application/json" -d "{}"
+```
+
+**Local:**
+
+```
+-2
+at_srfg_WeatherService_Stations
+weather2analytics
+asdf
+
+{}
+```
+

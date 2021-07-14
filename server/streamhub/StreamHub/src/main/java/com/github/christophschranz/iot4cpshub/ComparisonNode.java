@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
  *     BaseNode child2;  // right term of an expression.
  *     ArrayList<String> allowedKeys = new ArrayList<String>() {{
  *         add("thing");
+ *         add("client_app");
  *         add("quantity");
  *         add("result");
  *         add("time");
@@ -40,9 +41,14 @@ public class ComparisonNode extends BaseNode {
      * @param str String expression that describes an comparison operation
      */
     public ComparisonNode(String str) throws StreamSQLException {
+        this(str, true);
+    }
+
+    public ComparisonNode(String str, boolean verbose) throws StreamSQLException {
         super();
         // remove recursively outer brackets and trim spaces
         this.rawExpression = strip(str);
+        this.verbose = verbose;
 
         // extract the outer logic operator. First iterate through the expr
         String outer_str = getOuterExpr(this.rawExpression);
@@ -98,8 +104,8 @@ public class ComparisonNode extends BaseNode {
         // it the expression contains the arithmeticKeyword, then two children are created as ArithmeticNode
         if (StreamQuery.safeContainsKeyword(this.left_expr, this.arithmeticKeyword)) {
             // extract both children, convert the correct object. (the one must match 'quantity', 'result' or 'time'
-            this.child1 = new ArithmeticNode(left_expr);
-            this.child2 = new ArithmeticNode(right_expr);
+            this.child1 = new ArithmeticNode(left_expr, this.verbose);
+            this.child2 = new ArithmeticNode(right_expr, this.verbose);
         }
         else {
             if (this.right_expr.contains("'")) {

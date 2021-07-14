@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+  <table class="table">
+  <td>
+    <h1> {{payload.name}}</h1>
+    <h3> <small> Asset administration shell connection in company: {{payload.company_name}} </small></h3>
+    <hr>
+    <h3> {{payload.system_name}}</h3>
+      <br>
+    {% if payload.description %}
+    {{payload.description}}
+    {% endif %}
+  </td>
+    <td>
+<!--     <a class="btn btn-info float-right mb-2" href="/edit_client/{{payload.system_url}}/{{payload.name}}"> edit description </a>-->
+     <a class="btn btn-danger float-right" href="/delete_thing/{{payload.system_url}}/{{payload.name}}"
+        data-toggle="tooltip" title="Delete this thing connection."> delete thing </a>
+      <br>
+      <br>
+<!--      <h3> <small> Config to connect a CPS or service: </small></h3>-->
+<!--      Copy & Paste this config into your client application, see <a href={{payload.SOURCE_URL}}>here</a>.-->
+
+<!--      <pre id="json"></pre>-->
+  </td>
+  </table>
+
+<!--  <script>-->
+<!--    var data = {-->
+<!--        "thing_name": '{{config.thing_name}}',-->
+<!--        "system_name": '{{config.system_name}}',-->
+<!--        "resource_uri": '{{payload.resource_uri}}'};-->
+<!--    document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);-->
+<!--  </script>-->
+
+
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th>System</th>
+      <th>Registry URI</th>
+      <th>Creator's mail</th>
+      <th>Created at</th>
+<!--      <th>Creator</th>-->
+    </tr>
+      <tr>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.name}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.system_name}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.resource_uri}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.contact_mail}}</a></td>
+        <td><a href="/show_thing/{{payload.system_url}}/{{payload.name}}" class="btn btn-block">{{payload.datetime}}</a></td>
+
+      </tr>
+  </table>
+
+  <br>
+  <br>
+{% endblock %}

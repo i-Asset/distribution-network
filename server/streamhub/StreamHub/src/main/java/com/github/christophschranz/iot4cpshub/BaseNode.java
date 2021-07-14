@@ -20,8 +20,10 @@ public abstract class BaseNode {
     BaseNode child1;  // left term of an expression
     BaseNode child2;  // right term of an expression.
 
+    // a data event with a flat json structure with the following keys is expected as input
     ArrayList<String> allowedKeys = new ArrayList<String>() {{
         add("thing");
+        add("client_app");
         add("quantity");
         add("result");
         add("time");
@@ -176,7 +178,8 @@ public abstract class BaseNode {
     }
 
     /**
-     * Strip outer parenthesis recursively
+     * Safe strip outer parenthesis recursively
+     * Safe strip because (...) x (...), and (...) have same head and tail but only the latter can be stripped
      * Remove brackets and strip the expression if no outer statement was found.
      * @return Cleaned expression String
      */
@@ -185,20 +188,20 @@ public abstract class BaseNode {
         if (str.charAt(0) == '(' && str.charAt(str.length()-1) == ')') { // trim  '(' and ')' for split
             int i = 1;  // idx for str
             int depth = 0;  // offset for parenthesis
-            boolean gotToDeep = false;
+            boolean gotTooDeep = false;
             while (i<str.length()-1) {
                 if (str.charAt(i) == '(')
                     depth ++;
                 if (str.charAt(i) == ')')
                     depth--;
                 if (depth < 0) {
-                    gotToDeep = true;
+                    gotTooDeep = true;
                     break;
                 }
                 i ++;
             }
-            if (!gotToDeep) {
-                System.out.println("do some stripping");
+            if (!gotTooDeep) {
+                // got not too deep, do safe stripping, as the whole proposition is within the same parenthesis
                 return strip(str.substring(1, str.length() - 1).trim());
             }
         }

@@ -11,11 +11,11 @@ from wtforms import Form, StringField, validators, TextAreaField, RadioField
 if __name__ == '__main__':
     from useful_functions import get_datetime, is_logged_in, valid_name, valid_system, nocache, strip_dict, \
         decode_sys_url
-    from StreamAppHandler import stream_checks, fab_streams
+    from StreamAppHandler import stream_checks, stream_app_handler
 else:
     from server.utils.useful_functions import get_datetime, is_logged_in, valid_name, valid_system, nocache, strip_dict, \
     decode_sys_url, encode_sys_url
-    from server.utils.StreamAppHandler import fab_streams, stream_checks
+    from server.utils.StreamAppHandler import stream_checks, stream_app_handler
 
 stream_app = Blueprint("stream_app", __name__)
 
@@ -54,10 +54,6 @@ class FilterForm(Form):
 def show_stream(system_url, stream_name):
     system_name = decode_sys_url(system_url)
 
-    # Show a warning if the gost servers are not available
-    if not check_gost_connection():
-        flash("The GOST server is not available, but required to deploy a Stream App.", "warning")
-
     # Get current user_id and form
     user_id = session["user_id"]
     form = FilterForm(request.form)
@@ -77,30 +73,33 @@ def show_stream(system_url, stream_name):
               "warning")
         return render_template("/stream_apps/show_stream.html", payload=payload, form=form)
 
+    # create the stream-app object
+    stream_app = create_stream_app_from_payload(payload)
+
     # Check if the stream app is running
     # status is one of ["idle", "starting", "running", "stopping", "idle"]
     # real_status is one of ["init", "starting", "running", "failing", "crashed", "stopping", "idle"]
     status = payload["status"]
     app_stats = None
-    app.logger.debug(f"SOLL status for stream app '{fab_streams.build_name(system_name, stream_name)}' is '{status}'")
+    app.logger.debug(f"SOLL status for stream app '{stream_app.get_name()}' is '{status}'")
     if status == "init":
         pass  # skip init step as there is nothing to do
     elif status in ["starting", "running"]:
-        app_stats = fab_streams.local_stats(system_name=system_name, stream_name=stream_name)
+        app_stats = stream_app.get_stats()
         if not app_stats:
             status = "init"
             set_status_to(system_name, stream_name, "init")
             flash("The stream has to be initialized.", "info")
-        if app_stats.get("Running") != "true":  # The stream app has been crashed.
+        if app_stats.get("State", {}).get("Running", False) == False:  # stream app has been crashed.
             status = "crashed"
-        elif app_stats.get("Restarting") == "true":  # The stream app has been restarted caused by errors
+        elif app_stats.get("State", {}).get("Restarting", False) == True:  # stream app has been restarted caused by errors
             status = "failing"
         else:  # The stream app is running, because app_stats.get("Restarting") must be "false"
             status = "running"
             payload["status"] = "running"
             set_status_to(system_name, stream_name, "running")
     elif status in ["stopping", "idle"]:
-        app_stats = fab_streams.local_stats(system_name=system_name, stream_name=stream_name)
+        app_stats = stream_app.get_stats()
         # if the stream doesn't run
         if app_stats is None or app_stats.get("Running") == "false":  # The stream app was stopped successfully
             status = "idle"
@@ -108,13 +107,14 @@ def show_stream(system_url, stream_name):
             status = "stopping"
 
     payload["status"] = status
-    return render_template("/stream_apps/show_stream.html", payload=payload, app_stats=app_stats, form=form)
+    return render_template("/stream_apps/show_stream.html", payload=payload, app_stats=stream_app.get_short_stats(),
+                           form=form)
 
 
 # Streamhub Form Class
 class StreamhubForm(Form):
-    name = StringField("Name", [validators.Length(min=2, max=20), valid_name])
-    target_system = StringField("Target System", [validators.Length(max=72), valid_system])
+    name = StringField("Name", [validators.Length(min=2, max=64), valid_name])
+    target_system = StringField("Target System", [validators.Length(max=128), valid_system])
     is_multi_source = RadioField("Choose the Stream App type", [validators.InputRequired()],
                                   choices=["Single-Source Stream App", "Multi-Source Stream App"])
     logic = TextAreaField("Filter Logic")
@@ -308,12 +308,12 @@ def update_filter_logic(system_name, stream_name, form):
     if stream.get("is_multi_source"):
         create_custom_fct(system_name=system_name, name=stream_name, logic=logic)
 
-    msg = "The filter logic of stream '{}' of system '{}' was updated.".format(stream_name, streams[0]["source_system"])
+    msg = "The filter logic of stream '{}' of system '{}' was updated. Please re-deploy the stream.".format(stream_name, streams[0]["source_system"])
     app.logger.info(msg)
     flash(msg, "success")
 
 
-def get_stream_payload(user_id, system_name, stream_name):
+def get_stream_payload(user_id, system_name, stream_name, api_call=False):
     # Fetch all streams for the requested system and user agent
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
@@ -332,12 +332,15 @@ def get_stream_payload(user_id, system_name, stream_name):
     streams = [strip_dict(c.items()) for c in result_proxy.fetchall()]
     # print("Fetched streams: {}".format(streams))
 
+    if api_call:
+        return streams
+
     # Check if the system exists and has agents
     if len(streams) == 0:
         flash("It seems that this stream doesn't exist.", "danger")
         return redirect(url_for("stream_app.show_all_streams"))
 
-    # Check if the current user is agent of the client's system
+    # Check if the current user is not agent of the client's system
     if user_id not in [c["agent_id"] for c in streams]:
         flash("You are not permitted see details this stream.", "danger")
         return redirect(url_for("stream_app.show_all_streams"))
@@ -373,9 +376,12 @@ def start_stream(system_url, stream_name):
     if payload["status"] not in ["init", "idle"]:
         app.logger.debug(f"The stream can't be deployed in {payload['status']} mode.")
 
+    # create the stream-app object
+    stream_app = create_stream_app_from_payload(payload)
+
     # Check if the process is already running
-    if fab_streams.local_is_deployed(system_name=system_name, stream_name=stream_name):
-        app.logger.debug(f"The stream '{fab_streams.build_name(system_name, stream_name)}' is already deployed. "
+    if stream_app.is_running():
+        app.logger.debug(f"The stream '{stream_app.get_name()}' is already deployed. "
                          f"This should not be possible!")
 
     # The stream can be started
@@ -383,42 +389,34 @@ def start_stream(system_url, stream_name):
     conn = engine.connect()
     transaction = conn.begin()
 
-    # build the stream
-    stream = dict()
-    stream["SOURCE_SYSTEM"] = payload["source_system"]
-    stream["TARGET_SYSTEM"] = payload["target_system"]
-    stream["KAFKA_BOOTSTRAP_SERVERS"] = app.config["KAFKA_BOOTSTRAP_SERVER"]
-    stream["GOST_SERVER"] = "none"  # app.config["GOST_SERVER"]
-    stream["FILTER_LOGIC"] = payload["logic"]
-    stream["is_multi_source"] = payload["is_multi_source"]
-
     if payload.get("is_multi_source"):  # start multi-source stream apps
-        app.logger.debug(f"Try to deploy multi-source stream app '{system_name}_{stream_name}'")
-        res = fab_streams.local_deploy_multi(system_name=system_name, stream_name=stream_name,
-                                             stream=stream, logger=app.logger)
-        if len(res) != 64:  # res is the UUID of the container
-            app.logger.warning(
-                f"'{fab_streams.build_name(system_name, stream_name)}' was deployed with response {res}.")
-        app.logger.debug(f"Deployed multi-source stream '{system_name}_{stream_name}'.")
+        flash("Multi-source stream-apps not implemented")
+        # app.logger.debug(f"Try to deploy multi-source stream app '{system_name}_{stream_name}'")
+        # res = fab_streams.local_deploy_multi(system_name=system_name, stream_name=stream_name,
+        #                                      stream=stream, logger=app.logger)
+        # if len(res) != 64:  # res is the UUID of the container
+        #     app.logger.warning(
+        #         f"'{fab_streams.build_name(system_name, stream_name)}' was deployed with response {res}.")
+        # app.logger.debug(f"Deployed multi-source stream '{system_name}_{stream_name}'.")
 
     else:  # for single source stream apps
-        app.logger.debug(f"Try to deploy single-source stream app '{fab_streams.build_name(system_name, stream_name)}'")
-        res = fab_streams.local_deploy(system_name=system_name, stream_name=stream_name, stream=stream)
-        if len(res) != 64:  # res is the UUID of the container
-            app.logger.warning(f"'{fab_streams.build_name(system_name, stream_name)}' was deployed with response {res}.")
-        app.logger.debug(f"Deployed stream '{fab_streams.build_name(system_name, stream_name)}'.")
+        app.logger.debug(f"Try to deploy single-source stream app '{stream_app.get_name()}'")
+        stream_app.deploy()
+        app.logger.debug(f"Deployed stream '{stream_app.get_name()}'.")
 
     # Set status in DB
     set_status_to(system_name, stream_name, "starting")
     transaction.commit()
 
-    flash(f"{fab_streams.build_name(system_name, stream_name)} has been started.", "success")
+    flash(f"The stream-app {stream_app.get_name()} has been started.", "success")
     return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=payload["name"]))
 
 
 @stream_app.route("/stop_stream/<string:system_url>/<string:stream_name>", methods=["GET"])
 @is_logged_in
-def stop_stream(system_name, stream_name):
+def stop_stream(system_url, stream_name):
+    system_name = decode_sys_url(system_url)
+
     if not app.config["KAFKA_BOOTSTRAP_SERVER"]:
         # This platform runs in the 'platform-only' mode and doesn't provide the stream functionality
         flash("The platform runs in the 'platform-only' mode and doesn't provide the stream functionality.", "info")
@@ -435,28 +433,36 @@ def stop_stream(system_name, stream_name):
     if payload["status"] not in ["starting", "running", "failing", "crashed"]:
         app.logger.debug(f"The stream can't be stopped in {payload['status']} mode. This should not happen.")
 
+    # create the stream-app object
+    stream_app = create_stream_app_from_payload(payload)
+
     # commit change in database
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     transaction = conn.begin()
-    try:
-        # Stop the stream
-        res = fab_streams.local_down(system_name=system_name, stream_name=stream_name)
-        time.sleep(0.1)
-        if fab_streams.local_is_deployed(system_name=system_name, stream_name=stream_name):
-            app.logger.debug("{fab_streams.build_name(system_name, stream_name)} couldn't be stopped.")
 
+    try:
+        stream_app.stop()
+
+        # wait up to 3 seconds to stop
+        start_t = time.time()
+        time.sleep(0.1)
+        while (time.time() - start_t) < 3 and stream_app.is_running():
+            time.sleep(0.1)
+        if stream_app.is_running():
+            app.logger.warning(f"{stream_app.get_name()} couldn't be stopped.")
+            flash(f"{stream_app.get_name()} couldn't be stopped.", "warning")
+
+    except Exception as e:
+        transaction.rollback()
+        app.logger.info(f"The stream '{stream_app.get_name()}' couldn't be stopped, because {e}")
+    finally:
         # Set status
         set_status_to(system_name, stream_name, "idle")
 
-        msg = f"{fab_streams.build_name(system_name, stream_name)} was stopped successfully."
+        msg = f"The stream-app {stream_app.get_name()} was stopped successfully."
         app.logger.info(msg)
         flash(msg, "success")
-    except Exception as e:
-        transaction.rollback()
-        app.logger.info("The stream '{}' couldn't be stopped, because {}".format(payload["name"], e))
-        flash(f"{fab_streams.build_name(system_name, stream_name)} couldn't be stopped.", "success")
-    finally:
         return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=stream_name))
 
 
@@ -464,40 +470,38 @@ def stop_stream(system_name, stream_name):
 @is_logged_in
 # Don't use cache, as the log could be always the same
 @nocache
-def download_logs(system_name, stream_name):
+def download_logs(system_url, stream_name):
+    system_name = decode_sys_url(system_url)
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-    container_name = fab_streams.build_name(system_name, stream_name)
-    app.logger.debug(f"Downloading the log file for '{container_name}'.")
+
+    # Get current user_id
+    user_id = session["user_id"]
+    payload = get_stream_payload(user_id, system_name, stream_name)
+    if not isinstance(payload, dict):
+        return payload
+
+    # create the stream-app object
+    stream_app = create_stream_app_from_payload(payload)
+    app.logger.debug(f"Downloading the log file for '{stream_app.get_name()}'.")
 
     if not app.config["KAFKA_BOOTSTRAP_SERVER"]:
         # This platform runs in the 'platform-only' mode and doesn't provide the stream functionality
         flash("The platform runs in the 'platform-only' mode and doesn't provide the stream functionality.", "info")
         return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=stream_name))
 
-    response = fab_streams.local_logs(system_name, stream_name)
+    response = stream_app.get_logs(last_n=1_000)
     if response is None:
-        flash(f"No logfile available for {fab_streams.build_name(system_name, stream_name)}.", "info")
-        return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=stream_name))\
+        flash(f"No logfile available for {stream_app.get_name()}.", "info")
+        return redirect(url_for("stream_app.show_stream", system_url=encode_sys_url(system_name), stream_name=stream_name))
 
-    response = response.replace("\x00", "")
+    # response = response.replace("\x00", "")
     # res = json.dumps(response.replace("\r\n", "\n").replace("\t", "  ").replace('\"', '"'),
     #                       ensure_ascii=False).encode("utf-8")  # Filter all non-ascii chars
     # printable = set(string.printable)
     # res = "".join(filter(lambda x: x in printable, response))
     # res = response.encode("utf-8", errors="ignore").decode()
     return Response(response, mimetype="test/plain",
-                    headers={"Content-disposition": f"attachment; filename={container_name}_{get_datetime()}.log"})
-
-
-def check_if_proc_runs(system_name, stream_name):
-    """
-    Checks whether the StreamApp runs or not
-    :param system_name: UUID of the current system
-    :param stream_name: name of the current stream
-    :return: Boolean value, True if the process still runs.
-    """
-    app.logger.debug(f"Checks whether the '{fab_streams.build_name(system_name, stream_name)}' runs.")
-    return fab_streams.local_is_deployed(system_name=system_name, stream_name=stream_name)
+                    headers={"Content-disposition": f"attachment; filename={stream_app.get_name()}_{get_datetime()}.log"})
 
 
 def set_status_to(system_name, stream_name, status):
@@ -508,16 +512,12 @@ def set_status_to(system_name, stream_name, status):
     :param status: boolean value representing the SOLL status
     :return:
     """
-    app.logger.debug(f"Set status to '{status}' for '{fab_streams.build_name(system_name, stream_name)}'.")
+    app.logger.debug(f"Set status to '{status}'.")
     engine = db.create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     conn = engine.connect()
     query = f"UPDATE stream_apps SET status='{status}' WHERE source_system='{system_name}' AND name='{stream_name}';"
     conn.execute(query)
     engine.dispose()
-
-
-def get_streamapp_stats(system_name, stream_name):
-    return fab_streams.local_stats(system_name=system_name, stream_name=stream_name)
 
 
 def check_gost_connection():
@@ -551,3 +551,30 @@ def create_custom_fct(name="testclient", system_name="12345678", logic="test con
     with open(os.path.join(path, f"custom_fct_{system_name}_{name}.py"), "w") as f:
         f.write(logic)
 
+
+def create_stream_app_from_payload(payload):
+    """ Create a stream-app from the database payload
+
+    {'name': "machine1analytics",
+         'source_system': "at.srfg.MachineFleet.Machine1",
+         'target_system': "at.srfg.Analytics.MachineAnalytics",
+         'logic': "SELECT * FROM at.srfg.MachineFleet.Machine1;",
+         'creator_id': id_sue,
+         'status': "init",
+         'datetime': get_datetime(),
+         'description': lorem_ipsum}
+        """
+    if payload["is_multi_source"]:
+        flash("Complex Stream Apps not implemented yet.")
+
+    stream_app = stream_app_handler.SimpleStreamApp(
+        system_name=payload["source_system"],
+        stream_name=payload["name"],
+        source_system=payload["source_system"],
+        target_system=payload["target_system"],
+        kafka_bootstrap_servers=app.config["KAFKA_BOOTSTRAP_SERVER"],
+        server_uri=app.config["DNET_IASSET_SERVER"],
+        filter_logic=payload["logic"],
+        verbose=True)  # TODO set to False for performance?
+
+    return stream_app

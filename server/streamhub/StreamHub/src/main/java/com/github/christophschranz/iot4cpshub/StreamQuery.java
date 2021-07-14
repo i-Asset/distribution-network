@@ -16,7 +16,7 @@ public class StreamQuery {
     String source_system;
     String target_system;
     String kafka_bootstrap_servers;
-    String semantic_server;
+    String server_uri;
     String filter_logic;
 
     boolean verbose;
@@ -38,7 +38,7 @@ public class StreamQuery {
         this.source_system = stream_config.getProperty("SOURCE_SYSTEM");
         this.target_system = stream_config.getProperty("TARGET_SYSTEM");
         this.kafka_bootstrap_servers = stream_config.getProperty("KAFKA_BOOTSTRAP_SERVERS");
-        this.semantic_server = stream_config.getProperty("SEMANTIC_SERVER");
+        this.server_uri = stream_config.getProperty("SERVER_URI");
         this.filter_logic = stream_config.getProperty("FILTER_LOGIC").replaceAll("\\x00","");
 
         // extract the filter_logic and do validations
@@ -70,7 +70,7 @@ public class StreamQuery {
         // augment the condition with the full expressions from possible AS statements
 
         // build the conditional expression via a node tree
-        this.conditionTree = new LogicalNode(this.condition);
+        this.conditionTree = new LogicalNode(this.condition, this.verbose);
 
         logger.info(this.toString());
     }
@@ -84,7 +84,7 @@ public class StreamQuery {
                 + "\n\tSource system:   \t" + this.source_system
                 + "\n\tTarget system:   \t" + this.target_system
                 + "\n\tKafka servers:   \t" + this.kafka_bootstrap_servers
-                + "\n\tSemantic server: \t" + this.semantic_server
+                + "\n\tServer uri: \t\t" + this.server_uri
                 + "\n\tProjection List: \t" + this.projection_list
                 + "\n\tCPS List:        \t" + this.cps_list
                 + "\n\tCondition Node:  \t" + this.condition;

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
  *     BaseNode child2;  // right term of an expression.
  *     ArrayList<String> allowedKeys = new ArrayList<String>() {{
  *         add("thing");
+ *         add("client_app");
  *         add("quantity");
  *         add("result");
  *         add("time");
@@ -43,6 +44,10 @@ public class ArithmeticNode extends BaseNode {
      * @param str String expression that describes an arithmetic operation or number
      */
     public ArithmeticNode(String str) throws StreamSQLException {
+        this(str, true);
+    }
+
+    public ArithmeticNode(String str, boolean verbose) throws StreamSQLException {
         super();
         // replace empty strings with '0', as negative numbers '-x' are parsed to '0-x'
         if (str.equals("")) {
@@ -50,18 +55,19 @@ public class ArithmeticNode extends BaseNode {
         }
         // remove recursively outer brackets and trim spaces
         this.rawExpression = strip(str);
+        this.verbose = verbose;
 
         // extract the outer logic operator. First iterate through the expr
         String outer_str = getOuterExpr(this.rawExpression);
 
-        if (outer_str.contains("-"))
-            this.operation = "-";
-        else if (outer_str.contains("+"))
+        if (outer_str.contains("+"))
             this.operation = "+";
-        else if (outer_str.contains("/"))
-            this.operation = "/";
+        else if (outer_str.contains("-"))
+            this.operation = "-";
         else if (outer_str.contains("*"))
             this.operation = "*";
+        else if (outer_str.contains("/"))
+            this.operation = "/";
         else if (outer_str.contains("^"))
             this.operation = "^";
         else if (outer_str.contains("%"))
@@ -99,14 +105,14 @@ public class ArithmeticNode extends BaseNode {
             }
         }
 
-        // this node could be an inner node which gets two ArithmeticNodes as childs. Or a leaf node, that is either
-        // a number or a keyword expression
+        // this node could be an inner node which gets two ArithmeticNodes as children. Or a leaf node, that is either
+        // a number or a keyword expression, get lastIndexOf as this is required for proper subtraction
         if (!this.isAtomic && !this.isKeyword) {
-            String expr1 = this.rawExpression.substring(0, this.rawExpression.indexOf(this.operation)).trim();
-            this.child1 = new ArithmeticNode(expr1);
+            String expr1 = this.rawExpression.substring(0, this.rawExpression.lastIndexOf(this.operation)).trim();
+            this.child1 = new ArithmeticNode(expr1, this.verbose);
 
-            String expr2 = this.rawExpression.substring(this.rawExpression.indexOf(this.operation)+1).trim();
-            this.child2 = new ArithmeticNode(expr2);
+            String expr2 = this.rawExpression.substring(this.rawExpression.lastIndexOf(this.operation)+1).trim();
+            this.child2 = new ArithmeticNode(expr2, this.verbose);
         }
 
         super.setDegree(this.getDegree());
@@ -143,6 +149,8 @@ public class ArithmeticNode extends BaseNode {
                         + jsonInput.get(this.arithmeticKeyword).getAsDouble());
             return jsonInput.get(this.arithmeticKeyword).getAsDouble();  // the keyword should be result
         }
+        if (this.verbose)
+            logger.info("Solving arithmetic term: " + this.rawExpression);
         // recursive case. The nodes subtree must be evaluated
         switch (this.operation) {
             case "-":

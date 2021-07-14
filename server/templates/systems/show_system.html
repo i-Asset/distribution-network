@@ -29,7 +29,8 @@
   <table class="table table-striped">
     <tr>
       <th>Name</th>
-      <th>System</th>
+<!--      <th>System</th>-->
+      <th>Resource URI</th>
       <th>Creator</th>
       <th></th>
       <th></th>
@@ -37,7 +38,8 @@
       {% for client in client_apps %}
       <tr>
         <td><center>{{client.name}}</center></td>
-        <td><center>{{client.system_name}}</center></td>
+<!--        <td><center>{{client.system_name}}</center></td>-->
+        <td><center>{{client.resource_uri}}</center></td>
         <td><center>{{client.contact_mail}}</center></td>
 <!--        <td><a href="/show_client/{{client.system_name}}/{{client.name}}" class="btn btn-block">{{client.datetime}}</a></td>-->
         <td><a href="/show_client/{{client.system_url}}/{{client.name}}" class="btn btn-info float-right"
@@ -56,33 +58,33 @@
 <!---------------------------------------------------------------------------------------------->
 
   <hr>
-  <h2> <small> Asset administration shell connections </small></h2>
-  For connecting to the semantic representation:
+  <h2> <small> Thing connections </small></h2>
+  To connect the thing with a semantic representation:
   <hr>
   <table class="table table-striped">
     <tr>
       <th>Name</th>
-      <th>System</th>
-      <th>Registry URI</th>
+<!--      <th>System</th>-->
+      <th>Resource URI</th>
       <th>Creator</th>
       <th></th>
       <th></th>
     </tr>
-      {% for aas in aas_list %}
+      {% for thing in thing_list %}
       <tr>
-        <td><center>{{aas.name}}</center></td>
-        <td><center>{{aas.system_name}}</center></td>
-        <td><center>{{aas.registry_uri}}</center></td>
-        <td><center>{{aas.contact_mail}}</center></td>
-        <td><a href="/show_aas/{{aas.system_url}}/{{aas.name}}" class="btn btn-info float-right"
+        <td><center>{{thing.name}}</center></td>
+<!--        <td><center>{{thing.system_name}}</center></td>-->
+        <td><center>{{thing.resource_uri}}</center></td>
+        <td><center>{{thing.contact_mail}}</center></td>
+        <td><a href="/show_thing/{{thing.system_url}}/{{thing.name}}" class="btn btn-info float-right"
                 data-toggle="tooltip" title="Manage this client application.">manage</a></td>
-        <td><a class="btn btn-danger float-right" href="/delete_aas/{{aas.system_url}}/{{aas.name}}"
-        data-toggle="tooltip" title="Delete this aas connection."> delete </a></td>
+        <td><a class="btn btn-danger float-right" href="/delete_thing/{{thing.system_url}}/{{thing.name}}"
+        data-toggle="tooltip" title="Delete this thing connection."> delete </a></td>
       </tr>
     {% endfor %}
   </table>
-  <a class="btn btn-success" href="/add_aas/{{payload.system_url}}"
-      data-toggle="tooltip" title="Add a new aas connection to this system."> Add aas connection</a>
+  <a class="btn btn-success" href="/add_thing/{{payload.system_url}}"
+      data-toggle="tooltip" title="Add a new thing connection to this system."> Add thing connection</a>
 
   <br>
   <br>

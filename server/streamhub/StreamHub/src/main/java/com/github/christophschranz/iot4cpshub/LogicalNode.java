@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
  *     BaseNode child2;  // right term of an expression.
  *     ArrayList<String> allowedKeys = new ArrayList<String>() {{
  *         add("thing");
+ *         add("client_app");
  *         add("quantity");
  *         add("result");
  *         add("time");
@@ -49,6 +50,7 @@ public class LogicalNode extends BaseNode {
         super();
         // remove recursively outer brackets and trim spaces
         this.rawExpression = strip(str);
+        this.verbose = verbose;
 
         // extract the outer logic operator. First iterate through the expr
         String outer_str = getOuterExpr(this.rawExpression);
@@ -86,25 +88,25 @@ public class LogicalNode extends BaseNode {
 
         // create the child nodes that are LogicalNodes if they are not variables
         if (this.verbose)
-            System.out.println(this.expressionType + ": " + this.rawExpression + "; split on " + super.operation);
+            logger.info("{}: \"{}\", split on \"{}\"", this.expressionType, this.rawExpression, super.operation);
         switch (this.expressionType) {
             case "proposition": {
                 int split_idx = safeGetSplitIdx(this.rawExpression, " " + super.operation + " ");
                 String expr1 = this.rawExpression.substring(0, split_idx).trim();
-                this.child1 = new LogicalNode(expr1);
+                this.child1 = new LogicalNode(expr1, this.verbose);
                 String expr2 = this.rawExpression.substring(split_idx + super.operation.length() + 2).trim();
-                this.child2 = new LogicalNode(expr2);
+                this.child2 = new LogicalNode(expr2, this.verbose);
                 break;
             }
             // "NOT" is an unary operation, where child2 is set to TRUE and the operation to XOR
             case "negation": {
                 int split_idx = safeGetSplitIdx(this.rawExpression, "NOT ");
                 String expr1 = this.rawExpression.substring(split_idx + "NOT ".length()).trim();
-                this.child1 = new LogicalNode(expr1);
+                this.child1 = new LogicalNode(expr1, this.verbose);
                 break;
             }
             case "comparison":
-                this.child1 = new ComparisonNode(this.rawExpression);
+                this.child1 = new ComparisonNode(this.rawExpression, this.verbose);
                 break;
         }
         // logical variables are evaluated directly
@@ -118,6 +120,7 @@ public class LogicalNode extends BaseNode {
     public String toString(){
         return "\tNode:" + "\n\t Class: " + getClass().getName() + super.toString();
     }
+
 
     /**
      * Return a boolean expression whether the jsonInput is evaluated by the expression as true or false

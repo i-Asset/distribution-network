@@ -14,7 +14,7 @@ services:
 
     # Local docker deployment
     environment:
-      POSTGRES_HOST: localhost
+      POSTGRES_HOST: 172.23.73.143
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -35,6 +35,8 @@ services:
     ports:
       - "1908:1908"
 #    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - infra
     restart: always

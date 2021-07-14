@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from flask import Flask, send_from_directory
 from flask_swagger_ui import get_swaggerui_blueprint
 
-# Import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__name__)), os.pardir)))
 from server.create_database import check_postgres_connection, create_tables, insert_samples_if_empty
 
@@ -18,18 +17,21 @@ from server.views.company import company
 from server.views.system import system
 from server.views.client_apps import client_app
 from server.views.stream_apps import stream_app
-from server.views.aas import aas
+from server.views.thing import thing
 
 # import api
 from server.api.api_system import api_system
 from server.api.api_stream_app import api_stream_app
+from server.api.api_stream_app_controller import api_stream_app_controller
 from server.api.api_client_app import api_client_app
-from server.api.api_aas_connection import api_aas
+from server.api.api_thing import api_thing
 from server.api.api_datastreams import api_datastreams
+from server.api.api_subscriptions import api_subscriptions
 from server.api.api_auth import check_iasset_connection
 
 # Import application-specific functions
 from server.utils.kafka_interface import KafkaHandler, KafkaInterface
+from server.utils.StreamAppHandler.stream_app_handler import create_client
 
 
 def create_app():
@@ -50,14 +52,16 @@ def create_app():
     app.register_blueprint(system)
     app.register_blueprint(client_app)
     app.register_blueprint(stream_app)
-    app.register_blueprint(aas)
+    app.register_blueprint(thing)
 
     # Register api as blueprint
     app.register_blueprint(api_system)
     app.register_blueprint(api_stream_app)
+    app.register_blueprint(api_stream_app_controller)
     app.register_blueprint(api_client_app)
-    app.register_blueprint(api_aas)
+    app.register_blueprint(api_thing)
     app.register_blueprint(api_datastreams)
+    app.register_blueprint(api_subscriptions)
 
     ########################################################
     # ########### load and update env variables ########## #
@@ -156,6 +160,14 @@ def create_app():
         # Adding a KafkaHandler to the logger, ingests messages into kafka
         kh = KafkaHandler(app)
         app.logger.addHandler(kh)
+
+    ########################################################
+    # ########### rebuild the stream-app image #############
+    ########################################################
+
+    app.logger.info("docker-py: Re-build the streamhub_stream-app image.")
+    client = create_client()
+    client.images.build(path="streamhub/StreamHub", dockerfile="Dockerfile", tag="streamhub_stream-app", rm=True)
 
     ########################################################
     # ################ register swagger ui ################ #

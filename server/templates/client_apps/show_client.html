@@ -31,7 +31,7 @@
     var data = {
         "client_name": '{{config.client_name}}',
         "system": '{{config.system_name}}',
-        "submodel_element_collection": '{{payload.submodel_element_collection}}',
+        "resource_uri": '{{payload.resource_uri}}',
         "kafka_bootstrap_servers": '{{config.kafka_bootstrap_servers}}'};
     document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);
   </script>

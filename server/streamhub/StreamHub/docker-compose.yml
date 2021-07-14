@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  stream-app:
+    build: .
+    network_mode: host
+    environment:
+      # StreamApp config
+      STREAM_NAME: "StreamHubDocker"
+      SOURCE_SYSTEM: "at.srfg.WeatherService.Stations"
+      TARGET_SYSTEM: "at.srfg.Analytics.MachineAnalytics"
+      KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+      SERVER_URI: 127.0.0.1:1908
+      FILTER_LOGIC: "SELECT * FROM * WHERE (quantity = 'temperature_1' AND result < 4) OR (quantity = 'acceleration' AND result > 0.8)"
+      VERBOSE: "true"

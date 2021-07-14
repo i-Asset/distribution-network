@@ -17,26 +17,36 @@ public class Tester {
     @org.junit.Before
     public void setUp() throws Exception {
         globalOptions.setProperty("STREAM_NAME", "test-stream");
-        globalOptions.setProperty("SOURCE_SYSTEM", "is.iceland.iot4cps-wp5-WeatherService.Stations");
-        globalOptions.setProperty("TARGET_SYSTEM", "cz.icecars.iot4cps-wp5-CarFleet.Car1");
-        globalOptions.setProperty("SEMANTIC_SERVER", "127.0.0.1:8082");
+        globalOptions.setProperty("SOURCE_SYSTEM", "at.srfg.WeatherService.Stations");
+        globalOptions.setProperty("TARGET_SYSTEM", "at.srfg.MachineFleet.Machine1");
+/*        globalOptions.setProperty("SERVER_URI", "127.0.0.1:8082");*/
         globalOptions.setProperty("FILTER_LOGIC",
-                "SELECT * FROM * WHERE (name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_1.Air Temperature' OR name = 'is.iceland.iot4cps-wp5-WeatherService.Stations.Station_2.Air Temperature') AND result < 30;");
+                "SELECT * FROM * WHERE (name = 'at.srfg.WeatherService.Stations.Station_1.temperature' OR name = 'at.srfg.WeatherService.Stations.Station_2.temperature') AND result < 30;");
 
-        jsonInput.addProperty("quantity", "Air Temperature");
+        // Build a flattened! demo datastream
+        JsonObject jsonDSInput = new JsonObject();
+        jsonInput.addProperty("quantity", "temperature");
         jsonInput.addProperty("thing", "Station_1");
+        jsonInput.addProperty("client_app", "weatherstation_1");
         jsonInput.addProperty("result", 12.3);
-        jsonInput.addProperty("phenomenonTime", "2020-02-24T11:26:02");
-        jsonInput.addProperty("time", "2020-02-24T11:26:02");  // adding extra time key
+        jsonInput.addProperty("phenomenonTime", "2021-06-28T06:35:01.416978+00:00");
+        jsonInput.addProperty("resultTime", "2021-06-28T06:35:01.417075+00:00");  // adding extra time key
+        System.out.println("Demo data event:\n" + jsonInput);
+    /*
+        // Flatten the input
+        JsonObject flatJsonInput = new JsonObject();
+        flatJsonInput.addProperty("quantity", jsonInput.get("datastream").getAsJsonObject().get("quantity").getAsString());
+        flatJsonInput.addProperty("thing", jsonInput.get("datastream").getAsJsonObject().get("thing").getAsString());
+        flatJsonInput.addProperty("client_app", jsonInput.get("datastream").getAsJsonObject().get("client_app").getAsString());
+        flatJsonInput.addProperty("phenomenonTime", jsonInput.get("phenomenonTime").getAsString());
+        flatJsonInput.addProperty("resultTime", jsonInput.get("resultTime").getAsString());
+        flatJsonInput.addProperty("result", jsonInput.get("result").getAsDouble());*/
+
     }
 
     @Test
     public void test1() {
         System.out.println("#######################################################\n");
-
-        ComparisonNode comNode;
-        ArithmeticNode ariNode;
-
         System.out.println("\n######### Start of recursive tests #############\n");
 
         expr =  "thing = 'Station_1'";
@@ -45,19 +55,19 @@ public class Tester {
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 1 failed.");
 
-            expr = "thing = 'Station_1' AND quantity = 'Air Temperature' OR result > 4";
+            expr = "thing = 'Station_1' AND quantity = 'temperature' OR result > 4";
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 3 failed.");
 
-            expr = "(quantity = 'Air Temperature' OR result > 4.3210)";
+            expr = "(quantity = 'temperature' OR result > 4.3210)";
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 4 failed.");
 
-            expr = "quantity = 'Air Temperature' OR (result > 30 AND result > 4)";
+            expr = "quantity = 'temperature' OR (result > 30 AND result > 4)";
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 4 failed.");
 
-            expr = "((quantity = 'Air Temperature' OR (((result < 30) AND result > 4))))";
+            expr = "((quantity = 'temperature' OR (((result < 30) AND result > 4))))";
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 5 failed.");
 
@@ -65,9 +75,13 @@ public class Tester {
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 7 failed.");
 
-            expr = "result < 30 AND result < 4 OR quantity = 'Air Temperature'";  // should be equal than the one above
+            expr = "result < 30 AND result < 4 OR quantity = 'temperature'";  // should be equal than the one above
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 8 failed.");
+
+            expr = "result < 30 AND client_app = 'weatherstation_1'";
+            if (!new LogicalNode(expr).evaluate(jsonInput))
+                System.out.println("Test 8.2 failed.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,19 +92,19 @@ public class Tester {
         System.out.println("\n######### Start of special operations #############\n");
 
         try {
-            expr =  "result > 0 XOR quantity = 'Air Temperature'";  // intro of XOR
+            expr =  "result > 0 XOR quantity = 'temperature'";  // intro of XOR
             if (new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 9 failed.");
 
-            expr =  "result = 0 XOR quantity = 'Air Temperature'";  // intro of XOR
+            expr =  "result = 0 XOR quantity = 'temperature'";  // intro of XOR
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 10 failed.");
 
-            expr =  "quantity <> 'Air Temperature'";  // intro of not equal, false
+            expr =  "quantity <> 'temperature'";  // intro of not equal, false
             if (new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 11 failed.");
 
-            expr =  "quantity<>'Air Temperature_123'";  // intro of not equal, true
+            expr =  "quantity<>'temperature_123'";  // intro of not equal, true
             LogicalNode logNode = new LogicalNode(expr);
             if (!logNode.evaluate(jsonInput))
                 System.out.println("Test 12 failed.");
@@ -111,11 +125,11 @@ public class Tester {
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 16 failed.");
 
-            expr =  "NOT (result < 30 AND NOT quantity = 'Air Temperature')";  // intro of not, true
+            expr =  "NOT (result < 30 AND NOT quantity = 'temperature')";  // intro of not, true
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 17 failed.");
 
-            expr =  "NOT NOT (result < 30 AND NOT NOT quantity = 'Air Temperature')";  // intro of not, true
+            expr =  "NOT NOT (result < 30 AND NOT NOT quantity = 'temperature')";  // intro of not, true
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 18 failed.");
         } catch (Exception e) {
@@ -128,27 +142,27 @@ public class Tester {
         System.out.println("\n######### ordering and hierarchy #############\n");
         try {
             // ordering and hierarchy
-            expr =  "result < 30 AND result > 4 AND quantity = 'Air Temperature' AND thing = 'Station_1' ";  // true
+            expr =  "result < 30 AND result > 4 AND quantity = 'temperature' AND thing = 'Station_1' ";  // true
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 20 failed.");
 
-            expr =  "result > 30 AND result > 4 AND quantity = 'Air Temperature' ";  // false
+            expr =  "result > 30 AND result > 4 AND quantity = 'temperature' ";  // false
             if (new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 21 failed.");
 
-            expr =  "result < 30 AND result > 4 AND quantity <> 'Air Temperature' ";  // false
+            expr =  "result < 30 AND result > 4 AND quantity <> 'temperature' ";  // false
             if (new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 23 failed.");
 
-            expr =  "result > 30 AND result > 4 XOR quantity = 'Air Temperature' ";  // true
+            expr =  "result > 30 AND result > 4 XOR quantity = 'temperature' ";  // true
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 24 failed.");
 
-            expr =  "quantity = 'Air Temperature' XOR result > 30 AND result > 4";  // ordering, true
+            expr =  "quantity = 'temperature' XOR result > 30 AND result > 4";  // ordering, true
             if (!new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 25 failed.");
 
-            expr =  "result > 30 AND result > 4 OR thing = 'Station_123'";  // false
+            expr =  "result > 30 AND result > 4 OR client_app = 'weatherstation_123'";  // false
             if (new LogicalNode(expr).evaluate(jsonInput))
                 System.out.println("Test 26 failed.");
 
@@ -196,9 +210,13 @@ public class Tester {
             if (new ArithmeticNode(expr).arithmeticEvaluate() != 9)
                 System.out.println("Test 37 failed.");
 
-            expr = "2*3.1";  // there are rounding errors
+            expr = "2*3.1";  // there is a rounding issue
             if (Math.abs(new ArithmeticNode(expr).arithmeticEvaluate() - 6.2) > 1E-6)
                 System.out.println("Test 38 failed: " + new ArithmeticNode(expr).arithmeticEvaluate());
+
+            expr = "10+1+5-2-2+5-3*3.1";  // there are rounding errors
+            if (Math.abs(new ArithmeticNode(expr).arithmeticEvaluate() - 7.7) > 1E-6)
+                System.out.println("Test 39 failed: " + expr + " gets evaluated as " + new ArithmeticNode(expr).arithmeticEvaluate());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -270,7 +288,7 @@ public class Tester {
             if (logNode.getDegree() != 4)
                 System.out.println("Test 52 failed.");
 
-            expr =  "quantity = 'tricky_result_for this name' XOR result < 30 AND result > 4";
+            expr =  "quantity = 'tricky_result-for this name' XOR result < 30 AND result > 4";
             if (new LogicalNode(expr).getDegree() != 3)
                 System.out.println("Test 53 failed, -> correct: " + new LogicalNode(expr).getDegree());
         } catch (Exception e) {
@@ -413,6 +431,7 @@ public class Tester {
         ds = new JsonObject();
         ds.addProperty("quantity", "temperature");
         ds.addProperty("thing", "Car1");
+        ds.addProperty("client_app", "control");
         jsonInput.add("datastream", ds);
         jsonInput.addProperty("result", 1.23);
         jsonInput.addProperty("phenomenonTime", "2020-02-24T11:26:02");
@@ -422,8 +441,8 @@ public class Tester {
         attributes.addProperty("longitude", 13.04113);
         jsonInput.add("attributes", attributes);
 //        System.out.println(jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString());
-        globalOptions.setProperty("SOURCE_SYSTEM", "is.iceland.iot4cps-wp5-WeatherService.Stations");
-        globalOptions.setProperty("TARGET_SYSTEM", "cz.icecars.iot4cps-wp5-CarFleet.Car1");
+        globalOptions.setProperty("SOURCE_SYSTEM", "at.srfg.WeatherService.Stations");
+        globalOptions.setProperty("TARGET_SYSTEM", "at.srfg.MachineFleet.Machine1");
         globalOptions.setProperty("KAFKA_BOOTSTRAP_SERVERS", "172.20.38.70:9092,172.20.38.70:9093,172.20.38.70:9094");
         globalOptions.setProperty("SEMANTIC_SERVER", "https://iasset.salzburgresearch.at/registry-service/swagger-ui.html");
         globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE quantity = 'temperature' AND result < 4;");
@@ -437,10 +456,10 @@ public class Tester {
 
             // This part is only required for SensorThings as it simulates it's datastream structure
             // replace this demo semantic with a structure as {system_name: thing_aas: datastream_name: asdf}
-            ds1.addProperty("thing", "Car1");
-            ds1.addProperty("quantity", "Air temperature");
-            ds2.addProperty("thing", "Car2");
-            ds2.addProperty("quantity", "Air temperature");
+            ds1.addProperty("thing", "Machine1");
+            ds1.addProperty("quantity", "temperature");
+            ds2.addProperty("thing", "Machine2");
+            ds2.addProperty("quantity", "temperature");
             datastreams.add("1",ds1);
             datastreams.add("2",ds2);
             semantics.setStreamObjects(datastreams);
@@ -502,11 +521,11 @@ public class Tester {
         jsonInput.addProperty("time", "2020-02-24T11:26:02");  // adding extra time key
 //                System.out.println(jsonInput.get("Datastream").getAsJsonObject().get("@iot.id").getAsString());
 
-        globalOptions.setProperty("SOURCE_SYSTEM", "is.iceland.iot4cps-wp5-WeatherService.Stations");
-        globalOptions.setProperty("TARGET_SYSTEM", "cz.icecars.iot4cps-wp5-CarFleet.Car1");
+        globalOptions.setProperty("SOURCE_SYSTEM", "at.srfg.WeatherService.Stations");
+        globalOptions.setProperty("TARGET_SYSTEM", "at.srfg.MachineFleet.Machine1");
         globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM * WHERE " +
-                "(name = 'cz.icecars.iot4cps-wp5-CarFleet.Car1.Main.Air Temperature' OR " +
-                "name = 'cz.icecars.iot4cps-wp5-CarFleet.Car2.Main.Air Temperature') AND result < -3.99;");
+                "(name = 'at.srfg.MachineFleet.Machine1.temperature' OR " +
+                "name = 'at.srfg.MachineFleet.Machine2.temperature') AND result < -3.99;");
         try {
             streamQuery = new StreamQuery(globalOptions);
             semantics = new Semantics(globalOptions, "SensorThings");
@@ -515,9 +534,9 @@ public class Tester {
             JsonObject ds2 = new JsonObject();
 
             ds1.addProperty("@iot.id", 1);
-            ds1.addProperty("name", "cz.icecars.iot4cps-wp5-CarFleet.Car1");
+            ds1.addProperty("name", "at.srfg.MachineFleet.Machine1");
             ds2.addProperty("@iot.id", 2);
-            ds2.addProperty("name", "cz.icecars.iot4cps-wp5-CarFleet.Car2");
+            ds2.addProperty("name", "at.srfg.MachineFleet.Machine2");
             datastreams.add("1",ds1);
             datastreams.add("2",ds2);
             semantics.setSensorThingsStreams(datastreams);
@@ -530,10 +549,10 @@ public class Tester {
             e.printStackTrace();
         }*/
 
-//                globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations AS s" +
-//                        "WHERE (s.name = 'Station_1.Air Temperature' OR s.name = 'Station_2.Air Temperature') AND result < 30;");
-//                globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM is.iceland.iot4cps-wp5-WeatherService.Stations AS st,is.iceland.iot4cps-wp5-WeatherService.Services AS se" +
-//                        "WHERE (st.name = 'Station_1.Air Temperature' OR se.name = 'Service_3.temp_in_1_hour') AND result < 30;");
+//                globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM at.srfg.WeatherService.Stations AS s" +
+//                        "WHERE (s.name = 'Station_1.temperature' OR s.name = 'Station_2.temperature') AND result < 30;");
+//                globalOptions.setProperty("FILTER_LOGIC", "SELECT * FROM at.srfg.WeatherService.Stations AS st, at.srfg.MachineFleet.Machine1 AS m1" +
+//                        "WHERE (st.name = 'Station_1.temperature' OR se.name = 'Service_3.temp_in_1_hour') AND result < 30;");
         /* how to query here? What is the instance, and what the table??
          */
 //                try {

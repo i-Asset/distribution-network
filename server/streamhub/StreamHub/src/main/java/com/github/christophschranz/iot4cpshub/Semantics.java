@@ -17,13 +17,13 @@ import java.net.URL;
 import java.util.Properties;
 
 public class Semantics {
-    private String semantic_server;
+    private String server_uri;
 
     JsonObject streamObjects;
     String semantic;
     boolean verbose;
     String[] knownSemantics = new String[] {"SensorThings", "AAS"};
-    String[] augmentedDSAttributes = new String[]{"thing", "quantity"};  // augment attributes in "datastream" key
+    String[] augmentedDSAttributes = new String[]{"thing", "client_app", "quantity"};  // augment attributes in "datastream" key
     String[] augmentedMetaAttributes = new String[]{"longitude", "latitude"};  // augment attributes in "meta" key
     boolean exitOnUnknownIotID = false;
 
@@ -34,9 +34,8 @@ public class Semantics {
     public Semantics(Properties stream_config, String semantic, boolean verbose) throws SemanticsException {
         // gather configs and store in class vars
         // if (semantic.equalsIgnoreCase("gost"))
-        // this.semantic_server = stream_config.getProperty("SEMANTIC_SERVER").replace("\"", "");
         this.semantic = semantic;
-        this.semantic_server = stream_config.getProperty("SEMANTIC_SERVER").replace("\"", "");
+        this.server_uri = stream_config.getProperty("SERVER_URI", "").replace("\"", "");
         this.verbose = verbose;
 
         // the json value is not indexed properly, restructure such that we have {iot_id0: {}, iot_id1: {}, ...}
@@ -76,7 +75,7 @@ public class Semantics {
             size = this.streamObjects.size();
         return "Semantics Object " + getClass()
                 + "\n\tType: \t\t" + this.semantic
-                + "\n\tServer: \t" + this.semantic_server
+                + "\n\tServer: \t" + this.server_uri
                 + "\n\tEntries: \t" + size;
     }
 
@@ -94,7 +93,7 @@ public class Semantics {
      * @return the Augmented JsonInput
      */
     public JsonObject augmentJsonInput(JsonObject jsonInput) {
-        // augment with AAS semantic, fields, 'datastream', 'attributes'
+        // augment with AAS selected fields: all in 'datastream', 'attributes' and duplicate 'time'
         if (this.semantic.equalsIgnoreCase("aas")) {
             if (jsonInput.has("datastream")) {
                 for (String att : this.augmentedDSAttributes) {
@@ -106,6 +105,7 @@ public class Semantics {
                     jsonInput.addProperty(att, jsonInput.get("attributes").getAsJsonObject().get(att).getAsDouble());
                 }
             }
+            jsonInput.addProperty("time", jsonInput.get("phenomenonTime").getAsString());
             if (this.verbose)
                 logger.info("New message: " + jsonInput);
             return jsonInput;
@@ -183,7 +183,7 @@ public class Semantics {
      *  */
     public void checkConnectionGOST() throws SemanticsException {
         // urlString that is appended by the appropriate mode (all ds or a specified)
-        String urlString = "http://" + this.semantic_server;
+        String urlString = "http://" + this.server_uri;
         logger.info("Trying to connect with " + this.semantic + "-Server at: " + urlString);
 
         try {
@@ -193,12 +193,12 @@ public class Semantics {
             conn.setConnectTimeout(5000); //set timeout to 5 seconds
             conn.setRequestMethod("GET");
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            logger.info("Connected to " + this.semantic_server);
+            logger.info("Connected to " + this.server_uri);
         } catch (java.net.ConnectException | java.net.SocketTimeoutException | java.net.NoRouteToHostException e) {
-            logger.warn("GOST Server at '" + this.semantic_server + "' is not reachable.");
-            if (!this.semantic_server.contains("dashboard:8080")) {
+            logger.warn("GOST Server at '" + this.server_uri + "' is not reachable.");
+            if (!this.server_uri.contains("dashboard:8080")) {
                 logger.warn("Setting gost-server to 'http://dashboard:8080' and try again.");
-                this.semantic_server = "dashboard:8080";
+                this.server_uri = "dashboard:8080";
                 checkConnectionGOST();
             }
             else
@@ -206,7 +206,7 @@ public class Semantics {
         } catch (ProtocolException e) {
             e.printStackTrace();
         } catch (java.net.UnknownHostException e) {
-            logger.error("Unknown host '" + this.semantic_server + "'. Aborting!");
+            logger.error("Unknown host '" + this.server_uri + "'. Aborting!");
             e.printStackTrace();
             System.exit(62);
         } catch (MalformedURLException e) {
@@ -221,7 +221,7 @@ public class Semantics {
      *  */
     public void checkConnectionAAS() throws SemanticsException {
         // urlString that is appended by the appropriate mode (all ds or a specified)
-        String urlString = "http://" + this.semantic_server;
+        String urlString = "http://" + this.server_uri;
         logger.info("Trying to connect with " + this.semantic + "-Server at: " + urlString);
 
         try {
@@ -231,13 +231,13 @@ public class Semantics {
             conn.setConnectTimeout(5000); //set timeout to 5 seconds
             conn.setRequestMethod("GET");
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            logger.info("Connected to " + this.semantic_server);
+            logger.info("Connected with the distribution-network server " + this.server_uri);
         } catch (java.net.ConnectException | java.net.SocketTimeoutException | java.net.NoRouteToHostException e) {
-            logger.warn("GOST Server at '" + this.semantic_server + "' is not reachable.");
+            logger.warn("GOST Server at '" + this.server_uri + "' is not reachable.");
             // retry with a relative name
-            if (!this.semantic_server.contains("registry-service:8085")) {
-                logger.warn("Setting AAS-server to 'http://registry-service:8085' and try again.");
-                this.semantic_server = "registry-service:8085";
+            if (!this.server_uri.contains("registry-service:1908")) {
+                logger.warn("Setting AAS-server to 'http://registry-service:1908' and try again.");
+                this.server_uri = "registry-service:1908";
                 checkConnectionAAS();
             }
             else
@@ -245,9 +245,9 @@ public class Semantics {
         } catch (ProtocolException e) {
             e.printStackTrace();
         } catch (java.net.UnknownHostException e) {
-            logger.error("Unknown host '" + this.semantic_server + "'. Aborting!");
+            logger.error("Unknown host '" + this.server_uri + "'. Ignoring");
             e.printStackTrace();
-            System.exit(63);
+            /*System.exit(63);*/
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -262,7 +262,7 @@ public class Semantics {
          *  */
     public void fetchFromGOST(int iot_id) throws SemanticsException {
         // urlString that is appended by the appropriate mode (all ds or a specified)
-        String urlString = "http://" + this.semantic_server;
+        String urlString = "http://" + this.server_uri;
         logger.info("Reconnect to SensorThings-Server to fetch iot.id " + iot_id);
 
         if (iot_id <= 0)  // fetching all datastreams for iot_id <= 0

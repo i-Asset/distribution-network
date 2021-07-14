@@ -1,6 +1,19 @@
 -- CREATE DATABASE distributionnetworkdb WITH OWNER postgres;
 -- USE distributionnetworkdb;
 
+\c distributionnetworkdb;
+
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS companies CASCADE;
+DROP TABLE IF EXISTS systems CASCADE;
+DROP TABLE IF EXISTS is_admin_of_com CASCADE;
+DROP TABLE IF EXISTS is_admin_of_sys CASCADE;
+DROP TABLE IF EXISTS client_apps CASCADE;
+DROP TABLE IF EXISTS stream_apps CASCADE;
+DROP TABLE IF EXISTS mqtt_broker CASCADE;
+DROP TABLE IF EXISTS things CASCADE;
+DROP TABLE IF EXISTS datastreams CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
 
 CREATE TABLE if not exists users (
     id integer NOT NULL PRIMARY KEY,
@@ -47,7 +60,7 @@ CREATE TABLE if not exists is_admin_of_sys (
 );
 
 CREATE TABLE if not exists stream_apps (
-    name varchar(32) NOT NULL,
+    name varchar(64) NOT NULL,
     source_system varchar(128) NOT NULL REFERENCES systems(name),
     target_system varchar(128) NOT NULL REFERENCES systems(name),
     creator_id integer REFERENCES users(id),
@@ -59,10 +72,10 @@ CREATE TABLE if not exists stream_apps (
     PRIMARY KEY (source_system, name)
 );
 
-CREATE TABLE if not exists aas (
+CREATE TABLE if not exists things (
     name varchar(64) NOT NULL,
     creator_id integer NOT NULL REFERENCES users(id),
-    registry_uri varchar(256),
+    resource_uri varchar(256),
     datetime timestamp with time zone,
     description text,
     system_name varchar(128) NOT NULL REFERENCES systems(name),
@@ -80,8 +93,8 @@ CREATE TABLE if not exists mqtt_broker
 
 CREATE TABLE if not exists client_apps (
     system_name varchar(128) NOT NULL REFERENCES systems(name),
-    name varchar(32) NOT NULL,
-    submodel_element_collection text,
+    name varchar(64) NOT NULL,
+    resource_uri varchar(256),
     creator_id integer NOT NULL REFERENCES users(id),
     datetime timestamp with time zone,
     description text,
@@ -92,27 +105,33 @@ CREATE TABLE if not exists client_apps (
 
 CREATE TABLE if not exists datastreams
 (
-    system_name     varchar(128)   NOT NULL,
-    client_name     varchar(32) NOT NULL,
     shortname      varchar(32)    NOT NULL,
     name            varchar(128),
-    datastream_uri  text,
+    system_name     varchar(128)   NOT NULL,
+    thing_name        varchar(64) NOT NULL,
+    resource_uri varchar(256),
+    creator_id integer NOT NULL REFERENCES users(id),
     description     text,
-    aas_name        varchar(32),
-    aas_system_name varchar(128),
-    PRIMARY KEY (system_name, shortname),
-    FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
-    FOREIGN KEY (aas_system_name, aas_name) REFERENCES aas(system_name, name)
+    client_name     varchar(64) NOT NULL,
+    client_system_name varchar(128),
+    PRIMARY KEY (system_name, thing_name, shortname),
+    FOREIGN KEY (system_name, thing_name) REFERENCES things(system_name, name),
+    FOREIGN KEY (client_system_name, client_name) REFERENCES client_apps(system_name, name)
 );
 
-CREATE TABLE if not exists subscriptions (
-    system_name     varchar(128)   NOT NULL,
-    client_name     varchar(32) NOT NULL,
-    datastream_shortname  varchar(32)    NOT NULL,
-    datastream_system       varchar(128)   NOT NULL,
-    PRIMARY KEY (system_name, client_name, datastream_shortname),
-    FOREIGN KEY (system_name, client_name) REFERENCES client_apps(system_name, name),
-    FOREIGN KEY (datastream_system, datastream_shortname) REFERENCES datastreams(system_name, shortname)
+CREATE TABLE if not exists subscriptions
+(
+    shortname       varchar(32)    NOT NULL,
+    thing_name      varchar(64) NOT NULL,
+    thing_system_name    varchar(128)   NOT NULL,
+    FOREIGN KEY (shortname, thing_name, thing_system_name) REFERENCES datastreams(shortname, thing_name, system_name),
+    client_name      varchar(64) NOT NULL,
+    system_name   varchar(128) NOT NULL,
+    FOREIGN KEY (client_name, system_name) REFERENCES client_apps(name, system_name),
+    PRIMARY KEY (shortname, thing_name, thing_system_name, client_name, system_name),
+    creator_id integer NOT NULL REFERENCES users(id),
+    description     text,
+    datetime timestamp with time zone
 );
 
 -- ########################################################
@@ -159,18 +178,18 @@ INSERT INTO stream_apps (name, source_system, target_system, creator_id, logic, 
 ('weather2car2', 'at.srfg.WeatherService.Stations', 'at.srfg.Analytics.MachineAnalytics', -2,
  'SELECT * FROM at.srfg.WeatherService.Stations;', 'init', now(), 'Lorem Ipsum');
 
-INSERT INTO client_apps (system_name, name, submodel_element_collection, creator_id, datetime, description, on_kafka, keyfile_av) VALUES
-('at.srfg.MachineFleet.Machine1', 'machine_1', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.srfg.MachineFleet.Machine2', 'machine_2', 'submodel_uri', -1, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.srfg.WeatherService.Stations', 'weatherstation_1', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.srfg.WeatherService.Stations', 'weatherstation_2', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.srfg.WeatherService.Stations', 'weather_analytics', 'submodel_uri', -2, now(), 'Lorem Ipsum', TRUE, FALSE),
-('at.srfg.Analytics.MachineAnalytics','datastack-adapter', 'submodel_uri', -4, now(), 'Lorem Ipsum', TRUE, FALSE);
+INSERT INTO client_apps (system_name, name, resource_uri, creator_id, datetime, description, on_kafka) VALUES
+('at.srfg.MachineFleet.Machine1', 'machine_1', 'https://iasset.srfg.at/resources/resource_uri', -1, now(), 'Lorem Ipsum', TRUE),
+('at.srfg.MachineFleet.Machine2', 'machine_2', 'https://iasset.srfg.at/resources/resource_uri', -1, now(), 'Lorem Ipsum', TRUE),
+('at.srfg.WeatherService.Stations', 'weatherstation_1', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum', TRUE),
+('at.srfg.WeatherService.Stations', 'weatherstation_2', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum', TRUE),
+('at.srfg.WeatherService.Stations', 'weather_analytics', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum', TRUE),
+('at.srfg.Analytics.MachineAnalytics','datastack-adapter', 'https://iasset.srfg.at/resources/resource_uri', -4, now(), 'Lorem Ipsum', TRUE);
 
-INSERT INTO aas (system_name, name, registry_uri, creator_id, datetime, description) VALUES
-('at.srfg.MachineFleet.Machine1', 'machine', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
-('at.srfg.MachineFleet.Machine2', 'machine', 'aas_registry.uri', -1, now(), 'Lorem Ipsum'),
-('at.srfg.WeatherService.Stations', 'weatherstation 1', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('at.srfg.WeatherService.Stations', 'weatherstation 2', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('at.srfg.WeatherService.Stations', 'weather_analytics', 'aas_registry.uri', -2, now(), 'Lorem Ipsum'),
-('at.srfg.Analytics.MachineAnalytics','Datastack Adapter', 'aas_registry.uri', -4, now(), 'Lorem Ipsum');
+INSERT INTO things (system_name, name, resource_uri, creator_id, datetime, description) VALUES
+('at.srfg.MachineFleet.Machine1', 'machine', 'https://iasset.srfg.at/resources/resource_uri', -1, now(), 'Lorem Ipsum'),
+('at.srfg.MachineFleet.Machine2', 'machine', 'https://iasset.srfg.at/resources/resource_uri', -1, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weatherstation 1', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weatherstation 2', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.WeatherService.Stations', 'weather_analytics', 'https://iasset.srfg.at/resources/resource_uri', -2, now(), 'Lorem Ipsum'),
+('at.srfg.Analytics.MachineAnalytics','Datastack Adapter', 'https://iasset.srfg.at/resources/resource_uri', -4, now(), 'Lorem Ipsum');
