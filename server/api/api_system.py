@@ -2,6 +2,7 @@ import os
 import time
 import zlib
 
+import psycopg2
 import requests
 import urllib
 import sqlalchemy as db
@@ -333,30 +334,43 @@ def delete_systems(system_url, user_id):
 
     # 3) delete the instances from systems, is_admin_of_sys
     transaction = conn.begin()
-    # Delete single mqtt_broker
-    query = """DELETE FROM mqtt_broker
-        WHERE system_name='{}';""".format(system_name)
-    conn.execute(query)
-    # Delete is_admin_of_sys instance(s)
-    query = """DELETE FROM is_admin_of_sys
-        WHERE system_name='{}';""".format(system_name)
-    conn.execute(query)
-    # Delete single system
-    query = """DELETE FROM systems
-        WHERE name='{}';""".format(system_name)
-    conn.execute(query)
-    engine.dispose()
+    try:
+        # Delete single mqtt_broker
+        query = """DELETE FROM mqtt_broker
+            WHERE system_name='{}';""".format(system_name)
+        conn.execute(query)
+        # Delete is_admin_of_sys instance(s)
+        query = """DELETE FROM is_admin_of_sys
+            WHERE system_name='{}';""".format(system_name)
+        conn.execute(query)
+        # Delete single system
+        query = """DELETE FROM systems
+            WHERE name='{}';""".format(system_name)
+        conn.execute(query)
+    except (db.exc.IntegrityError, psycopg2.errors.ForeignKeyViolation) as e:
+        pass
+        # Handle Violation conflict error
+        transaction.rollback()
+        engine.dispose()
+        msg = f"The kafka topics for system '{system_name}' could not be deleted, because there are existing dependencies: \n{e}"
+        app.logger.warning(msg)
+        return jsonify({"value": msg, "url": fct, "status_code": 400}), 400
 
     # 4) Delete Kafka topics
     if app.kafka_interface.delete_system_topics(system_name=system_name):
         transaction.commit()
-        app.logger.info("The system '{}' was deleted.".format(system_name))
-        flash("The system '{}' was deleted.".format(system_name), "success")
+        engine.dispose()
+        msg = "The system '{}' was deleted.".format(system_name)
+        app.logger.info(msg)
+        # flash("The system '{}' was deleted.".format(system_name), "success")
     else:
         transaction.rollback()
-        app.logger.warning(f"{fct}: The system '{system_name}' could not be deleted, returned False")
-        flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
+        engine.dispose()
+        msg = f"{fct}: The kafka topics for system '{system_name}' could not be deleted, returned False"
+        app.logger.warning(msg)
+        # flash("The system '{}' couldn't be deleted.".format(system_name), "danger")
+        return jsonify({"value": msg, "url": fct, "status_code": 400}), 400
 
     # 5) return
-    return jsonify({"url": fct, "status_code": 204}), 204
+    return jsonify({"value": msg, "url": fct, "status_code": 204}), 204
 
