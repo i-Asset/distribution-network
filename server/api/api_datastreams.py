@@ -249,25 +249,39 @@ def create_datastreams(user_id, system_url):
     # return jsonify({"thing_connections": existing_datastreams})
 
     # 4) create the datastreams or warn if at least one of the datastreams already exist.
-    if len(already_existing) > 0:
+    if request.method == "POST":
+        if len(already_existing) > 0:
         # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
-        if request.method == "POST":
             engine.dispose()
             msg = f"The datastreams '{already_existing}' for system '{system_name}' already exist, abort request."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
+        else:  # doesn't exist yet
+            query = db.insert(app.config["tables"]["datastreams"])
+            conn.execute(query, new_ds)
 
-        else:  # PUT
-            for ds in new_ds:
-                query = db.update(app.config["tables"]["datastreams"]).where(
-                    ("shortname" == ds["shortname"] and "thing_name" == ds["thing_name"] and
-                     "system_name" == ds["system_name"]))
-                conn.execute(query, ds)
-
-    else:  # doesn't exist yet
-        query = db.insert(app.config["tables"]["datastreams"])
-        conn.execute(query, new_ds)
-
+    # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
+    if request.method == "PUT":
+        for ds in new_ds:
+            conn.execute(f"""
+                INSERT INTO datastreams 
+                    (shortname, name, system_name, thing_name, client_name, client_system_name, 
+                        description, creator_id, datetime) 
+                VALUES ('{ds["shortname"]}', '{ds["name"]}', '{ds["name"]}', '{ds["thing_name"]}', 
+                    '{ds["client_name"]}', '{ds["client_system_name"]}', 
+                    '{ds["description"]}', '{ds["creator_id"]}', '{ds["datetime"]}') 
+                ON CONFLICT (shortname, thing_name, system_name) 
+                DO UPDATE SET shortname='{ds["shortname"]}', name='{ds["name"]}', 
+                    thing_name='{ds["thing_name"]}', system_name='{ds["system_name"]}',  
+                    client_name='{ds["client_name"]}', client_system_name='{ds["client_system_name"]}', 
+                    description='{ds["description"]}', creator_id='{ds["creator_id"]}', datetime='{ds["datetime"]}';
+            """)
+            # This routine doesn't create anything if one of the instances already exists.
+            # This behaviour is not desired for the PUT method.
+            # query = db.update(app.config["tables"]["datastreams"]).where(
+            #     ("shortname" == ds["shortname"] and "thing_name" == ds["thing_name"] and
+            #      "system_name" == ds["system_name"]))
+            # conn.execute(query, ds)
     engine.dispose()
     # return created datastreams
     return jsonify({"datastreams": new_ds})

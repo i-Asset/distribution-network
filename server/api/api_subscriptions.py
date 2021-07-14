@@ -4,8 +4,7 @@ from flask import Blueprint, request, jsonify
 from flask import current_app as app
 
 from .api_auth import authorize_request, get_user_id
-from ..utils.useful_functions import get_datetime, decode_sys_url, \
-    strip_dict
+from ..utils.useful_functions import get_datetime, decode_sys_url, encode_sys_url, strip_dict
 
 prefix = "/distributionnetwork"  # url_prefix="/distributionnetwork/")
 api_subscriptions = Blueprint("api_subscriptions", __name__)
@@ -188,17 +187,17 @@ def create_subscriptions(user_id, system_url, client_name):
         for ex_ds in existing_subscriptions:
             if ds["shortname"] == ex_ds["shortname"] and \
                     client_name == ex_ds["client_name"] and system_name == ex_ds["system_name"] and \
-                    ds["thing_name"] == ex_ds["thing_name"] and ds["system_name"] == ex_ds["thing_system_name"]:
+                    ds["thing_name"] == ex_ds["thing_name"] and encode_sys_url(ds["system_name"]) == ex_ds["thing_system_name"]:
                 already_existing.append(
                     {"shortname": ds["shortname"],
                      "thing_name": ds["thing_name"],
-                     "system_name": ds["system_name"]}
+                     "system_name": encode_sys_url(ds["system_name"])}
                 )
                 break
         new_ds.append({
             "shortname": ds["shortname"],
             "thing_name": ds["thing_name"],
-            "thing_system_name": ds["system_name"],  # system of the thing
+            "thing_system_name": encode_sys_url(ds["system_name"]),  # system of the thing
             "system_name": system_name,
             "client_name": client_name,
             "creator_id": user_id,
@@ -232,6 +231,8 @@ def create_subscriptions(user_id, system_url, client_name):
                     client_name='{ds["client_name"]}', system_name='{ds["system_name"]}', 
                     creator_id='{ds["creator_id"]}', datetime='{ds["datetime"]}';
             """)
+            # This routine doesn't create anything if one of the instances already exists.
+            # This behaviour is not desired for the PUT method.
             # (shortname='{ds["shortname"]}',
             # thing_name='{ds["thing_name"]}', thing_system_name='{ds["thing_system_name"]}',
             # client_name='{ds["client_name"]}', system_name='{ds["system_name"]}',

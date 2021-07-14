@@ -100,13 +100,13 @@ def thing_per_system(user_id, system_url, thing_name):
         return jsonify({"value": msg, "url": fct, "status_code": 403}), 403
 
     result_proxy = conn.execute(f"""
-    SELECT thing.system_name, thing.name, thing.resource_uri, creator.email AS contact_mail, thing.datetime AS created_at, 
-        thing.description
+    SELECT things.system_name, things.name, things.resource_uri, creator.email AS contact_mail, things.datetime AS created_at, 
+        things.description
     FROM systems AS sys
     INNER JOIN is_admin_of_sys AS agf ON sys.name=agf.system_name 
-    INNER JOIN thing on sys.name = thing.system_name
-    INNER JOIN users as creator ON creator.id=thing.creator_id
-    WHERE agf.user_id='{user_id}' AND thing.system_name='{system_name}' AND thing.name='{thing_name}';""")
+    INNER JOIN things on sys.name = things.system_name
+    INNER JOIN users as creator ON creator.id=things.creator_id
+    WHERE agf.user_id='{user_id}' AND things.system_name='{system_name}' AND things.name='{thing_name}';""")
     engine.dispose()
     thing_cons = [strip_dict(c.items()) for c in result_proxy.fetchall()]
 
@@ -218,8 +218,8 @@ def delete_thing_conn(user_id, system_url, thing_name):
     conn = engine.connect()
     result_proxy = conn.execute(
         f"SELECT '1' FROM is_admin_of_sys "
-        f"INNER JOIN thing on is_admin_of_sys.system_name = thing.system_name "
-        f"WHERE user_id='{str(user_id)}' AND thing.system_name='{system_name}' AND name='{thing_name}';")
+        f"INNER JOIN things on is_admin_of_sys.system_name = things.system_name "
+        f"WHERE user_id='{str(user_id)}' AND things.system_name='{system_name}' AND name='{thing_name}';")
     sys_admins = [dict(c.items()) for c in result_proxy.fetchall()]
     if len(sys_admins) == 0:
         engine.dispose()
@@ -228,7 +228,7 @@ def delete_thing_conn(user_id, system_url, thing_name):
         return jsonify({"value": msg, "url": fct, "status_code": 400}), 400
 
     # 3) delete thing connection
-    query = f"""DELETE FROM thing
+    query = f"""DELETE FROM things
         WHERE system_name='{system_name}' AND name='{thing_name}';"""
     conn.execute(query)
     engine.dispose()
