@@ -22,10 +22,6 @@ tags:
   description: "Connection tester for the Distribution Network"
 - name: "System Request"
   description: "API for System requests on the Distribution Network"
-- name: "Stream App Request"
-  description: "API for Stream App requests on the Distribution Network"
-- name: "Stream App Control Request"
-  description: "API for controlling Stream App on the Distribution Network"
 - name: "Client App Request"
   description: "API for Client App requests on the Distribution Network"
 - name: "Thing Request"
@@ -34,6 +30,10 @@ tags:
   description: "API for Datastream requests on the Distribution Network"
 - name: "Datastream Subscription Request"
   description: "API for Datastream Subscription requests on the Distribution Network"
+- name: "Stream App Request"
+  description: "API for Stream App requests on the Distribution Network"
+- name: "Stream App Control Request"
+  description: "API for controlling Stream Apps on the Distribution Network"
 
 paths:
   # Connection Tester
