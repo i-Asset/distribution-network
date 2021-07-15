@@ -206,7 +206,7 @@ def create_thing_con(user_id, system_url):
 
     engine.dispose()
     # return created thing connection
-    return jsonify({"thing": new_thing})
+    return jsonify({"things": [new_thing]})
 
 
 @api_thing.route(f"{prefix}/delete_thing/<string:user_id>/<string:system_url>/<string:thing_name>",

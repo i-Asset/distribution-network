@@ -190,7 +190,7 @@ def create_stream_app(user_id, system_url):
         app.logger.warning(f"{fct}: {msg}")
         return jsonify({"value": msg, "url": fct, "status_code": 406}), 406
 
-    new_stream_apps = [{"name": stream_name,
+    new_stream_app = {"name": stream_name,
                         "source_system": system_name,
                         "target_system": new_stream_app["target_system"],
                         "logic": new_stream_app.get("logic", ""),
@@ -198,25 +198,43 @@ def create_stream_app(user_id, system_url):
                         "creator_id": user_id,
                         "status": "init",
                         "datetime": get_datetime(),
-                        "description": new_stream_app.get("description", "")}]
-    if len(stream_apps) > 0:
-        # If the stream-app exists and the method is POST, return without change. If the method is PUT, overwrite
-        if request.method == "POST":
+                        "description": new_stream_app.get("description", "")}
+
+    if request.method == "POST":
+        if len(stream_apps) > 0:
+            # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
             engine.dispose()
             msg = f"The stream app with name '{stream_name}' for system '{system_name}' already exists."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
-        else:  # PUT overwrite
-            query = db.update(app.config["tables"]["stream_apps"]).where(
-                ("name" == stream_name and "source_system" == system_name))
-            conn.execute(query, new_stream_apps)
-    else:
+        else:  # doesn't exist yet
+            query = db.insert(app.config["tables"]["stream_apps"])
+            conn.execute(query, new_stream_app)
+
+    # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
+    if request.method == "PUT":
+        # This routine doesn't work because the logic is a SQL statement
+        # conn.execute(f"""
+        #     INSERT INTO stream_apps
+        #         (name, source_system, target_system, logic, is_multi_source, status, description, creator_id, datetime)
+        #     VALUES ('{new_stream_app["name"]}', '{new_stream_app["source_system"]}', '{new_stream_app["target_system"]}',
+        #         '{new_stream_app["logic"]}', '{new_stream_app["is_multi_source"]}', '{new_stream_app["status"]}',
+        #         '{new_stream_app["description"]}', '{new_stream_app["creator_id"]}', '{new_stream_app["datetime"]}')
+        #     ON CONFLICT (name, source_system)
+        #     DO UPDATE SET name='{new_stream_app["name"]}', source_system='{new_stream_app["source_system"]}',
+        #         target_system='{new_stream_app["target_system"]}', logic='{new_stream_app["logic"]}',
+        #         is_multi_source='{new_stream_app["is_multi_source"]}', status='{new_stream_app["status"]}',
+        #         description='{new_stream_app["description"]}', creator_id='{new_stream_app["creator_id"]}',
+        #         datetime='{new_stream_app["datetime"]}';
+        # """)
+        # Delete a potential duplicate before creating new
+        _ = delete_stream_app(user_id, system_url, stream_name)
         query = db.insert(app.config["tables"]["stream_apps"])
-        conn.execute(query, new_stream_apps)
+        conn.execute(query, new_stream_app)
 
     engine.dispose()
     # return created stream app
-    return jsonify({"stream_apps": new_stream_apps})
+    return jsonify({"stream_apps": [new_stream_app]})
 
 
 @api_stream_app.route(f"{prefix}/delete_stream_app/<string:user_id>/<string:system_url>/<string:stream_name>",
