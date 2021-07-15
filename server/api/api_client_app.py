@@ -179,22 +179,36 @@ def create_client_app(user_id, system_url):
                         "datetime": get_datetime(),
                         "description": new_client_app.get("description", "")}]
 
-    if len(client_apps) > 0:
-        # If the stream-app exists and the method is POST, return without change. If the method is PUT, overwrite
-        if request.method == "POST":
+    if request.method == "POST":
+        if len(client_apps) > 0:
+            # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
             engine.dispose()
             msg = f"The client app with name '{client_name}' for system '{system_name}' already exists."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
-
-        else:  # PUT
-            query = db.update(app.config["tables"]["client_apps"]).where(
-                ("name" == client_name and "system_name" == system_name))
+        else:  # doesn't exist yet
+            query = db.insert(app.config["tables"]["client_apps"])
             conn.execute(query, new_client_apps)
 
-    else:  # doesn't exist yet
-        query = db.insert(app.config["tables"]["client_apps"])
-        conn.execute(query, new_client_apps)
+    # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
+    if request.method == "PUT":
+        for ca in new_client_apps:
+            conn.execute(f"""
+                INSERT INTO client_apps 
+                    (name, system_name, resource_uri, on_kafka, key, description, creator_id, datetime) 
+                VALUES ('{ca["name"]}', '{ca["system_name"]}', '{ca["resource_uri"]}', 
+                    '{ca["on_kafka"]}', '{ca["key"]}', 
+                    '{ca["description"]}', '{ca["creator_id"]}', '{ca["datetime"]}') 
+                ON CONFLICT (name, system_name) 
+                DO UPDATE SET name='{ca["name"]}', system_name='{ca["system_name"]}', 
+                    resource_uri='{ca["resource_uri"]}', on_kafka='{ca["on_kafka"]}', key='{ca["key"]}', 
+                    description='{ca["description"]}', creator_id='{ca["creator_id"]}', datetime='{ca["datetime"]}';
+            """)
+            # This routine doesn't create anything if one of the instances already exists.
+            # This behaviour is not desired for the PUT method.
+            # query = db.update(app.config["tables"]["client_apps"]).where(
+            #                 ("name" == client_name and "system_name" == system_name))
+            # conn.execute(query, ca)
 
     engine.dispose()
     # return created client app

@@ -251,7 +251,7 @@ def create_datastreams(user_id, system_url):
     # 4) create the datastreams or warn if at least one of the datastreams already exist.
     if request.method == "POST":
         if len(already_existing) > 0:
-        # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
+            # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
             engine.dispose()
             msg = f"The datastreams '{already_existing}' for system '{system_name}' already exist, abort request."
             app.logger.warning(f"{fct}: {msg}")
@@ -267,7 +267,7 @@ def create_datastreams(user_id, system_url):
                 INSERT INTO datastreams 
                     (shortname, name, system_name, thing_name, client_name, client_system_name, 
                         description, creator_id, datetime) 
-                VALUES ('{ds["shortname"]}', '{ds["name"]}', '{ds["name"]}', '{ds["thing_name"]}', 
+                VALUES ('{ds["shortname"]}', '{ds["name"]}', '{ds["system_name"]}', '{ds["thing_name"]}', 
                     '{ds["client_name"]}', '{ds["client_system_name"]}', 
                     '{ds["description"]}', '{ds["creator_id"]}', '{ds["datetime"]}') 
                 ON CONFLICT (shortname, thing_name, system_name) 

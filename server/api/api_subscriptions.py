@@ -191,13 +191,13 @@ def create_subscriptions(user_id, system_url, client_name):
                 already_existing.append(
                     {"shortname": ds["shortname"],
                      "thing_name": ds["thing_name"],
-                     "system_name": encode_sys_url(ds["system_name"])}
+                     "system_name": decode_sys_url(ds["system_name"])}
                 )
                 break
         new_ds.append({
             "shortname": ds["shortname"],
             "thing_name": ds["thing_name"],
-            "thing_system_name": encode_sys_url(ds["system_name"]),  # system of the thing
+            "thing_system_name": decode_sys_url(ds["system_name"]),  # system of the thing
             "system_name": system_name,
             "client_name": client_name,
             "creator_id": user_id,

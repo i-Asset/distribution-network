@@ -168,32 +168,44 @@ def create_thing_con(user_id, system_url):
         f"WHERE system_name='{system_name}' AND name='{thing_name}';")
     thing_apps = [dict(c.items()) for c in result_proxy.fetchall()]
 
-    new_thing = [{"name": thing_name,
+    new_thing = {"name": thing_name,
                      "system_name": system_name,
                      "resource_uri": new_thing.get("resource_uri", ""),
                      "creator_id": user_id,
                      "datetime": get_datetime(),
-                     "description": new_thing.get("description", "")}]
+                     "description": new_thing.get("description", "")}
 
-    if len(thing_apps) > 0:
-        # If the thing exists and the method is POST, return without change. If the method is PUT, overwrite
-        if request.method == "POST":
+    if request.method == "POST":
+        if len(thing_apps) > 0:
+            # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
             engine.dispose()
             msg = f"The thing connection with name '{thing_name}' for system '{system_name}' already exists."
             app.logger.warning(f"{fct}: {msg}")
             return jsonify({"value": msg, "url": fct, "status_code": 208}), 208
-
-        else:  # PUT
-            query = db.update(app.config["tables"]["things"]).where(
-                ("name" == thing_name and "system_name" == system_name))
+        else:  # doesn't exist yet
+            query = db.insert(app.config["tables"]["things"])
             conn.execute(query, new_thing)
 
-    else:  # doesn't exist yet
-        query = db.insert(app.config["tables"]["things"])
-        conn.execute(query, new_thing)
+    # If one of the exists and the method is POST, return without change. If the method is PUT, overwrite
+    if request.method == "PUT":
+        conn.execute(f"""
+            INSERT INTO things 
+                (name, system_name, resource_uri, description, creator_id, datetime) 
+            VALUES ('{new_thing["name"]}', '{new_thing["system_name"]}', '{new_thing["resource_uri"]}', 
+                '{new_thing["description"]}', '{new_thing["creator_id"]}', '{new_thing["datetime"]}') 
+            ON CONFLICT (name, system_name) 
+            DO UPDATE SET name='{new_thing["name"]}', system_name='{new_thing["system_name"]}', 
+                resource_uri='{new_thing["resource_uri"]}', description='{new_thing["description"]}', 
+                creator_id='{new_thing["creator_id"]}', datetime='{new_thing["datetime"]}';
+        """)
+        # This routine doesn't create anything if one of the instances already exists.
+        # This behaviour is not desired for the PUT method.
+        # query = db.update(app.config["tables"]["things"]).where(
+        #     ("name" == thing_name and "system_name" == system_name))
+        # conn.execute(query, new_thing)
 
     engine.dispose()
-    # return created client app
+    # return created thing connection
     return jsonify({"thing": new_thing})
 
 
