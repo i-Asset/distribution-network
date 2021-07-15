@@ -451,6 +451,9 @@ thing_name = thing_1
 curl -X DELETE "https://iasset.salzburgresearch.at/distributionnetwork/delete_thing/453/ee_455_labor_testStation/thing_1" -H  "accept: application/json" -H  "Authorization: [bearer-token]"
 ```
 
+**Note that Industry 4.0 Components usually constitute a *1-1*-connection of a Client App as digital instance and 
+a thing as abstraction of the physical instance. 
+Therefore, for each I4.0 component a Client App as well as a Thing connection has to be created.** 
 
 
 ### API for Datastreams
