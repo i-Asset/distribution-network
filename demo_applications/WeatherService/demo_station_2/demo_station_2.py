@@ -61,7 +61,7 @@ try:
         temperature = randomised_temp.get_temp()
 
         # Send the demo temperature
-        client.produce(quantity="temperature_2", result=temperature, timestamp=timestamp)
+        client.produce(quantity="temperature", result=temperature, timestamp=timestamp)
 
         # Print the temperature with the corresponding timestamp in ISO format
         print(f"The air temperature at the demo station 2 is {temperature} °C at "

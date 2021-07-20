@@ -1,7 +1,13 @@
 {
   "subscriptions": [
-    "cz.icecars.iot4cps-wp5-CarFleet.*.temperature",
-    "cz.icecars.iot4cps-wp5-CarFleet.*.acceleration",
-    "domain.enterprise.work-center.station.quantity"
+// internal datastreams, i.e., datastreams that origins from the same system
+//    "thing_in_same_system.datastream",
+    "machine.temperature",
+    "machine.acceleration",
+
+// external datastreams, i.e., datastreams that origins from another system
+//    "domain.enterprise.work-center.station.thing.quantity",
+    "at.srfg.MachineFleet.*.machine.temperature",
+    "at.srfg.MachineFleet.*.machine.acceleration"
   ]
 }

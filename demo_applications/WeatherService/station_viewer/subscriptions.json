@@ -1,6 +1,9 @@
 {
   "subscriptions": [
-    "at.srfg.WeatherService.Stations.temperature_1",
-    "at.srfg.WeatherService.Stations.temperature_2"
+// internal datastreams, i.e., datastreams that origins from the same system
+//    "thing_in_same_system.datastream",
+  "*.temperature"
+// external datastreams, i.e., datastreams that origins from another system
+//    "domain.enterprise.work-center.station.thing.quantity",
   ]
 }
