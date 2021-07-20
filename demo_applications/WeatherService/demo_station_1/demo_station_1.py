@@ -37,7 +37,7 @@ CONFIG = {
     "client_name": "weatherstation_1",
     "system_name": "at.srfg.WeatherService.Stations",
     "server_uri": "localhost:1908",
-    "kafka_bootstrap_servers": ":9092"  # , "iasset.salzburgresearch.at:9092"
+    "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
 }
 INTERVAL = 5  # interval at which to produce (s)

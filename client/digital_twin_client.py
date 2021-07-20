@@ -473,7 +473,7 @@ class DigitalTwinClient:
         # Either consume from kafka bootstrap, or to kafka rest endpoint
         if self.config["kafka_bootstrap_servers"]:
             # Subscribe to topics that are needed to get the data
-            self.logger.debug(f"subscribing to Kafka topics: {topic_subs}.")
+            self.logger.info(f"subscribe: Subscribing to Kafka topics: {topic_subs}.")
             self.consumer.subscribe(list(topic_subs))
 
         else:

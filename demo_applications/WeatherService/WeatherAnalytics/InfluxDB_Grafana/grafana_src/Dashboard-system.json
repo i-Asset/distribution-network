@@ -86,7 +86,23 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "thing",
+              "operator": "=~",
+              "value": "/^$${q}thing$${q}/"
+            },
+            {
+              "key": "client_app",
+              "operator": "=~",
+              "value": "/^$${q}client_app$${q}/"
+            },
+            {
+              "key": "quantity",
+              "operator": "=~",
+              "value": "/^$${q}quantity$${q}/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -136,7 +152,83 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": "InfluxDB",
+        "definition": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"thing\";",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "thing",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"thing\";",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": "InfluxDB",
+        "definition": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"client_app\";",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "client_app",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"client_app\";",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": "InfluxDB",
+        "definition": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"quantity\";",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "quantity",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"quantity\";",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

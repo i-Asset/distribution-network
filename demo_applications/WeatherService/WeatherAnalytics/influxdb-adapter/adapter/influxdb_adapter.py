@@ -84,7 +84,8 @@ try:
 
         for received_quantity in received_quantities:
             if verbose:
-                logger.info(f'New data: {received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
+                logger.info(f'New data: {received_quantity["datastream"]["thing"]}.'
+                            f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
 
             # send to influxdb
             # all tags and the time create together the key and must be unique
