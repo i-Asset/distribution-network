@@ -73,9 +73,10 @@ try:
             new_row = {
                 "measurement": CONFIG["system_name"],
                 "tags": {
-                    "quantity": received_quantity["datastream"]["quantity"],
+                    "system": received_quantity["datastream"].get("system", ""),
                     "thing": received_quantity["datastream"].get("thing", ""),
                     "client_app": received_quantity["datastream"].get("client_app", ""),
+                    "quantity": received_quantity["datastream"]["quantity"],
                 },
                 "time": received_quantity["phenomenonTime"],
                 "fields": {

@@ -88,6 +88,11 @@
           ],
           "tags": [
             {
+              "key": "system",
+              "operator": "=~",
+              "value": "/^$${q}system$${q}/"
+            },
+            {
               "key": "thing",
               "operator": "=~",
               "value": "/^$${q}thing$${q}/"
@@ -153,6 +158,31 @@
   "tags": [],
   "templating": {
     "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "InfluxDB",
+        "definition": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"system\";",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "system",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"${SYSTEM_NAME}\" WITH KEY = \"system\";",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
       {
         "allValue": null,
         "current": {
