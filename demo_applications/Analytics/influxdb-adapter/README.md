@@ -8,7 +8,7 @@ The adapter is based on the Panta Rhei (or Digital Twin) client which allows the
 from client.digital_twin_client import DigitalTwinClient
 config = {
     "client_name": "demo_app1", 
-    "system_name": "at.datahouse.Analytics.RoadAnalytics",
+    "system_name": "at.srfg.Analytics.MachineAnalytics",
     "kafka_bootstrap_servers": "localhost:9092", 
     "server_uri": "localhost:1908"
 }
@@ -55,7 +55,7 @@ services:
       INFLUXDB_HOST: "localhost"
       # Panta Rhei configuration
       CLIENT_NAME: "analytic"
-      SYSTEM_NAME: "cz.icecars.iot4cps-wp5-CarFleet.Car1"
+      SYSTEM_NAME: "at.srfg.Analytics.MachineAnalytics"
       SERVER_URI: "localhost:1908"
       KAFKA_BOOTSTRAP_SERVERS: ":9092"
       # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"

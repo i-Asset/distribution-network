@@ -8,10 +8,12 @@ services:
     environment:
       VERBOSE_ADAPTER: "true"
       # InfluxDB configuration
-      INFLUXDB_HOST: "localhost"
+      INFLUXDB_HOST: "at.srfg.MachineFleet.Machine1_influxdb"
+      INFLUXDB_PORT: 8087
       # Panta Rhei configuration
       CLIENT_NAME: "analytic"
-      SYSTEM_NAME: "cz.icecars.iot4cps-wp5-CarFleet.Car1"
+      SYSTEM_NAME: "at.srfg.MachineFleet.Machine1"
+      # "at.srfg.Analytics.MachineAnalytics"
       SERVER_URI: "localhost:1908"
       KAFKA_BOOTSTRAP_SERVERS: ":9092"
       # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"

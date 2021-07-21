@@ -35,7 +35,7 @@ CONFIG = {
     "client_name": "analytics-software_2",
     "system_name": "at.srfg.MachineFleet.Machine1",
     "server_uri": "localhost:1908",  # "iasset.salzburgresearch.at",
-    "kafka_bootstrap_servers": ":9092"  # "iasset.salzburgresearch.at:9092"
+    "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     #,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094"
 }
 

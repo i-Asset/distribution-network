@@ -5,7 +5,7 @@ datasources:
     type: influxdb
     access: proxy
     orgId: 1
-    url: http://influxdb:8086
+    url: http://${SYSTEM_NAME}_influxdb:8086
     database: ${INFLUXDB_DB}
     isDefault: true
     editable: true
