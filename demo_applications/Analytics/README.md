@@ -4,25 +4,27 @@
 
 ## Setup
 
-All configurations are stored in the environment file `.env`. 
-Please create one if not already done.
+All configurations are stored in the environment file `.env` in the directory `InfluxDB_Grafana`. 
+Please create one if it doesn't exist.
 **Change the password immediately and never commit this file if the service is available from other 
 nodes!**
 
 ```.env
 GRAFANA_PORT=30001
-INFLUXDB_PORT=80861
+INFLUXDB_PORT=38601
 
-VERBOSE_ADAPTER: "true"
-INFLUXDB_HOST: "influxdb"
+VERBOSE_ADAPTER=true
+INFLUXDB_HOST=at.srfg.Analytics.MachineAnalytics_influxdb
 
 # Adapter configuration for the Distribution Network
-CLIENT_NAME=analytic
-SYSTEM_NAME=at.datahouse.Analytics.RoadAnalytics
+CLIENT_NAME=analytics
+SYSTEM_NAME=at.srfg.Analytics.MachineAnalytics
 SERVER_URI=localhost:1908
-KAFKA_BOOTSTRAP_SERVERS=:9092
+KAFKA_BOOTSTRAP_SERVERS="iasset.salzburgresearch.at:9092"
+ADAPTER_INFLUXDB_HOST=localhost
+ADAPTER_INFLUXDB_PORT=38601
 
-INFLUXDB_DB=at.datahouse.Analytics.RoadAnalytics
+INFLUXDB_DB=at.srfg.Analytics.MachineAnalytics
 INFLUXDB_ADMIN_ENABLED=true
 INFLUXDB_ADMIN_USER=admin
 INFLUXDB_ADMIN_PASSWORD=admin

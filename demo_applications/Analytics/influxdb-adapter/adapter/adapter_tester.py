@@ -33,7 +33,7 @@ from client.digital_twin_client import DigitalTwinClient
 # Make sure that Kafka and Postgres are up and running before starting the platform
 CONFIG = {
     "client_name": "analytics-software_2",
-    "system_name": "at.srfg.MachineFleet.Machine1",
+    "system_name": "at.srfg.MachineFleet.Machine1",  # at.srfg.Analytics.MachineAnalytics
     "server_uri": "localhost:1908",  # "iasset.salzburgresearch.at",
     "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     #,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094"
