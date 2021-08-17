@@ -111,7 +111,10 @@ Test the Influx-Python API using `db_interface.py`.
 Grafana is started with InfluxDB and is reachable on
 [localhost:30001](http://localhost:30001).
 
-For this instance a demo dashboard should be provided that is configured in `InfluxDB_Grafana/grafana_src`.
+For this instance a demo dashboard should be provided that is configured in 
+`InfluxDB_Grafana/grafana_src`. 
+The Dashboard may stored in a folder that is not shown in home. 
+Just click on search and find in the `Provisioning`-folder the provided dashboard.
 
 To create an new `InfluxDB` data source, 
 click on `Configuration -> Data Sources -> Add data source`.
