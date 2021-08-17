@@ -1,12 +1,16 @@
 {
   "subscriptions": [
-    "placeholder",
-    "*.*.*.*.temperature",
-    "at.srfg.MachineFleet.Machine2.temperature",
-    "at.srfg.MachineFleet.Machine2.acceleration",
-    "at.srfg.MachineFleet.Machine2.latitude",
-    "at.srfg.MachineFleet.Machine2.longitude",
-    "at.srfg.WeatherService.Stations.temperature_1",
-    "at.srfg.WeatherService.Stations.temperature_2"
+// internal datastreams, i.e., datastreams that origins from the same system
+//    "thing_in_same_system.datastream",
+
+// external datastreams, i.e., datastreams that origins from another system
+//    "domain.enterprise.work-center.station.thing.quantity",
+    "*.*.*.*.*.temperature",
+    "at.srfg.MachineFleet.Machine2.machine.temperature",
+    "at.srfg.MachineFleet.Machine2.machine.acceleration",
+    "at.srfg.MachineFleet.Machine2.machine.latitude",
+    "at.srfg.MachineFleet.Machine2.machine.longitude",
+    "at.srfg.WeatherService.Stations.Station_1.temperature",
+    "at.srfg.WeatherService.Stations.Station_2.temperature"
   ]
 }

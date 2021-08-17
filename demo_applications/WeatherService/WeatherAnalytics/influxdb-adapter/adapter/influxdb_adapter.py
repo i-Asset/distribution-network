@@ -84,16 +84,18 @@ try:
 
         for received_quantity in received_quantities:
             if verbose:
-                logger.info(f'New data: {received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
+                logger.info(f'New data: {received_quantity["datastream"]["thing"]}.'
+                            f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
 
             # send to influxdb
             # all tags and the time create together the key and must be unique
             new_row = {
                 "measurement": CONFIG["system_name"],
                 "tags": {
-                    "quantity": received_quantity["datastream"]["quantity"],
+                    "system": received_quantity["datastream"].get("system", ""),
                     "thing": received_quantity["datastream"].get("thing", ""),
                     "client_app": received_quantity["datastream"].get("client_app", ""),
+                    "quantity": received_quantity["datastream"]["quantity"],
                 },
                 "time": received_quantity["phenomenonTime"],
                 "fields": {

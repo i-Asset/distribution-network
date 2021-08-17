@@ -32,9 +32,9 @@ from client.digital_twin_client import DigitalTwinClient
 # This config is used to registering a client application on the platform
 # Make sure that Kafka and Postgres are up and running before starting the platform
 CONFIG = {
-    "client_name": "analytics-software",
-    "system_name": "at.srfg.Analytics.MachineAnalytics",
-    "server_uri": "iasset.salzburgresearch.at",
+    "client_name": "analytics-software_2",
+    "system_name": "at.srfg.MachineFleet.Machine1",
+    "server_uri": "localhost:1908",  # "iasset.salzburgresearch.at",
     "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     #,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094"
 }
@@ -65,16 +65,18 @@ try:
 
         for received_quantity in received_quantities:
             if verbose:
-                print(f'New data: {received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
+                print(f'New data: {received_quantity["datastream"]["thing"]}.'
+                      f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
 
             # send to influxdb
             # all tags and the time create together the key and must be unique
             new_row = {
                 "measurement": CONFIG["system_name"],
                 "tags": {
-                    "quantity": received_quantity["datastream"]["quantity"],
+                    "system": received_quantity["datastream"].get("system", ""),
                     "thing": received_quantity["datastream"].get("thing", ""),
                     "client_app": received_quantity["datastream"].get("client_app", ""),
+                    "quantity": received_quantity["datastream"]["quantity"],
                 },
                 "time": received_quantity["phenomenonTime"],
                 "fields": {

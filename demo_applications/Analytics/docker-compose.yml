@@ -1,21 +1,21 @@
 version: "3.4"
 
 services:
-  datastore-adapter:
-    image: 127.0.0.1:5001/datastore-adapter
+  analytics-adapter:
+    image: 127.0.0.1:5001/analytics-adapter
     build: ./influxdb-adapter
-    container_name: datastore-adapter
+    container_name: ${SYSTEM_NAME}_analytics-adapter
     restart: always
     network_mode: host
     env_file:
       - .env
     depends_on:
-      - influxdb
+      - analytics_influxdb
 
-  grafana:
+  analytics_grafana:
     image: 127.0.0.1:5001/grafana
     build: ./InfluxDB_Grafana/grafana_src
-    container_name: grafana
+    container_name: ${SYSTEM_NAME}_grafana
     restart: always
     ports:
       - ${GRAFANA_PORT}:3000
@@ -24,13 +24,13 @@ services:
     env_file:
       - .env
     depends_on:
-      - influxdb
+      - analytics_influxdb
 #    volumes:
 #      - ./InfluxDB_Grafana/grafanadata:/var/lib/grafana
 
-  influxdb:
+  analytics_influxdb:
     image: influxdb:1.8.3
-    container_name: influxdb
+    container_name: ${SYSTEM_NAME}_influxdb
     restart: always
     ports:
       - ${INFLUXDB_PORT}:8086

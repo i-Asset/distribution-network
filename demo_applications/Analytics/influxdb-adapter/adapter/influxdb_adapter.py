@@ -21,13 +21,15 @@ Message Schema:
     "attributes": dict of key-values pairs, string: bool, integer, double, string, dict or list (optional)
 }
 """
-
+import logging
 import os
 import sys
 import json
 import time
 import pytz
 from datetime import datetime
+
+import requests
 from influxdb import InfluxDBClient
 
 if os.path.exists("/src/distribution-network"):
@@ -40,7 +42,7 @@ CONFIG = {
     "client_name": os.environ.get("CLIENT_NAME", "analytics-software"),
     "system_name": os.environ.get("SYSTEM_NAME", "at.srfg.Analytics.MachineAnalytics"),
     "server_uri": os.environ.get("SERVER_URI", "localhost:1908"),
-    "kafka_bootstrap_servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", ":9092")  # , "iasset.salzburgresearch.at:9092"
+    "kafka_bootstrap_servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "iasset.salzburgresearch.at:9092")
     # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
 }
 
@@ -49,31 +51,36 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 # INSTANCES = os.path.join(dirname, "instances.json")
 SUBSCRIPTIONS = os.path.join(dirname, "subscriptions.json")
 
-verbose = os.environ.get("VERBOSE_ADAPTER", "True")
-if verbose.lower().strip() == "false":
+verbose = True
+if os.environ.get("VERBOSE_ADAPTER", "True").lower().strip() == "false":
     verbose = False
-else:
-    verbose = True
 
 # InfluxDB host
-INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")  # "192.168.48.71"
+INFLUXDB_HOST = os.environ.get("ADAPTER_INFLUXDB_HOST", "localhost")  # "192.168.48.71"
+INFLUXDB_PORT = os.environ.get("ADAPTER_INFLUXDB_PORT")  # "192.168.48.71"
+if not INFLUXDB_PORT:
+    INFLUXDB_PORT = os.environ.get("INFLUXDB_PORT", 8086)
+
 # create InfluxDB Connector and create database if not already done
-influx_client = InfluxDBClient(INFLUXDB_HOST, 8086, 'root', 'root', CONFIG["system_name"])
-influx_client.create_database(CONFIG["system_name"])
+influx_client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, 'root', 'root', CONFIG["system_name"])
+try:
+    influx_client.create_database(CONFIG["system_name"])
+except requests.exceptions.ConnectionError as e:
+    time.sleep(5)
+    raise e
 
 # Set the configs, create a new Digital Twin Instance and register file structure
 client = DigitalTwinClient(**CONFIG)
 client.logger.info("Main: Starting client.")
 client.subscribe(subscription_file=SUBSCRIPTIONS)  # Subscribe to datastreams
 
-# # Init logstash logging for data
-# logging.basicConfig(level='WARNING')
-# loggername_metric = 'influxdb-adapter'
-# logger_metric = logging.getLogger(loggername_metric)
-# logger_metric.setLevel(logging.INFO)
+# Init logstash logging for data
+logging.basicConfig(level='INFO')
+logger = logging.getLogger(CONFIG["client_name"])
+logger.setLevel(logging.INFO)
 
+logger.info(f"Loaded clients, InfluxDB-Adapter for {CONFIG['system_name']} is ready.")
 
-print("Loaded clients, InfluxDB-Adapter is ready.")
 try:
     while True:
         rows_to_insert = list()
@@ -83,16 +90,18 @@ try:
 
         for received_quantity in received_quantities:
             if verbose:
-                print(f'New data: {received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
+                logger.info(f'New data: {received_quantity["datastream"]["thing"]}.'
+                            f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
 
             # send to influxdb
             # all tags and the time create together the key and must be unique
             new_row = {
                 "measurement": CONFIG["system_name"],
                 "tags": {
-                    "quantity": received_quantity["datastream"]["quantity"],
+                    "system": received_quantity["datastream"].get("system", ""),
                     "thing": received_quantity["datastream"].get("thing", ""),
                     "client_app": received_quantity["datastream"].get("client_app", ""),
+                    "quantity": received_quantity["datastream"]["quantity"],
                 },
                 "time": received_quantity["phenomenonTime"],
                 "fields": {

@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import jstyleson
 import time
 
 import pytz
@@ -210,12 +211,12 @@ class DigitalTwinClient:
 
         try:
             with open(instance_file) as f:
-                datastreams = json.loads(f.read())
+                datastreams = jstyleson.loads(f.read())
         except FileNotFoundError:
             self.logger.warning("register_new: FileNotFound, creating empty datastream file")
             datastreams = json.loads('{"Datastreams": []}')
-        with open(instance_file, "w") as f:
-            f.write(json.dumps(datastreams, indent=2))
+            with open(instance_file, "w") as f:
+                f.write(json.dumps(datastreams, indent=2))
 
         # Check each entry of the instance file and store into mapping with the shortname as key
         for ds in datastreams["Datastreams"]:
@@ -420,47 +421,60 @@ class DigitalTwinClient:
         # Load from subscription_file or create empty one if not exists
         try:
             with open(subscription_file) as f:
-                subscriptions = json.loads(f.read())
+                subscriptions = jstyleson.loads(f.read())
         except FileNotFoundError:
             self.logger.warning("subscribe: FileNotFound, creating empty subscription file")
             subscriptions = json.loads('{"subscriptions": []}')
-        with open(subscription_file, "w") as f:
-            f.write(json.dumps(subscriptions, indent=2))
+            with open(subscription_file, "w") as f:
+                f.write(json.dumps(subscriptions, indent=2))
         if not (isinstance(subscriptions, dict) and "subscriptions" in subscriptions.keys() and
                 isinstance(subscriptions["subscriptions"], list)):
             msg = (f'subscribe: The subscriptions must contain a list of datastream idenifiers of the form: '
-                   f'{{"subscriptions": ["interal_shortname", ..., "domain.enterprise.work-center.system.external_shortname", ...]}} '
-                   f'with "*" as placeholder. Provided was {subscriptions}.')
+                   f'{{"subscriptions": ["domain.enterprise.work-center.system.thing_a.datastream_shortname", '
+                   f'"domain.enterprise.work-center.system.*.datastream_shortname", ...]}} '
+                   f'with "*" as optional placeholder available for all levels. Provided was {subscriptions}.')
             self.logger.error(msg)
             raise Exception(msg)
 
         # load the datastreams
-        sub_int = sub_ext = False
         for ds in subscriptions["subscriptions"]:
-            if ds.count(".") == 0:  # add intra-system datastream name to subscriptions
-                sub_int = True
+            if ds.count(".") == 1:  # add intra-system datastream name to subscriptions
+                self.subscriptions.add(f'{self.config["system_name"]}.{ds}')  # cast to global datastream identifier
+            elif ds.count(".") == 5:    # add intra-system datastream name to subscriptions
+                # intra-system datastream with global definition or external datastream
                 self.subscriptions.add(ds)
-            if ds.count(".") == 4:    # add intra-system datastream name to subscriptions
-                if ds.startswith(self.config["system_name"]):  # intra-system datastream with global definition
-                    self.subscriptions.add(ds.split(".")[-1])  # cast the definition as local
-                    sub_int = True
-                else:  # inter-system datastream with global definition
-                    self.subscriptions.add(ds)
-                    sub_ext = True
-            if ds.count(".") not in [0, 4]:
-                raise Exception(f"Invalid topic / system name in '{subscription_file}': '{ds}'.")
+            else:
+                raise Exception(f"Invalid topic / system name in '{subscription_file}': '{ds}': "
+                                f"Invalid number of hierarchy levels."
+                                f"There must be 2 for internal and 5 for external topics!")
 
+        # check what topics have to be subscribed
         self.logger.info("subscribe: Subscribing to datastreams with names: {}".format(self.subscriptions))
+        topic_subs = set()
+        domain, company, workcenter, station = self.config["system_name"].split(".")
+        for can in self.subscriptions:
+            c_domain, c_company, c_workcenter, c_station, c_thing, c_quantity = can.split(".")
+            # only the internal topic is possible
+            if c_domain == domain and c_company == company and c_workcenter == workcenter and c_station == station:
+                topic_subs.add(self.config["system_name"] + ".int")
+            # internal and external topics are possible (internal only is already handled)
+            elif (
+                    (c_domain == domain or c_domain == "*") and
+                    (c_company == company or c_company == "*") and
+                    (c_workcenter == workcenter or c_workcenter == "*") and
+                    (c_station == station or c_station == "*")
+            ):
+                topic_subs.add(self.config["system_name"] + ".int")
+                topic_subs.add(self.config["system_name"] + ".ext")
+            # internal is not possible, external only
+            else:
+                topic_subs.add(self.config["system_name"] + ".ext")
 
         # Either consume from kafka bootstrap, or to kafka rest endpoint
         if self.config["kafka_bootstrap_servers"]:
             # Subscribe to topics that are needed to get the data
-            topic_subs = list()
-            if sub_int:
-                topic_subs.append(self.config["system_name"] + ".int")
-            if sub_ext:
-                topic_subs.append(self.config["system_name"] + ".ext")
-            self.consumer.subscribe(topic_subs)
+            self.logger.info(f"subscribe: Subscribing to Kafka topics: {topic_subs}.")
+            self.consumer.subscribe(list(topic_subs))
 
         else:
             # Create consumer
@@ -544,33 +558,43 @@ class DigitalTwinClient:
                 else:
                     raise e
 
+            data["partition"] = msg.partition()
+            data["topic"] = msg.topic()
+            if data["topic"].count(".") != 4:
+                raise Exception(f"Invalid topic / system name: '{data['topic']}'.")
+
             quantity = data.get("datastream", dict()).get("quantity", None)
+            thing = data.get("datastream", dict()).get("thing", None)
+            # print(f"quantity: {quantity}, \tmessage: {data}")
 
-            if msg.topic().endswith(".int") and (quantity in self.subscriptions or
-                                                 self.config["system_name"] + "." + quantity in self.subscriptions):
-                data["partition"] = msg.partition()
-                data["topic"] = msg.topic()
+            if msg.topic().endswith(".int"):
+                data["datastream"]["system"] = data["topic"].replace(".int", "")
+
+                for can in self.subscriptions:
+                    if can.startswith(data["datastream"]["system"]):
+                        c_domain, c_company, c_workcenter, c_station, c_thing, c_quantity = can.split(".")
+                        if (
+                                (c_thing == thing or c_thing == "*") and
+                                (c_quantity == quantity or c_quantity == "*")
+                        ):
+                            received_quantities.append(data)
+                            break
+
                 received_quantities.append(data)
-                # print(f"found '{quantity}' in internal topics")
+                # print(f"found '{thing}.{quantity}' in internal topics")
 
-            elif msg.topic().endswith(".ext"):  # check for matches in each candidate
-                data["partition"] = msg.partition()
-                data["topic"] = msg.topic()  # system + ".ext"
-
-                if data["topic"].count(".") != 4:
-                    raise Exception(f"Invalid topic / system name: '{data['topic']}'.")
+            elif msg.topic().endswith(".ext"):  # check for matches in subscribed datastreams
                 data["datastream"]["system"] = data["topic"].replace(".ext", "")
 
                 domain, company, workcenter, station, topic_type = data["topic"].split(".")
                 for can in self.subscriptions:
-                    if can.count(".") != 4:
-                        continue  # is required for testing
-                    c_domain, c_company, c_workcenter, c_station, c_quantity = can.split(".")
+                    c_domain, c_company, c_workcenter, c_station, c_thing, c_quantity = can.split(".")
                     if (
                             (c_domain == domain or c_domain == "*") and
                             (c_company == company or c_company == "*") and
                             (c_workcenter == workcenter or c_workcenter == "*") and
                             (c_station == station or c_station == "*") and
+                            (c_thing == thing or c_thing == "*") and
                             (c_quantity == quantity or c_quantity == "*")
                     ):
                         received_quantities.append(data)

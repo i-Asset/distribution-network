@@ -37,7 +37,7 @@ CONFIG = {
     "client_name": "weatherstation_2",
     "system_name": "at.srfg.WeatherService.Stations",
     "server_uri": "localhost:1908",
-    "kafka_bootstrap_servers": ":9092"  # , "iasset.salzburgresearch.at:9092"
+    "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     # ,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094",
 }
 INTERVAL = 5  # interval at which to produce (s)
@@ -61,7 +61,7 @@ try:
         temperature = randomised_temp.get_temp()
 
         # Send the demo temperature
-        client.produce(quantity="temperature_2", result=temperature, timestamp=timestamp)
+        client.produce(quantity="temperature", result=temperature, timestamp=timestamp)
 
         # Print the temperature with the corresponding timestamp in ISO format
         print(f"The air temperature at the demo station 2 is {temperature} °C at "

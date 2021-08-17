@@ -34,6 +34,7 @@ invoke==1.4.1
 ipaddr==2.2.0
 itsdangerous==1.1.0
 Jinja2==2.11.3
+jstyleson==0.0.2
 lockfile==0.12.2
 lxml==4.6.3
 Mako==1.1.3

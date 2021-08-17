@@ -2,7 +2,7 @@
   "Datastreams": [
     {
       "name": "Air Temperature 2",
-      "shortname": "temperature_2",
+      "shortname": "temperature",
       "description": "Air Temperature measured in the weather station 2",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
