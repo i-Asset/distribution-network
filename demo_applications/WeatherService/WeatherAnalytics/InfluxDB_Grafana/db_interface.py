@@ -2,7 +2,7 @@ import json
 from influxdb import InfluxDBClient
 
 system_name = "at.srfg.WeatherService.Stations"
-INFLUXDB_PORT = 8087
+INFLUXDB_PORT = 38602
 
 # create InfluxDB Connector and create database if not already done
 client = InfluxDBClient('localhost', INFLUXDB_PORT, 'root', 'root', system_name)

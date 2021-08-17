@@ -1,10 +1,10 @@
 import json
 from influxdb import InfluxDBClient
 
-system_name = "at.srfg.Analytics.MachineAnalytics"
+system_name = "at.srfg.MachineFleet.Machine1"
 
 # create InfluxDB Connector and create database if not already done
-client = InfluxDBClient('localhost', 8086, 'root', 'root', system_name)
+client = InfluxDBClient('localhost', 38601, 'root', 'root', system_name)
 client.create_database(system_name)
 print(client.get_list_database())
 

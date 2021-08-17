@@ -43,8 +43,6 @@ services:
     volumes:
       - ./InfluxDB_Grafana/influxdata:/var/lib/influxdb
 
-
-
 networks:
   monitoring:
     driver: bridge

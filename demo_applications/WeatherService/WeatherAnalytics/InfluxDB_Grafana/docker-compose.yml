@@ -1,9 +1,20 @@
 version: "3.4"
 
 services:
-  grafana:
+  analytics-adapter:
+    image: 127.0.0.1:5001/analytics-adapter
+    build: ./influxdb-adapter
+    container_name: ${SYSTEM_NAME}_analytics-adapter
+    restart: always
+    network_mode: host
+    env_file:
+      - .env
+    depends_on:
+      - analytics_influxdb
+
+  analytics_grafana:
     image: 127.0.0.1:5001/grafana
-    build: ./grafana_src
+    build: ./InfluxDB_Grafana/grafana_src
     container_name: ${SYSTEM_NAME}_grafana
     restart: always
     ports:
@@ -13,11 +24,11 @@ services:
     env_file:
       - .env
     depends_on:
-      - influxdb
+      - analytics_influxdb
 #    volumes:
-#      - ./grafanadata:/var/lib/grafana
+#      - ./InfluxDB_Grafana/grafanadata:/var/lib/grafana
 
-  influxdb:
+  analytics_influxdb:
     image: influxdb:1.8.3
     container_name: ${SYSTEM_NAME}_influxdb
     restart: always
@@ -27,10 +38,8 @@ services:
       - monitoring
     env_file:
       - .env
-    environment:
-      - bla=12
     volumes:
-      - ./influxdata:/var/lib/influxdb
+      - ./InfluxDB_Grafana/influxdata:/var/lib/influxdb
 
 networks:
   monitoring:
