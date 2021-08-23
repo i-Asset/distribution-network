@@ -3,7 +3,7 @@
     {
       "name": "Air Temperature",
       "shortname": "temperature",
-      "description": "Air temperature measured in the connected machine 1",
+      "description": "Air temperature measured in the connected machine 2",
       "observationType": "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
       "unitOfMeasurement": {
         "name": "DegreeCelsius",
@@ -12,11 +12,11 @@
       },
       "ObservedProperty": {
         "name": "Air Temperature",
-        "description": "Air temperature measured in the connected machine 1",
+        "description": "Air temperature measured in the connected machine 2",
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#AreaTemperature"
       },
       "thing": "machine",
-      "client": "machine_1",
+      "client": "machine_2",
       "additional_attributes": [
         "longitude",
         "latitude",
@@ -40,7 +40,7 @@
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Acceleration"
       },
       "thing": "machine",
-      "client": "machine_1",
+      "client": "machine_2",
       "additional_attributes": [
         "longitude",
         "latitude",
@@ -63,7 +63,7 @@
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
       "thing": "machine",
-      "client": "machine_1"
+      "client": "machine_2"
     },
     {
       "name": "GPS-position-longitude",
@@ -81,7 +81,7 @@
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Angle"
       },
       "thing": "machine",
-      "client": "machine_1"
+      "client": "machine_2"
     },
     {
       "name": "GPS-position-attitude",
@@ -99,7 +99,7 @@
         "definition": "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html#Length"
       },
       "thing": "machine",
-      "client": "machine_1"
+      "client": "machine_2"
     }
   ]
 }
