@@ -34,7 +34,7 @@ from client.digital_twin_client import DigitalTwinClient
 CONFIG = {
     "client_name": "analytics-software_test",
     "system_name": "at.srfg.Analytics.MachineAnalytics",  # at.srfg.Analytics.MachineAnalytics
-    "server_uri": "localhost:1908",  # "iasset.salzburgresearch.at",
+    "server_uri": "iasset.salzburgresearch.at",  # "iasset.salzburgresearch.at",
     "kafka_bootstrap_servers": "iasset.salzburgresearch.at:9092"
     #,iasset.salzburgresearch.at:9093,iasset.salzburgresearch.at:9094"
 }
