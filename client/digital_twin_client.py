@@ -269,7 +269,8 @@ class DigitalTwinClient:
                      "resultTime": datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat(),
                      "datastream": {
                          "quantity": quantity,
-                         "client_app": self.config["client_name"]
+                         "client_app": self.config["client_name"],
+                         "system": self.config["system_name"]
                      },
                      "result": result
                      })
