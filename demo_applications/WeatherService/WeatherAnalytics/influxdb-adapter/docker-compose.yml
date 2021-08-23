@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   datastore-adapter:
     image: 127.0.0.1:5001/datastore-adapter
@@ -9,11 +7,12 @@ services:
     environment:
       VERBOSE_ADAPTER: "true"
       # InfluxDB configuration
-      INFLUXDB_HOST: "localhost"
+      INFLUXDB_HOST: "at.srfg.MachineFleet.Machine1_influxdb"
       INFLUXDB_PORT: 8087
       # Panta Rhei configuration
       CLIENT_NAME: "weather_analytics"
       SYSTEM_NAME: "at.srfg.WeatherService.Stations"
+      # "at.srfg.Analytics.MachineAnalytics"
       SERVER_URI: "localhost:1908"
       KAFKA_BOOTSTRAP_SERVERS: ":9092"
       # "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"

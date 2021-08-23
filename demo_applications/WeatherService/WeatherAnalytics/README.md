@@ -1,17 +1,17 @@
 # DataStore
 
-#### The DataStore is a provisioned backend with InfluxDB and Grafana that consumes streaming data from the system 'at.srfg.WeatherService.Stations' of the Distribution-Network.
+#### The DataStore is a provisioned backend with InfluxDB and Grafana that consumes streaming data from the system 'at.datahouse.Analytics.RoadAnalytics' of the Distribution-Network.
 
 ## Setup
 
-All configurations are stored in the environment file `.env`. 
-Please create one if not already done.
+All configurations are stored in the environment file `.env` in the directory `InfluxDB_Grafana`. 
+Please create one if it doesn't exist.
 **Change the password immediately and never commit this file if the service is available from other 
 nodes!**
 
 ```.env
-GRAFANA_PORT=3001
-INFLUXDB_PORT=8087
+GRAFANA_PORT=30002
+INFLUXDB_PORT=38602
 
 VERBOSE_ADAPTER=true
 INFLUXDB_HOST=at.srfg.WeatherService.Stations_influxdb
@@ -20,9 +20,10 @@ INFLUXDB_HOST=at.srfg.WeatherService.Stations_influxdb
 CLIENT_NAME=weather_analytics
 SYSTEM_NAME=at.srfg.WeatherService.Stations
 SERVER_URI=localhost:1908
-KAFKA_BOOTSTRAP_SERVERS=:9092
+KAFKA_BOOTSTRAP_SERVERS="iasset.salzburgresearch.at:9092"
 ADAPTER_INFLUXDB_HOST=localhost
-ADAPTER_INFLUXDB_PORT=8087
+ADAPTER_INFLUXDB_PORT=38602
+# "192.168.48.71:9092,192.168.48.71:9093,192.168.48.71:9094"
 
 INFLUXDB_DB=at.srfg.WeatherService.Stations
 INFLUXDB_ADMIN_ENABLED=true
@@ -37,7 +38,7 @@ GF_SECURITY_ADMIN_PASSWORD=dev
 
 To start InfluxDB and also Grafana, run`
 ```bash
-cd demo_applications/WeatherService/Weather_Analytics
+cd demo_applications/Analytics
 docker-compose up --build -d
 ``` 
 
@@ -60,9 +61,8 @@ form `"domain.enterprise.work-center.station.quantity_name"` for global quantiti
 ```json
 {
   "subscriptions": [
-    "at.srfg.WeatherService.Stations.temperature_1",
-    "at.srfg.WeatherService.Stations.temperature_2",
-    "at.srfg.WeatherService.Stations.*"
+    "*.temperature",
+    "*.acceleration"
   ]
 }
 ```  
@@ -75,7 +75,7 @@ To validate, if InfluxDB is running correctly, curl the service
 using:
 
 ```bash
-curl -sl -I http://localhost:8087/ping
+curl -sl -I http://localhost:80861/ping
 # Expected result, note the status code 204
 HTTP/1.1 204 No Content
 Content-Type: application/json
@@ -89,12 +89,12 @@ Date: Sun, 24 May 2020 10:34:45 GMT
 InfluxDB provides a RestAPI that can be executed via `curl`
 
 ```bash
-curl -XPOST 'http://localhost:8087/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
-curl -XPOST 'http://localhost:8087/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
-curl -G 'http://localhost:8087/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
+curl -XPOST 'http://localhost:80861/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
+curl -XPOST 'http://localhost:80861/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
+curl -G 'http://localhost:80861/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
 
 # or for this database:
-curl -G 'http://localhost:8087/query?db=at.srfg.iot.dtz' --data-urlencode 'q=SELECT * FROM "at.srfg.iot.dtz"'
+curl -G 'http://localhost:80861/query?db=at.srfg.iot.dtz' --data-urlencode 'q=SELECT * FROM "at.srfg.iot.dtz"'
 ```
 More API interface examples can be found [here](https://docs.influxdata.com/influxdb/v1.8/tools/api/).
 
@@ -109,9 +109,12 @@ Test the Influx-Python API using `db_interface.py`.
 ## First steps in Grafana
 
 Grafana is started with InfluxDB and is reachable on
-[localhost:3001](http://localhost:3001).
+[localhost:30001](http://localhost:30001).
 
-For this instance a demo dashboard should be provided that is configured in `InfluxDB_Grafana/grafana_src`.
+For this instance a demo dashboard should be provided that is configured in 
+`InfluxDB_Grafana/grafana_src`. 
+The Dashboard may stored in a folder that is not shown in home. 
+Just click on search and find in the `Provisioning`-folder the provided dashboard.
 
 To create an new `InfluxDB` data source, 
 click on `Configuration -> Data Sources -> Add data source`.

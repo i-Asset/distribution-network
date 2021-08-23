@@ -23,7 +23,7 @@ public class Semantics {
     String semantic;
     boolean verbose;
     String[] knownSemantics = new String[] {"SensorThings", "AAS"};
-    String[] augmentedDSAttributes = new String[]{"thing", "client_app", "quantity"};  // augment attributes in "datastream" key
+    String[] augmentedDSAttributes = new String[]{"thing", "client_app", "quantity", "system"};  // augment attributes in "datastream" key
     String[] augmentedMetaAttributes = new String[]{"longitude", "latitude"};  // augment attributes in "meta" key
     boolean exitOnUnknownIotID = false;
 

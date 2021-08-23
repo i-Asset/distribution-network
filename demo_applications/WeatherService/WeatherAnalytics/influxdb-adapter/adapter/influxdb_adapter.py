@@ -28,6 +28,8 @@ import json
 import time
 import pytz
 from datetime import datetime
+
+import requests
 from influxdb import InfluxDBClient
 
 if os.path.exists("/src/distribution-network"):
@@ -61,7 +63,11 @@ if not INFLUXDB_PORT:
 
 # create InfluxDB Connector and create database if not already done
 influx_client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, 'root', 'root', CONFIG["system_name"])
-influx_client.create_database(CONFIG["system_name"])
+try:
+    influx_client.create_database(CONFIG["system_name"])
+except requests.exceptions.ConnectionError as e:
+    time.sleep(5)
+    raise e
 
 # Set the configs, create a new Digital Twin Instance and register file structure
 client = DigitalTwinClient(**CONFIG)
@@ -73,7 +79,7 @@ logging.basicConfig(level='INFO')
 logger = logging.getLogger(CONFIG["client_name"])
 logger.setLevel(logging.INFO)
 
-logger.info("Loaded clients, InfluxDB-Adapter for Weather Analytics is ready.")
+logger.info(f"Loaded clients, InfluxDB-Adapter for {CONFIG['system_name']} is ready.")
 
 try:
     while True:
@@ -85,7 +91,9 @@ try:
         for received_quantity in received_quantities:
             if verbose:
                 logger.info(f'New data: {received_quantity["datastream"]["thing"]}.'
-                            f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}')
+                            f'{received_quantity["datastream"]["quantity"]} = {received_quantity["result"]}'
+                            f"\t from system='{received_quantity['datastream'].get('system', '')}' and"
+                            f" client_app='{received_quantity['datastream'].get('client_app', '')}'")
 
             # send to influxdb
             # all tags and the time create together the key and must be unique

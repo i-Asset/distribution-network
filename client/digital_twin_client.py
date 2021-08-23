@@ -33,7 +33,7 @@ class DigitalTwinClient:
         :parameter server_uri (string): URL of the server to which this application should connect to.
         :parameter kafka_bootstrap_servers (string): If the Kafka servers run on a different cluster it can be
             specified using this argument. The servers are specified using a comma-separated string like:
-            kafka1:9092,kafka2:9093,kafka2:9094
+            kafka1:9092,kafka2:9093,kafka3:9094
         :keyword produce_via (string, None): Choose the protocol to produce to, default: None="kafka"
         :keyword break_on_errors (boolean): Break on errors like an onmatched key, default is True
         """
@@ -269,7 +269,8 @@ class DigitalTwinClient:
                      "resultTime": datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat(),
                      "datastream": {
                          "quantity": quantity,
-                         "client_app": self.config["client_name"]
+                         "client_app": self.config["client_name"],
+                         "system": self.config["system_name"]
                      },
                      "result": result
                      })
@@ -568,7 +569,8 @@ class DigitalTwinClient:
             # print(f"quantity: {quantity}, \tmessage: {data}")
 
             if msg.topic().endswith(".int"):
-                data["datastream"]["system"] = data["topic"].replace(".int", "")
+                if not data["datastream"].get("system"):
+                    data["datastream"]["system"] = data["topic"].replace(".int", "")
 
                 for can in self.subscriptions:
                     if can.startswith(data["datastream"]["system"]):
@@ -584,7 +586,8 @@ class DigitalTwinClient:
                 # print(f"found '{thing}.{quantity}' in internal topics")
 
             elif msg.topic().endswith(".ext"):  # check for matches in subscribed datastreams
-                data["datastream"]["system"] = data["topic"].replace(".ext", "")
+                if not data["datastream"].get("system"):
+                    data["datastream"]["system"] = data["topic"].replace(".ext", "")
 
                 domain, company, workcenter, station, topic_type = data["topic"].split(".")
                 for can in self.subscriptions:
