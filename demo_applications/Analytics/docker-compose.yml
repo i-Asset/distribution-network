@@ -38,8 +38,6 @@ services:
       - monitoring
     env_file:
       - .env
-    environment:
-      - bla=12
     volumes:
       - ./InfluxDB_Grafana/influxdata:/var/lib/influxdb
 

@@ -75,7 +75,7 @@ To validate, if InfluxDB is running correctly, curl the service
 using:
 
 ```bash
-curl -sl -I http://localhost:80861/ping
+curl -sl -I http://localhost:38601/ping
 # Expected result, note the status code 204
 HTTP/1.1 204 No Content
 Content-Type: application/json
@@ -89,13 +89,15 @@ Date: Sun, 24 May 2020 10:34:45 GMT
 InfluxDB provides a RestAPI that can be executed via `curl`
 
 ```bash
-curl -XPOST 'http://localhost:80861/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
-curl -XPOST 'http://localhost:80861/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
-curl -G 'http://localhost:80861/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
+curl -XPOST 'http://localhost:38601/query' --data-urlencode 'q=CREATE DATABASE "mydb"'
+curl -XPOST 'http://localhost:38601/query?db=mydb' --data-urlencode 'q=SELECT * INTO "newmeas" FROM "mymeas"'
+curl -G 'http://localhost:38601/query?db=mydb&pretty=true' --data-urlencode 'q=SELECT * FROM "mymeas"'
 
 # or for this database:
-curl -G 'http://localhost:80861/query?db=at.srfg.iot.dtz' --data-urlencode 'q=SELECT * FROM "at.srfg.iot.dtz"'
+curl -G 'http://localhost:38601/query?db=at.srfg.Analtics.MachineAnalytics' --data-urlencode 'q=SELECT * FROM "at.srfg.Analytic
+s.MachineAnalytics"'
 ```
+
 More API interface examples can be found [here](https://docs.influxdata.com/influxdb/v1.8/tools/api/).
 
 It is important, that the attributes `time` and all `tags` are

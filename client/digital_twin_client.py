@@ -33,7 +33,7 @@ class DigitalTwinClient:
         :parameter server_uri (string): URL of the server to which this application should connect to.
         :parameter kafka_bootstrap_servers (string): If the Kafka servers run on a different cluster it can be
             specified using this argument. The servers are specified using a comma-separated string like:
-            kafka1:9092,kafka2:9093,kafka2:9094
+            kafka1:9092,kafka2:9093,kafka3:9094
         :keyword produce_via (string, None): Choose the protocol to produce to, default: None="kafka"
         :keyword break_on_errors (boolean): Break on errors like an onmatched key, default is True
         """
