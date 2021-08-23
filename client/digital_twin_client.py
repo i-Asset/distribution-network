@@ -569,7 +569,8 @@ class DigitalTwinClient:
             # print(f"quantity: {quantity}, \tmessage: {data}")
 
             if msg.topic().endswith(".int"):
-                data["datastream"]["system"] = data["topic"].replace(".int", "")
+                if not data["datastream"].get("system"):
+                    data["datastream"]["system"] = data["topic"].replace(".int", "")
 
                 for can in self.subscriptions:
                     if can.startswith(data["datastream"]["system"]):
@@ -585,7 +586,8 @@ class DigitalTwinClient:
                 # print(f"found '{thing}.{quantity}' in internal topics")
 
             elif msg.topic().endswith(".ext"):  # check for matches in subscribed datastreams
-                data["datastream"]["system"] = data["topic"].replace(".ext", "")
+                if not data["datastream"].get("system"):
+                    data["datastream"]["system"] = data["topic"].replace(".ext", "")
 
                 domain, company, workcenter, station, topic_type = data["topic"].split(".")
                 for can in self.subscriptions:
