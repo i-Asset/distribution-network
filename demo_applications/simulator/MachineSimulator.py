@@ -78,7 +78,7 @@ class MachineSimulator:
 
     def update_positions(self, n=0):
         if n > 10:
-            raise RecursionError("defined maximum recursion depth exceeded")
+            return None
         self.last_update = time.time()
         self.logger.debug("Passed track index: {}".format(self.track_idx))  # The first 3 entries (2) are 0
 
