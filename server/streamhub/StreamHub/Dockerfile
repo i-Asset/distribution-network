@@ -1,5 +1,5 @@
 # FROM anapsix/alpine-java:8u202b08_jdk
-FROM java:8
+FROM eclipse-temurin:8
 MAINTAINER Christoph Schranz <christoph.schranz@salzburgresearch.at>
 
 ADD target/StreamApp-1.2-jar-with-dependencies.jar /streamApp.jar
