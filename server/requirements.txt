@@ -17,7 +17,7 @@ distro==1.4.0
 dnspython==2.0.0
 dominate==2.5.1
 email-validator==1.1.1
-Flask==1.0.3
+Flask==2.2.5
 Flask-Bootstrap==3.3.7.1
 Flask-Cache==0.13.1
 Flask-Migrate==1.8.0
